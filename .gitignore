@@ -1,0 +1,18 @@
+## .NET
+bin/
+obj/
+*.user
+.vs/
+
+## Frontend
+node_modules/
+dist/
+
+## Entorno / secretos
+.env
+.env.local
+appsettings.Local.json
+
+## SO
+.DS_Store
+Thumbs.db

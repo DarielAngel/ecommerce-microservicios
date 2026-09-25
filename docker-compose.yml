@@ -1,0 +1,344 @@
+version: "3.9"
+
+services:
+  # ------------------------------------------------------------------
+  # Infraestructura compartida
+  # ------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: ecommerce-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # UI de administración -> http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Postgres — una instancia por microservicio (Database per Service)
+  # Se van activando a medida que se construye cada módulo.
+  # ------------------------------------------------------------------
+  postgres-users:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-users
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: users_svc
+      POSTGRES_PASSWORD: users_pass_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U users_svc -d users_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  postgres-catalog:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-catalog
+    environment:
+      POSTGRES_DB: catalog_db
+      POSTGRES_USER: catalog_svc
+      POSTGRES_PASSWORD: catalog_pass_dev
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_catalog_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog_svc -d catalog_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  postgres-cart:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-cart
+    environment:
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: cart_svc
+      POSTGRES_PASSWORD: cart_pass_dev
+    ports:
+      - "5435:5432"
+    volumes:
+      - pg_cart_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cart_svc -d cart_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  postgres-inventory:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-inventory
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: inventory_svc
+      POSTGRES_PASSWORD: inventory_pass_dev
+    ports:
+      - "5436:5432"
+    volumes:
+      - pg_inventory_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory_svc -d inventory_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  postgres-orders:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-orders
+    environment:
+      POSTGRES_DB: orders_db
+      POSTGRES_USER: orders_svc
+      POSTGRES_PASSWORD: orders_pass_dev
+    ports:
+      - "5437:5432"
+    volumes:
+      - pg_orders_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders_svc -d orders_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  postgres-payments:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-payments
+    environment:
+      POSTGRES_DB: payments_db
+      POSTGRES_USER: payments_svc
+      POSTGRES_PASSWORD: payments_pass_dev
+    ports:
+      - "5438:5432"
+    volumes:
+      - pg_payments_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payments_svc -d payments_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Users / Auth
+  # ------------------------------------------------------------------
+  users-service:
+    build:
+      context: .
+      dockerfile: src/Services/Users/Users.Api/Dockerfile
+    container_name: ecommerce-users-service
+    environment:
+      ConnectionStrings__UsersDb: "Host=postgres-users;Port=5432;Database=users_db;Username=users_svc;Password=users_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      Jwt__AccessTokenMinutes: "15"
+      Jwt__RefreshTokenDays: "7"
+      AdminProvisioning__ApiKey: "${ADMIN_PROVISIONING_KEY:-clave-admin-de-desarrollo}"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5001:8080"  # acceso directo útil para probar/depurar sin pasar por el Gateway
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Catálogo de productos
+  # ------------------------------------------------------------------
+  catalog-service:
+    build:
+      context: .
+      dockerfile: src/Services/Catalog/Catalog.Api/Dockerfile
+    container_name: ecommerce-catalog-service
+    environment:
+      ConnectionStrings__CatalogDb: "Host=postgres-catalog;Port=5432;Database=catalog_db;Username=catalog_svc;Password=catalog_pass_dev"
+      # Mismo secreto que users-service: así Catálogo puede validar los JWT que emite Users
+      # sin tener que llamarlo por red en cada request.
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      FileStorage__RootPath: "/app/uploads"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5002:8080"
+    volumes:
+      - catalog_images:/app/uploads
+    depends_on:
+      postgres-catalog:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Inventario
+  # ------------------------------------------------------------------
+  inventory-service:
+    build:
+      context: .
+      dockerfile: src/Services/Inventory/Inventory.Api/Dockerfile
+    container_name: ecommerce-inventory-service
+    environment:
+      ConnectionStrings__InventoryDb: "Host=postgres-inventory;Port=5432;Database=inventory_db;Username=inventory_svc;Password=inventory_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5003:8080"
+    depends_on:
+      postgres-inventory:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Carrito de compras
+  # ------------------------------------------------------------------
+  cart-service:
+    build:
+      context: .
+      dockerfile: src/Services/Cart/Cart.Api/Dockerfile
+    container_name: ecommerce-cart-service
+    environment:
+      ConnectionStrings__CartDb: "Host=postgres-cart;Port=5432;Database=cart_db;Username=cart_svc;Password=cart_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      ServiceUrls__CatalogBaseUrl: "http://catalog-service:8080/"
+      ServiceUrls__InventoryBaseUrl: "http://inventory-service:8080/"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5004:8080"
+    depends_on:
+      postgres-cart:
+        condition: service_healthy
+      catalog-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Pagos (PayPal)
+  # ------------------------------------------------------------------
+  payments-service:
+    build:
+      context: .
+      dockerfile: src/Services/Payments/Payments.Api/Dockerfile
+    container_name: ecommerce-payments-service
+    environment:
+      ConnectionStrings__PaymentsDb: "Host=postgres-payments;Port=5432;Database=payments_db;Username=payments_svc;Password=payments_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      PayPal__BaseUrl: "https://api-m.sandbox.paypal.com"
+      PayPal__ClientId: "${PAYPAL_CLIENT_ID:-}"
+      PayPal__ClientSecret: "${PAYPAL_CLIENT_SECRET:-}"
+      PayPal__WebhookId: "${PAYPAL_WEBHOOK_ID:-}"
+      PayPal__ReturnUrl: "http://localhost:5000/api/payments/return"
+      PayPal__CancelUrl: "http://localhost:5000/api/payments/cancel"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5005:8080"
+    depends_on:
+      postgres-payments:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Órdenes/Checkout (orquesta Carrito, Inventario y Pagos)
+  # ------------------------------------------------------------------
+  orders-service:
+    build:
+      context: .
+      dockerfile: src/Services/Orders/Orders.Api/Dockerfile
+    container_name: ecommerce-orders-service
+    environment:
+      ConnectionStrings__OrdersDb: "Host=postgres-orders;Port=5432;Database=orders_db;Username=orders_svc;Password=orders_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      ServiceUrls__CartBaseUrl: "http://cart-service:8080/"
+      ServiceUrls__InventoryBaseUrl: "http://inventory-service:8080/"
+      ServiceUrls__PaymentsBaseUrl: "http://payments-service:8080/"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5006:8080"
+    depends_on:
+      postgres-orders:
+        condition: service_healthy
+      cart-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      payments-service:
+        condition: service_started
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Gateway — único punto de entrada para el frontend
+  # ------------------------------------------------------------------
+  gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/Dockerfile
+    container_name: ecommerce-gateway
+    ports:
+      - "5000:8080"
+    depends_on:
+      - rabbitmq
+      - users-service
+      - catalog-service
+      - inventory-service
+      - cart-service
+      - payments-service
+      - orders-service
+    networks:
+      - ecommerce-net
+
+networks:
+  ecommerce-net:
+    driver: bridge
+
+volumes:
+  pg_users_data:
+  pg_catalog_data:
+  pg_cart_data:
+  pg_inventory_data:
+  pg_orders_data:
+  pg_payments_data:
+  catalog_images:
