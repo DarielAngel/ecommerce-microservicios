@@ -13,6 +13,9 @@ public interface INotificationLogRepository
     /// </summary>
     Task<bool> TryAddAsync(SentNotification notification, CancellationToken ct);
 
+    /// <summary>Deshace un registro (se usa cuando el envío falló después de "reservar" el registro).</summary>
+    Task RemoveAsync(NotificationType type, Guid referenceId, CancellationToken ct);
+
     Task<IReadOnlyList<SentNotification>> ListRecentAsync(int count, CancellationToken ct);
 }
 

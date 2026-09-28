@@ -5,9 +5,15 @@ using Microsoft.Extensions.Logging;
 namespace Ecommerce.Notifications.Application.Common;
 
 /// <summary>
-/// Lógica común de los 3 casos de uso: (1) si ya se envió, no repetir; (2) enviar el email;
-/// (3) registrar el envío. Si el envío FALLA, la excepción sube y NO se registra nada — así
-/// MassTransit reintenta el mensaje más tarde y el cliente sí termina recibiendo su email.
+/// Lógica común de los 3 casos de uso, con el orden "reservar → enviar → (deshacer si falla)":
+///  1. Si ya existe el registro, es un duplicado: no se hace nada.
+///  2. Se "reserva" el registro ANTES de enviar. La restricción única de la base de datos
+///     garantiza que, si dos copias del mismo evento se procesan a la vez, solo una gana la
+///     reserva — la otra sale sin enviar. Así nunca hay emails duplicados, ni con concurrencia.
+///  3. Se envía el email. Si FALLA, se deshace la reserva y la excepción sube: MassTransit
+///     reintenta el mensaje y el cliente sí termina recibiendo su email.
+/// (Compromiso conocido: si el proceso muere justo entre el paso 2 y 3, ese email se pierde.
+///  Para emails transaccionales preferimos "nunca duplicar" sobre "nunca perder en un crash".)
 /// </summary>
 public class NotificationDispatcher
 {
@@ -32,15 +38,25 @@ public class NotificationDispatcher
             return;
         }
 
-        await _emailSender.SendAsync(toEmail, subject, html, ct);
+        var reserved = await _log.TryAddAsync(SentNotification.Create(type, referenceId, toEmail), ct);
 
-        var registered = await _log.TryAddAsync(SentNotification.Create(type, referenceId, toEmail), ct);
-
-        if (!registered)
+        if (!reserved)
         {
-            _logger.LogWarning(
-                "Notificación {Type} para {ReferenceId} enviada, pero otro proceso ya la había registrado (carrera entre duplicados).",
-                type, referenceId);
+            _logger.LogInformation(
+                "Notificación {Type} para {ReferenceId} ya la está procesando otra copia del evento — se ignora.", type, referenceId);
+            return;
+        }
+
+        try
+        {
+            await _emailSender.SendAsync(toEmail, subject, html, ct);
+        }
+        catch
+        {
+            // Compensación: liberar la reserva para que el reintento pueda volver a intentar el envío.
+            // CancellationToken.None a propósito: aunque la solicitud se cancele, el rollback debe ocurrir.
+            await _log.RemoveAsync(type, referenceId, CancellationToken.None);
+            throw;
         }
     }
 }

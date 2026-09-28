@@ -35,6 +35,11 @@ public class NotificationLogRepository : INotificationLogRepository
         }
     }
 
+    public Task RemoveAsync(NotificationType type, Guid referenceId, CancellationToken ct) =>
+        _context.SentNotifications
+            .Where(n => n.Type == type && n.ReferenceId == referenceId)
+            .ExecuteDeleteAsync(ct);
+
     public async Task<IReadOnlyList<SentNotification>> ListRecentAsync(int count, CancellationToken ct) =>
         await _context.SentNotifications
             .OrderByDescending(n => n.SentAtUtc)
