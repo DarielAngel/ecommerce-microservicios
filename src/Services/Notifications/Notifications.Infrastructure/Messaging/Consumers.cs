@@ -1,0 +1,48 @@
+using Ecommerce.Contracts.Events;
+using Ecommerce.Notifications.Application.Features;
+using MassTransit;
+using MediatR;
+
+namespace Ecommerce.Notifications.Infrastructure.Messaging;
+
+/// <summary>
+/// Cada consumidor traduce un evento externo (Contracts) al comando interno de Application.
+/// Si el envío falla, la excepción sube y MassTransit reintenta (ver configuración del bus).
+/// </summary>
+public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
+{
+    private readonly ISender _mediator;
+
+    public UserRegisteredConsumer(ISender mediator) => _mediator = mediator;
+
+    public Task Consume(ConsumeContext<UserRegisteredEvent> context) =>
+        _mediator.Send(
+            new SendUserRegisteredEmailCommand(context.Message.UserId, context.Message.Email, context.Message.FullName),
+            context.CancellationToken);
+}
+
+public class OrderPaidConsumer : IConsumer<OrderPaidEvent>
+{
+    private readonly ISender _mediator;
+
+    public OrderPaidConsumer(ISender mediator) => _mediator = mediator;
+
+    public Task Consume(ConsumeContext<OrderPaidEvent> context) =>
+        _mediator.Send(
+            new SendOrderPaidEmailCommand(
+                context.Message.OrderId, context.Message.Email, context.Message.FullName,
+                context.Message.TotalAmount, context.Message.Currency),
+            context.CancellationToken);
+}
+
+public class OrderShippedConsumer : IConsumer<OrderShippedEvent>
+{
+    private readonly ISender _mediator;
+
+    public OrderShippedConsumer(ISender mediator) => _mediator = mediator;
+
+    public Task Consume(ConsumeContext<OrderShippedEvent> context) =>
+        _mediator.Send(
+            new SendOrderShippedEmailCommand(context.Message.OrderId, context.Message.Email, context.Message.FullName),
+            context.CancellationToken);
+}
