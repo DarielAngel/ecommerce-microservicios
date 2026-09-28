@@ -91,13 +91,23 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await Task.WhenAll(_postgresContainer.DisposeAsync().AsTask(), _rabbitMqContainer.DisposeAsync().AsTask());
     }
 
-    public static string CreateToken(Guid userId, string role = "Cliente")
+    /// <summary>
+    /// Imita los tokens reales de Users, que incluyen email y nombre (Orders los lee del JWT
+    /// para guardarlos en la orden). Con includeEmail=false se simula un token incompleto.
+    /// </summary>
+    public static string CreateToken(Guid userId, string role = "Cliente", bool includeEmail = true)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(ClaimTypes.Role, role)
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(ClaimTypes.Role, role)
         };
+
+        if (includeEmail)
+        {
+            claims.Add(new Claim(JwtRegisteredClaimNames.Email, $"{userId:N}@test.com"));
+            claims.Add(new Claim(ClaimTypes.Name, "Cliente Prueba"));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtSecret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

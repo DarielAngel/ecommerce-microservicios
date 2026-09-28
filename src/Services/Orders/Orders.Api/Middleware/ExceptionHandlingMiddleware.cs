@@ -50,6 +50,9 @@ public class ExceptionHandlingMiddleware
         NotFoundAppException notFoundEx => (StatusCodes.Status404NotFound,
             new { message = notFoundEx.Message }),
 
+        UnauthorizedAccessException unauthorizedEx => (StatusCodes.Status401Unauthorized,
+            new { message = unauthorizedEx.Message }),
+
         HttpRequestException httpEx => (StatusCodes.Status502BadGateway,
             new { message = "Uno de los servicios necesarios (Carrito, Inventario o Pagos) no respondió correctamente. Intenta de nuevo." }),
 

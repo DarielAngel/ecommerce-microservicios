@@ -177,4 +177,86 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         orders.Should().NotBeEmpty();
     }
+
+    [Fact]
+    public async Task Checkout_ConTokenSinEmail_DeberiaDevolver401NoUn500()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid(), includeEmail: false);
+
+        var request = WithAuth(HttpMethod.Post, "/api/orders/checkout", token);
+        request.Content = JsonContent.Create(new { VariantIds = new List<Guid> { Guid.NewGuid() }, ShippingAddress = "Calle Falsa 123" });
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    private async Task<Guid> CreatePaidOrderAsync(string userToken)
+    {
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        _factory.FakePayments.ShouldCaptureSucceed = true;
+
+        var checkout = WithAuth(HttpMethod.Post, "/api/orders/checkout", userToken);
+        checkout.Content = JsonContent.Create(new { VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123" });
+        var checkoutResult = await (await _client.SendAsync(checkout)).Content.ReadFromJsonAsync<CheckoutResult>();
+
+        await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{checkoutResult!.OrderId}/confirm-payment", userToken));
+        return checkoutResult.OrderId;
+    }
+
+    [Fact]
+    public async Task Ship_ConRolAdminSobreOrdenPagada_DeberiaQuedarShipped()
+    {
+        var orderId = await CreatePaidOrderAsync(OrdersApiFactory.CreateToken(Guid.NewGuid()));
+        var adminToken = OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin");
+
+        var response = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/ship", adminToken));
+        var result = await response.Content.ReadFromJsonAsync<CheckoutResult>();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        result!.Status.Should().Be("Shipped");
+    }
+
+    [Fact]
+    public async Task Ship_LlamadoDosVeces_DeberiaSerIdempotente()
+    {
+        var orderId = await CreatePaidOrderAsync(OrdersApiFactory.CreateToken(Guid.NewGuid()));
+        var adminToken = OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin");
+
+        await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/ship", adminToken));
+        var second = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/ship", adminToken));
+
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Ship_ConRolCliente_DeberiaDevolver403()
+    {
+        var userToken = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var orderId = await CreatePaidOrderAsync(userToken);
+
+        var response = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/ship", userToken));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Ship_SobreOrdenSinPagar_DeberiaDevolver400()
+    {
+        var userToken = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+
+        var checkout = WithAuth(HttpMethod.Post, "/api/orders/checkout", userToken);
+        checkout.Content = JsonContent.Create(new { VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123" });
+        var checkoutResult = await (await _client.SendAsync(checkout)).Content.ReadFromJsonAsync<CheckoutResult>();
+
+        var response = await _client.SendAsync(WithAuth(
+            HttpMethod.Post, $"/api/orders/{checkoutResult!.OrderId}/ship", OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin")));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }
