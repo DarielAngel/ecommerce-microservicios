@@ -7,7 +7,8 @@ using Microsoft.Extensions.Logging;
 namespace Ecommerce.Orders.Application.Features;
 
 public record CheckoutCommand(
-    Guid UserId, List<Guid> VariantIdsToCheckout, string ShippingAddress, string AccessToken) : IRequest<CheckoutResult>;
+    Guid UserId, string UserEmail, string UserFullName,
+    List<Guid> VariantIdsToCheckout, string ShippingAddress, string AccessToken) : IRequest<CheckoutResult>;
 
 public record OrderLineResult(Guid VariantId, string ProductName, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal);
 
@@ -90,6 +91,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
         var order = Order.Create(
             orderId,
             request.UserId,
+            request.UserEmail,
+            request.UserFullName,
             request.ShippingAddress,
             selectedItems.Select(i => (i.VariantId, i.ProductId, i.ProductName, i.Sku, i.UnitPrice, i.Quantity)));
 

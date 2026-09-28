@@ -12,5 +12,8 @@ public enum OrderStatus
     Failed = 2,
 
     /// <summary>Cancelada explícitamente (uso futuro).</summary>
-    Cancelled = 3
+    Cancelled = 3,
+
+    /// <summary>El Admin marcó la orden como enviada.</summary>
+    Shipped = 4
 }

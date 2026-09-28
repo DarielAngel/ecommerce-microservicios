@@ -42,3 +42,10 @@ public interface IPaymentServiceClient
     Task<CreatePaymentResult> CreatePaymentAsync(Guid orderId, decimal amount, string currency, string accessToken, CancellationToken ct);
     Task<CapturePaymentResult> CapturePaymentAsync(Guid orderId, string accessToken, CancellationToken ct);
 }
+
+// ---- Eventos ----
+
+public interface IEventPublisher
+{
+    Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : class;
+}

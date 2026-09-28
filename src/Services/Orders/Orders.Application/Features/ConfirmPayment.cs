@@ -1,3 +1,4 @@
+using Ecommerce.Contracts.Events;
 using Ecommerce.Orders.Application.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ public record ConfirmPaymentCommand(Guid OrderId, string AccessToken) : IRequest
 /// Segundo tramo de la saga, disparado después de que el comprador aprueba el pago en PayPal
 /// (paso manual, fuera de nuestro control). Este handler SIEMPRE deja la orden en un estado
 /// terminal y consistente con el stock:
-///   - Captura exitosa  → Orden Paid, stock confirmado (descontado definitivo).
+///   - Captura exitosa  → Orden Paid, stock confirmado (descontado definitivo), evento OrderPaid publicado.
 ///   - Captura fallida  → Orden Failed, stock liberado (vuelve a estar disponible para otros).
 /// </summary>
 public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentCommand, CheckoutResult>
@@ -19,6 +20,7 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
     private readonly IInventoryServiceClient _inventoryClient;
     private readonly IPaymentServiceClient _paymentClient;
     private readonly ICartServiceClient _cartClient;
+    private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<ConfirmPaymentCommandHandler> _logger;
 
     public ConfirmPaymentCommandHandler(
@@ -26,12 +28,14 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
         IInventoryServiceClient inventoryClient,
         IPaymentServiceClient paymentClient,
         ICartServiceClient cartClient,
+        IEventPublisher eventPublisher,
         ILogger<ConfirmPaymentCommandHandler> logger)
     {
         _orderRepository = orderRepository;
         _inventoryClient = inventoryClient;
         _paymentClient = paymentClient;
         _cartClient = cartClient;
+        _eventPublisher = eventPublisher;
         _logger = logger;
     }
 
@@ -61,6 +65,18 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
         order.MarkPaid();
         await _inventoryClient.ConfirmReservationAsync(order.Id, request.AccessToken, ct);
         await _orderRepository.SaveChangesAsync(ct);
+
+        // Publicamos DESPUÉS de guardar (si publicar falla, la orden ya quedó pagada de verdad
+        // — no queremos revertir un pago real capturado solo porque RabbitMQ tuvo un hipo).
+        try
+        {
+            await _eventPublisher.PublishAsync(
+                new OrderPaidEvent(order.Id, order.UserId, order.UserEmail, order.UserFullName, order.TotalAmount, "USD", DateTime.UtcNow), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "No se pudo publicar OrderPaidEvent para la orden {OrderId} (no crítico).", order.Id);
+        }
 
         // Quitar del carrito los ítems que ya se compraron. Esto es una "mejor esfuerzo": si
         // Carrito no responde, no queremos revertir el pago ya capturado por eso — se loguea

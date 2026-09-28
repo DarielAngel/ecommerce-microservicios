@@ -9,6 +9,8 @@ public class Order
 
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
+    public string UserEmail { get; private set; } = null!;
+    public string UserFullName { get; private set; } = null!;
     public string ShippingAddress { get; private set; } = null!;
     public OrderStatus Status { get; private set; }
     public IReadOnlyCollection<OrderLine> Lines => _lines.AsReadOnly();
@@ -21,10 +23,12 @@ public class Order
 
     private Order() { }
 
-    private Order(Guid id, Guid userId, string shippingAddress)
+    private Order(Guid id, Guid userId, string userEmail, string userFullName, string shippingAddress)
     {
         Id = id;
         UserId = userId;
+        UserEmail = userEmail;
+        UserFullName = userFullName;
         ShippingAddress = shippingAddress;
         Status = OrderStatus.PendingPayment;
         CreatedAtUtc = DateTime.UtcNow;
@@ -42,10 +46,15 @@ public class Order
     /// stock en Inventario usándolo como clave de la reserva. Si generáramos el Id acá adentro,
     /// terminaríamos con dos Ids distintos para la misma orden — el de la reserva de stock y el
     /// de la orden persistida — y ConfirmPayment no podría confirmar/liberar la reserva correcta.
+    ///
+    /// Guarda también el email/nombre del comprador (tomados del JWT al momento del checkout)
+    /// para no tener que volver a consultar a Users cuando haya que mandar notificaciones.
     /// </summary>
     public static Order Create(
         Guid orderId,
         Guid userId,
+        string userEmail,
+        string userFullName,
         string shippingAddress,
         IEnumerable<(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal UnitPrice, int Quantity)> items)
     {
@@ -66,7 +75,7 @@ public class Order
             throw new DomainException("Todas las cantidades deben ser mayores a cero.");
         }
 
-        var order = new Order(orderId, userId, shippingAddress.Trim());
+        var order = new Order(orderId, userId, userEmail, userFullName, shippingAddress.Trim());
 
         foreach (var item in itemsList)
         {
@@ -109,6 +118,17 @@ public class Order
         }
 
         Status = OrderStatus.Cancelled;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void MarkShipped()
+    {
+        if (Status != OrderStatus.Paid)
+        {
+            throw new DomainException($"Solo se puede marcar como enviada una orden pagada (estado actual: '{Status}').");
+        }
+
+        Status = OrderStatus.Shipped;
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }
