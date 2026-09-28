@@ -1,7 +1,9 @@
 using Ecommerce.Users.Application.Common;
+using Ecommerce.Users.Infrastructure.Messaging;
 using Ecommerce.Users.Infrastructure.Persistence;
 using Ecommerce.Users.Infrastructure.Repositories;
 using Ecommerce.Users.Infrastructure.Security;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,25 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+
+        var rabbitMqSettings = configuration.GetSection(RabbitMqSettings.SectionName).Get<RabbitMqSettings>()
+            ?? new RabbitMqSettings();
+
+        // Users solo PUBLICA eventos (UserRegistered) — no consume nada.
+        services.AddMassTransit(busConfigurator =>
+        {
+            busConfigurator.UsingRabbitMq((context, rabbitConfigurator) =>
+            {
+                rabbitConfigurator.Host(rabbitMqSettings.Host, (ushort)rabbitMqSettings.Port, rabbitMqSettings.VirtualHost, hostConfigurator =>
+                {
+                    hostConfigurator.Username(rabbitMqSettings.Username);
+                    hostConfigurator.Password(rabbitMqSettings.Password);
+                });
+
+                rabbitConfigurator.ConfigureEndpoints(context);
+            });
+        });
 
         return services;
     }

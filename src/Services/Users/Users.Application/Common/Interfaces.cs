@@ -38,3 +38,8 @@ public interface IDateTimeProvider
 {
     DateTime UtcNow { get; }
 }
+
+public interface IEventPublisher
+{
+    Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : class;
+}

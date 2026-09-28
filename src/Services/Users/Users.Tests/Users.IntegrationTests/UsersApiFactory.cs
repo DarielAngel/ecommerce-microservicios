@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
+using Testcontainers.RabbitMq;
 using Xunit;
 
 namespace Ecommerce.Users.IntegrationTests;
@@ -21,9 +22,19 @@ public class UsersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         .WithPassword("test_pass")
         .Build();
 
+    private const string RabbitMqTestUsername = "test_user";
+    private const string RabbitMqTestPassword = "test_pass";
+
+    // IMPORTANTE: NO usar "guest" (restricción de loopback de RabbitMQ — ver Inventory).
+    private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
+        .WithImage("rabbitmq:3.13-management")
+        .WithUsername(RabbitMqTestUsername)
+        .WithPassword(RabbitMqTestPassword)
+        .Build();
+
     public async Task InitializeAsync()
     {
-        await _postgresContainer.StartAsync();
+        await Task.WhenAll(_postgresContainer.StartAsync(), _rabbitMqContainer.StartAsync());
 
         // IMPORTANTE: se usan variables de entorno en vez de ConfigureAppConfiguration/
         // AddInMemoryCollection. Con el modelo de hosting mínimo (WebApplication.CreateBuilder,
@@ -38,6 +49,11 @@ public class UsersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Audience", "Ecommerce.Clients.Tests");
         Environment.SetEnvironmentVariable("Jwt__AccessTokenMinutes", "15");
         Environment.SetEnvironmentVariable("AdminProvisioning__ApiKey", "test-admin-key");
+        Environment.SetEnvironmentVariable("RabbitMq__Host", _rabbitMqContainer.Hostname);
+        Environment.SetEnvironmentVariable("RabbitMq__Port", _rabbitMqContainer.GetMappedPublicPort(5672).ToString());
+        Environment.SetEnvironmentVariable("RabbitMq__VirtualHost", "/");
+        Environment.SetEnvironmentVariable("RabbitMq__Username", RabbitMqTestUsername);
+        Environment.SetEnvironmentVariable("RabbitMq__Password", RabbitMqTestPassword);
 
         // Aplica el esquema (CreateAsync sirve para tests; en producción se usan migraciones reales).
         using var scope = Services.CreateScope();
@@ -53,7 +69,12 @@ public class UsersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Audience", null);
         Environment.SetEnvironmentVariable("Jwt__AccessTokenMinutes", null);
         Environment.SetEnvironmentVariable("AdminProvisioning__ApiKey", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Host", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Port", null);
+        Environment.SetEnvironmentVariable("RabbitMq__VirtualHost", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Username", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Password", null);
 
-        await _postgresContainer.DisposeAsync();
+        await Task.WhenAll(_postgresContainer.DisposeAsync().AsTask(), _rabbitMqContainer.DisposeAsync().AsTask());
     }
 }

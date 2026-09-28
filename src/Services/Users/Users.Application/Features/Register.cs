@@ -1,8 +1,10 @@
+using Ecommerce.Contracts.Events;
 using Ecommerce.Users.Application.Common;
 using Ecommerce.Users.Domain.Entities;
 using Ecommerce.Users.Domain.ValueObjects;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ecommerce.Users.Application.Features;
 
@@ -28,17 +30,23 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResul
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _tokenGenerator;
+    private readonly IEventPublisher _eventPublisher;
+    private readonly ILogger<RegisterCommandHandler> _logger;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator tokenGenerator)
+        IJwtTokenGenerator tokenGenerator,
+        IEventPublisher eventPublisher,
+        ILogger<RegisterCommandHandler> logger)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _passwordHasher = passwordHasher;
         _tokenGenerator = tokenGenerator;
+        _eventPublisher = eventPublisher;
+        _logger = logger;
     }
 
     public async Task<AuthResult> Handle(RegisterCommand request, CancellationToken ct)
@@ -62,6 +70,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthResul
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, ct);
         await _refreshTokenRepository.SaveChangesAsync(ct);
+
+        // Publicamos DESPUÉS de guardar: si RabbitMQ falla, el usuario igual queda registrado
+        // (el email de bienvenida es "mejor esfuerzo", no debe romper el registro).
+        try
+        {
+            await _eventPublisher.PublishAsync(
+                new UserRegisteredEvent(user.Id, user.Email.Value, user.FullName, DateTime.UtcNow), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "No se pudo publicar UserRegisteredEvent para el usuario {UserId} (no crítico).", user.Id);
+        }
 
         return new AuthResult(user.Id, user.Email.Value, user.FullName, user.Role.ToString(), accessToken, rawRefreshToken);
     }
