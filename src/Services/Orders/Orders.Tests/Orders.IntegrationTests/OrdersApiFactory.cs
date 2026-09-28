@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Testcontainers.PostgreSql;
+using Testcontainers.RabbitMq;
 using Xunit;
 
 namespace Ecommerce.Orders.IntegrationTests;
@@ -20,6 +21,8 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public const string TestJwtSecret = "clave-secreta-solo-para-tests-ordenes-1234567890";
     public const string TestJwtIssuer = "Ecommerce.Users.Tests";
     public const string TestJwtAudience = "Ecommerce.Clients.Tests";
+    private const string RabbitMqTestUsername = "test_user";
+    private const string RabbitMqTestPassword = "test_pass";
 
     public FakeCartServiceClient FakeCart { get; } = new();
     public FakeInventoryServiceClient FakeInventory { get; } = new();
@@ -30,6 +33,13 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         .WithDatabase("orders_db_test")
         .WithUsername("test_user")
         .WithPassword("test_pass")
+        .Build();
+
+    // IMPORTANTE: NO usar "guest" aquí (restricción de loopback de RabbitMQ — ver Inventory).
+    private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
+        .WithImage("rabbitmq:3.13-management")
+        .WithUsername(RabbitMqTestUsername)
+        .WithPassword(RabbitMqTestPassword)
         .Build();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -49,12 +59,17 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _postgresContainer.StartAsync();
+        await Task.WhenAll(_postgresContainer.StartAsync(), _rabbitMqContainer.StartAsync());
 
         Environment.SetEnvironmentVariable("ConnectionStrings__OrdersDb", _postgresContainer.GetConnectionString());
         Environment.SetEnvironmentVariable("Jwt__Secret", TestJwtSecret);
         Environment.SetEnvironmentVariable("Jwt__Issuer", TestJwtIssuer);
         Environment.SetEnvironmentVariable("Jwt__Audience", TestJwtAudience);
+        Environment.SetEnvironmentVariable("RabbitMq__Host", _rabbitMqContainer.Hostname);
+        Environment.SetEnvironmentVariable("RabbitMq__Port", _rabbitMqContainer.GetMappedPublicPort(5672).ToString());
+        Environment.SetEnvironmentVariable("RabbitMq__VirtualHost", "/");
+        Environment.SetEnvironmentVariable("RabbitMq__Username", RabbitMqTestUsername);
+        Environment.SetEnvironmentVariable("RabbitMq__Password", RabbitMqTestPassword);
 
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
@@ -67,8 +82,13 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Secret", null);
         Environment.SetEnvironmentVariable("Jwt__Issuer", null);
         Environment.SetEnvironmentVariable("Jwt__Audience", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Host", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Port", null);
+        Environment.SetEnvironmentVariable("RabbitMq__VirtualHost", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Username", null);
+        Environment.SetEnvironmentVariable("RabbitMq__Password", null);
 
-        await _postgresContainer.DisposeAsync();
+        await Task.WhenAll(_postgresContainer.DisposeAsync().AsTask(), _rabbitMqContainer.DisposeAsync().AsTask());
     }
 
     public static string CreateToken(Guid userId, string role = "Cliente")

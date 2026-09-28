@@ -37,7 +37,7 @@ public class CheckoutCommandHandlerTests
 
         var handler = CreateHandler();
         var result = await handler.Handle(
-            new CheckoutCommand(userId, new List<Guid> { variantId }, "Calle Falsa 123", "token"), CancellationToken.None);
+            new CheckoutCommand(userId, "cliente@test.com", "Cliente Prueba", new List<Guid> { variantId }, "Calle Falsa 123", "token"), CancellationToken.None);
 
         result.ApproveUrl.Should().Be("https://paypal.test/approve/X");
         result.TotalAmount.Should().Be(40m);
@@ -53,7 +53,7 @@ public class CheckoutCommandHandlerTests
 
         var handler = CreateHandler();
         var act = async () => await handler.Handle(
-            new CheckoutCommand(userId, new List<Guid> { Guid.NewGuid() }, "Calle Falsa 123", "token"), CancellationToken.None);
+            new CheckoutCommand(userId, "cliente@test.com", "Cliente Prueba", new List<Guid> { Guid.NewGuid() }, "Calle Falsa 123", "token"), CancellationToken.None);
 
         await act.Should().ThrowAsync<ConflictAppException>();
         await _inventoryClient.DidNotReceive().ReserveStockAsync(
@@ -71,7 +71,7 @@ public class CheckoutCommandHandlerTests
 
         var handler = CreateHandler();
         var act = async () => await handler.Handle(
-            new CheckoutCommand(userId, new List<Guid> { variantId }, "Calle Falsa 123", "token"), CancellationToken.None);
+            new CheckoutCommand(userId, "cliente@test.com", "Cliente Prueba", new List<Guid> { variantId }, "Calle Falsa 123", "token"), CancellationToken.None);
 
         await act.Should().ThrowAsync<ConflictAppException>();
         await _paymentClient.DidNotReceive().CreatePaymentAsync(
@@ -92,7 +92,7 @@ public class CheckoutCommandHandlerTests
 
         var handler = CreateHandler();
         var act = async () => await handler.Handle(
-            new CheckoutCommand(userId, new List<Guid> { variantId }, "Calle Falsa 123", "token"), CancellationToken.None);
+            new CheckoutCommand(userId, "cliente@test.com", "Cliente Prueba", new List<Guid> { variantId }, "Calle Falsa 123", "token"), CancellationToken.None);
 
         await act.Should().ThrowAsync<HttpRequestException>();
 

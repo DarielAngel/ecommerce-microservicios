@@ -1,7 +1,9 @@
 using Ecommerce.Orders.Application.Common;
+using Ecommerce.Orders.Infrastructure.Messaging;
 using Ecommerce.Orders.Infrastructure.Persistence;
 using Ecommerce.Orders.Infrastructure.Repositories;
 using Ecommerce.Orders.Infrastructure.ServiceClients;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,26 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
+
+        var rabbitMqSettings = configuration.GetSection(RabbitMqSettings.SectionName).Get<RabbitMqSettings>()
+            ?? new RabbitMqSettings();
+
+        // Órdenes solo PUBLICA eventos (OrderPaid, OrderShipped) — no consume nada, así que no
+        // hace falta registrar consumidores, solo la conexión al bus.
+        services.AddMassTransit(busConfigurator =>
+        {
+            busConfigurator.UsingRabbitMq((context, rabbitConfigurator) =>
+            {
+                rabbitConfigurator.Host(rabbitMqSettings.Host, (ushort)rabbitMqSettings.Port, rabbitMqSettings.VirtualHost, hostConfigurator =>
+                {
+                    hostConfigurator.Username(rabbitMqSettings.Username);
+                    hostConfigurator.Password(rabbitMqSettings.Password);
+                });
+
+                rabbitConfigurator.ConfigureEndpoints(context);
+            });
+        });
 
         var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
             ?? new ServiceUrlsOptions();

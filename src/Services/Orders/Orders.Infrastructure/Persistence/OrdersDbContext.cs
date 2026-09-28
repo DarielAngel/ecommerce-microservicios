@@ -19,6 +19,9 @@ public class OrdersDbContext : DbContext
             order.Property(o => o.UserId).HasColumnName("user_id").IsRequired();
             order.HasIndex(o => o.UserId);
 
+            order.Property(o => o.UserEmail).HasColumnName("user_email").HasMaxLength(256).IsRequired();
+            order.Property(o => o.UserFullName).HasColumnName("user_full_name").HasMaxLength(200).IsRequired();
+
             order.Property(o => o.ShippingAddress).HasColumnName("shipping_address").HasMaxLength(500).IsRequired();
             order.Property(o => o.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20).IsRequired();
             order.Property(o => o.FailureReason).HasColumnName("failure_reason").HasMaxLength(1000);

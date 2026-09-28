@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Ecommerce.Orders.Application.Features;
 using MediatR;
@@ -32,6 +33,19 @@ public class OrdersController : ControllerBase
         return userId;
     }
 
+    /// <summary>
+    /// Email y nombre ya vienen en el JWT que emite Users — los reusamos acá para guardarlos
+    /// en la orden (y poder mandar notificaciones después) sin tener que llamar a Users por red.
+    /// </summary>
+    private (string Email, string FullName) GetUserEmailAndName()
+    {
+        var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue(JwtRegisteredClaimNames.Email)
+            ?? throw new UnauthorizedAccessException("Token sin email.");
+        var fullName = User.FindFirstValue(ClaimTypes.Name) ?? "Cliente";
+
+        return (email, fullName);
+    }
+
     private string GetRawAccessToken()
     {
         var header = Request.Headers.Authorization.ToString();
@@ -47,8 +61,9 @@ public class OrdersController : ControllerBase
     [HttpPost("checkout")]
     public async Task<ActionResult<CheckoutResult>> Checkout(CheckoutRequest request, CancellationToken ct)
     {
+        var (email, fullName) = GetUserEmailAndName();
         var result = await _mediator.Send(
-            new CheckoutCommand(GetUserId(), request.VariantIds, request.ShippingAddress, GetRawAccessToken()), ct);
+            new CheckoutCommand(GetUserId(), email, fullName, request.VariantIds, request.ShippingAddress, GetRawAccessToken()), ct);
         return Ok(result);
     }
 
@@ -60,6 +75,15 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<CheckoutResult>> ConfirmPayment(Guid orderId, CancellationToken ct)
     {
         var result = await _mediator.Send(new ConfirmPaymentCommand(orderId, GetRawAccessToken()), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Marca la orden como enviada (Admin) y dispara el email de "tu pedido va en camino".</summary>
+    [HttpPost("{orderId:guid}/ship")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<CheckoutResult>> MarkAsShipped(Guid orderId, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new MarkOrderAsShippedCommand(orderId), ct);
         return Ok(result);
     }
 

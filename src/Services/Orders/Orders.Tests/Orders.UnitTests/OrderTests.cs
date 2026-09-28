@@ -16,7 +16,7 @@ public class OrderTests
     {
         var orderId = Guid.NewGuid();
 
-        var order = Order.Create(orderId, Guid.NewGuid(), "Calle Falsa 123", new[] { SampleItem });
+        var order = Order.Create(orderId, Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", new[] { SampleItem });
 
         order.Id.Should().Be(orderId, "el Id debe ser el mismo que se usó para reservar stock antes de crear la orden");
         order.Status.Should().Be(OrderStatus.PendingPayment);
@@ -26,7 +26,7 @@ public class OrderTests
     [Fact]
     public void Create_SinItems_DeberiaLanzarDomainException()
     {
-        var act = () => Order.Create(Guid.NewGuid(), Guid.NewGuid(), "Calle Falsa 123", Array.Empty<(Guid, Guid, string, string, decimal, int)>());
+        var act = () => Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", Array.Empty<(Guid, Guid, string, string, decimal, int)>());
 
         act.Should().Throw<DomainException>();
     }
@@ -34,7 +34,7 @@ public class OrderTests
     [Fact]
     public void Create_SinDireccionDeEnvio_DeberiaLanzarDomainException()
     {
-        var act = () => Order.Create(Guid.NewGuid(), Guid.NewGuid(), "  ", new[] { SampleItem });
+        var act = () => Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "  ", new[] { SampleItem });
 
         act.Should().Throw<DomainException>();
     }
@@ -42,7 +42,7 @@ public class OrderTests
     [Fact]
     public void MarkPaid_DesdePendingPayment_DeberiaFuncionar()
     {
-        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "Calle Falsa 123", new[] { SampleItem });
+        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", new[] { SampleItem });
 
         order.MarkPaid();
 
@@ -53,7 +53,7 @@ public class OrderTests
     [Fact]
     public void MarkFailed_DespuesDePagada_DeberiaLanzarDomainException()
     {
-        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "Calle Falsa 123", new[] { SampleItem });
+        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", new[] { SampleItem });
         order.MarkPaid();
 
         var act = () => order.MarkFailed("no debería poder");
@@ -64,10 +64,31 @@ public class OrderTests
     [Fact]
     public void MarkCancelled_DespuesDePagada_DeberiaLanzarDomainException()
     {
-        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "Calle Falsa 123", new[] { SampleItem });
+        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", new[] { SampleItem });
         order.MarkPaid();
 
         var act = () => order.MarkCancelled();
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void MarkShipped_DesdePaid_DeberiaFuncionar()
+    {
+        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", new[] { SampleItem });
+        order.MarkPaid();
+
+        order.MarkShipped();
+
+        order.Status.Should().Be(OrderStatus.Shipped);
+    }
+
+    [Fact]
+    public void MarkShipped_SinEstarPagada_DeberiaLanzarDomainException()
+    {
+        var order = Order.Create(Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123", new[] { SampleItem });
+
+        var act = () => order.MarkShipped();
 
         act.Should().Throw<DomainException>();
     }

@@ -14,12 +14,13 @@ public class ConfirmPaymentCommandHandlerTests
     private readonly IInventoryServiceClient _inventoryClient = Substitute.For<IInventoryServiceClient>();
     private readonly IPaymentServiceClient _paymentClient = Substitute.For<IPaymentServiceClient>();
     private readonly ICartServiceClient _cartClient = Substitute.For<ICartServiceClient>();
+    private readonly IEventPublisher _eventPublisher = Substitute.For<IEventPublisher>();
 
     private ConfirmPaymentCommandHandler CreateHandler() =>
-        new(_orderRepository, _inventoryClient, _paymentClient, _cartClient, NullLogger<ConfirmPaymentCommandHandler>.Instance);
+        new(_orderRepository, _inventoryClient, _paymentClient, _cartClient, _eventPublisher, NullLogger<ConfirmPaymentCommandHandler>.Instance);
 
     private static Order BuildPendingOrder(Guid orderId, Guid variantId) => Order.Create(
-        orderId, Guid.NewGuid(), "Calle Falsa 123",
+        orderId, Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123",
         new[] { (variantId, Guid.NewGuid(), "Camiseta", "SKU-1", 20m, 2) });
 
     [Fact]
@@ -40,6 +41,8 @@ public class ConfirmPaymentCommandHandlerTests
         await _inventoryClient.Received(1).ConfirmReservationAsync(orderId, "token", Arg.Any<CancellationToken>());
         await _inventoryClient.DidNotReceive().ReleaseReservationAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _cartClient.Received(1).RemoveItemAsync(variantId, "token", Arg.Any<CancellationToken>());
+        await _eventPublisher.Received(1).PublishAsync(
+            Arg.Any<Ecommerce.Contracts.Events.OrderPaidEvent>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
