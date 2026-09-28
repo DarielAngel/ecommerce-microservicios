@@ -868,3 +868,105 @@ Frontend Vue) son módulos de superficie sobre esta base ya sólida.
 
 Si algo falla, copia el error exacto — si es de Docker, incluye
 `docker compose logs orders-service --tail 60`.
+
+---
+
+# Módulo 8: Notificaciones (emails)
+
+Un microservicio que **escucha eventos de RabbitMQ** y manda emails reales
+con [Resend](https://resend.com) — mismo patrón que Catálogo→Inventario.
+Los servicios que originan el evento **no esperan** al email: si Resend o
+RabbitMQ fallan, el registro o el pago igual se completan.
+
+| Evento | Publicado por | Email que se envía |
+|---|---|---|
+| `UserRegistered` | Users (al registrarse) | Bienvenida |
+| `OrderPaid` | Órdenes (al confirmar el pago) | Confirmación de pedido con total |
+| `OrderShipped` | Órdenes (`POST /api/orders/{id}/ship`, solo Admin) | "Tu pedido va en camino" |
+
+**Garantías de diseño:** nunca se manda el mismo email dos veces (idempotencia
+con restricción única en la base de datos, aun con eventos duplicados o
+concurrentes); si el envío falla, MassTransit reintenta 3 veces (cada 10 s);
+los nombres de usuario se escapan (HTML-encode) antes de entrar al email.
+
+## Cambios en módulos anteriores (por qué hay que re-correr sus tests)
+
+- **Órdenes**: nuevo estado `Shipped`; ahora guarda el email/nombre del comprador (los toma del JWT en el checkout); publica `OrderPaid`/`OrderShipped`.
+- **Users**: publica `UserRegistered` al registrar.
+- Ambos ahora usan RabbitMQ, así que **sus tests de integración levantan un RabbitMQ real** (Testcontainers), igual que Inventario.
+
+## 1. Conseguir la API key de Resend (gratis, una sola vez)
+
+1. Crea una cuenta en [resend.com](https://resend.com) (plan gratuito: 3,000 emails/mes, 100/día).
+2. Ve a **API Keys → Create API Key**, permiso **Sending access**, y copia la key (empieza con `re_`). Solo se muestra una vez.
+3. ⚠️ **Limitación del modo de pruebas:** sin verificar un dominio propio, el remitente `onboarding@resend.dev` **solo puede enviar al mismo email con el que te registraste en Resend**. Para probar, regístrate en la tienda usando **ese mismo email**. (Para enviar a cualquier cliente hay que verificar un dominio en Resend → Domains, y poner `RESEND_FROM_ADDRESS`.)
+
+Si no puedes crear la cuenta, no pasa nada: los tests automatizados (con un fake del proveedor) verifican toda la lógica, y sin API key el servicio arranca igual — solo registra un error claro en los logs y reintenta.
+
+## 2. Agregar los proyectos a la solución
+
+```bash
+dotnet sln add src/Services/Notifications/Notifications.Domain/Notifications.Domain.csproj
+dotnet sln add src/Services/Notifications/Notifications.Application/Notifications.Application.csproj
+dotnet sln add src/Services/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj
+dotnet sln add src/Services/Notifications/Notifications.Api/Notifications.Api.csproj
+dotnet sln add src/Services/Notifications/Notifications.Tests/Notifications.UnitTests/Notifications.UnitTests.csproj
+dotnet sln add src/Services/Notifications/Notifications.Tests/Notifications.IntegrationTests/Notifications.IntegrationTests.csproj
+```
+
+## 3. Correr los tests (no necesitan cuenta de Resend)
+
+```bash
+dotnet test src/Services/Notifications/Notifications.Tests/Notifications.UnitTests
+dotnet test src/Services/Notifications/Notifications.Tests/Notifications.IntegrationTests
+# Módulos modificados por este cambio:
+dotnet test src/Services/Users/Users.Tests/Users.UnitTests
+dotnet test src/Services/Users/Users.Tests/Users.IntegrationTests
+dotnet test src/Services/Orders/Orders.Tests/Orders.UnitTests
+dotnet test src/Services/Orders/Orders.Tests/Orders.IntegrationTests
+```
+
+## 4. Levantar todo
+
+**cmd.exe (Windows):**
+```cmd
+set RESEND_API_KEY=re_tu_api_key
+docker compose up -d --build
+```
+(Opcional: `set RESEND_FROM_ADDRESS=tienda@tudominio.com` si verificaste un dominio.)
+
+## 5. Checklist de verificación manual
+
+1. **Healthcheck:**
+   ```cmd
+   curl http://localhost:5007/health
+   ```
+
+2. **Email de bienvenida** — registra un cliente con el **mismo email de tu cuenta de Resend**:
+   ```cmd
+   curl -X POST http://localhost:5000/api/auth/register -H "Content-Type: application/json" -d "{\"email\":\"TU_EMAIL_DE_RESEND\",\"password\":\"Password123\",\"fullName\":\"Tu Nombre\"}"
+   ```
+   En unos segundos debe llegarte el email de bienvenida (revisa spam la primera vez).
+
+3. **Auditoría (Admin)** — lista los emails registrados como enviados:
+   ```cmd
+   curl http://localhost:5000/api/notifications -H "Authorization: Bearer %TOKEN%"
+   ```
+   Debe aparecer una entrada `UserRegistered` para ese email.
+
+4. **Email de "pedido enviado"** (necesita una orden `Paid`, o sea el flujo de PayPal del Módulo 7):
+   ```cmd
+   curl -X POST http://localhost:5000/api/orders/%ORDER_ID%/ship -H "Authorization: Bearer %TOKEN%"
+   ```
+   (`%TOKEN%` de un **Admin**.) Sin acceso a PayPal no se puede llegar a `Paid` en vivo; el flujo completo `OrderPaid → email → Shipped → email` está cubierto por los tests de integración.
+
+5. **Idempotencia** — repite el paso 4 sobre la misma orden: no debe llegar un segundo email.
+
+6. **Sin API key** (opcional, para ver el manejo de errores): levanta sin `RESEND_API_KEY`, registra un usuario y mira `docker compose logs notifications-service --tail 40`: verás el error claro *"Falta la API key de Resend"* y los reintentos — y el registro del usuario habrá funcionado igual.
+
+## Siguiente paso
+
+Quedan los módulos de superficie sobre esta base: **Panel de Administración**
+y **Frontend (Vue + Tailwind)**.
+
+Si algo falla, incluye `docker compose logs notifications-service --tail 60`.

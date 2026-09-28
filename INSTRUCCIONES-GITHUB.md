@@ -89,3 +89,26 @@ git push
 
 Así tu repo de GitHub queda tan actualizado como tu carpeta local, sin que
 yo necesite tocar tus credenciales en ningún momento.
+
+## Actualizar tu repo con los módulos nuevos (Módulo 8 en adelante)
+
+Cada vez que te entregue un `ecommerce-repo.bundle` actualizado, **conserva
+el historial** (los commits anteriores tienen exactamente los mismos hashes),
+así que basta con traer solo lo nuevo. Desde dentro de tu carpeta `ecommerce\`:
+
+```cmd
+git pull C:\ruta\al\nuevo\ecommerce-repo.bundle master
+git push
+```
+
+(Si tu rama local se llama `main`, git lo resuelve solo al hacer el pull;
+si te pide elegir, usa `git pull <ruta-al-bundle> master:main`.) Después,
+para el issue del Módulo 8:
+
+```cmd
+bash create-github-issue-modulo8.sh
+```
+
+Ese issue se crea **abierto** — ciérralo con `gh issue close <numero>` cuando
+hayas verificado los tests y el checklist.
+

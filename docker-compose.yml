@@ -136,6 +136,25 @@ services:
     networks:
       - ecommerce-net
 
+  postgres-notifications:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-notifications
+    environment:
+      POSTGRES_DB: notifications_db
+      POSTGRES_USER: notifications_svc
+      POSTGRES_PASSWORD: notifications_pass_dev
+    ports:
+      - "5439:5432"
+    volumes:
+      - pg_notifications_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notifications_svc -d notifications_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Microservicio: Users / Auth
   # ------------------------------------------------------------------
@@ -152,11 +171,17 @@ services:
       Jwt__AccessTokenMinutes: "15"
       Jwt__RefreshTokenDays: "7"
       AdminProvisioning__ApiKey: "${ADMIN_PROVISIONING_KEY:-clave-admin-de-desarrollo}"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
       - "5001:8080"  # acceso directo útil para probar/depurar sin pasar por el Gateway
     depends_on:
       postgres-users:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - ecommerce-net
@@ -294,11 +319,17 @@ services:
       ServiceUrls__CartBaseUrl: "http://cart-service:8080/"
       ServiceUrls__InventoryBaseUrl: "http://inventory-service:8080/"
       ServiceUrls__PaymentsBaseUrl: "http://payments-service:8080/"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
       - "5006:8080"
     depends_on:
       postgres-orders:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       cart-service:
         condition: service_started
@@ -306,6 +337,36 @@ services:
         condition: service_started
       payments-service:
         condition: service_started
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Microservicio: Notificaciones (emails vía Resend, disparados por eventos de RabbitMQ)
+  # ------------------------------------------------------------------
+  notifications-service:
+    build:
+      context: .
+      dockerfile: src/Services/Notifications/Notifications.Api/Dockerfile
+    container_name: ecommerce-notifications-service
+    environment:
+      ConnectionStrings__NotificationsDb: "Host=postgres-notifications;Port=5432;Database=notifications_db;Username=notifications_svc;Password=notifications_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
+      Resend__ApiKey: "${RESEND_API_KEY:-}"
+      Resend__FromAddress: "${RESEND_FROM_ADDRESS:-onboarding@resend.dev}"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5007:8080"
+    depends_on:
+      postgres-notifications:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - ecommerce-net
 
@@ -327,6 +388,7 @@ services:
       - cart-service
       - payments-service
       - orders-service
+      - notifications-service
     networks:
       - ecommerce-net
 
@@ -341,4 +403,5 @@ volumes:
   pg_inventory_data:
   pg_orders_data:
   pg_payments_data:
+  pg_notifications_data:
   catalog_images:
