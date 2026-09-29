@@ -1030,6 +1030,31 @@ El panel queda en **http://localhost:8081**.
 7. **Administradores**: crea un segundo Admin (necesitas la `ADMIN_PROVISIONING_KEY` del `docker-compose.yml`).
 8. **Notificaciones**: debe listar los emails que ya se enviaron en el Módulo 8.
 
+## Troubleshooting general: `column ... does not exist` (esquema desactualizado)
+
+Todo el proyecto usa `EnsureCreatedAsync()` en vez de migraciones reales de
+EF Core (velocidad de desarrollo, a costa de esto). **`EnsureCreated` solo
+crea las tablas la primera vez que la base de datos no existe — si ya
+existe, nunca la actualiza**, aunque el código C# haya cambiado. Esto pasó
+de verdad en el Módulo 9: agregamos `user_email`/`user_full_name` a
+`Order` en el Módulo 8, pero como `postgres-orders` ya tenía datos de
+antes, Postgres nunca se enteró.
+
+**Si ves un error `column X does not exist` en los logs de cualquier
+servicio** después de que le agregamos un campo nuevo a una entidad, es
+esto. Dos formas de arreglarlo:
+
+- **Agregar la columna a mano** (conserva los datos existentes):
+  ```cmd
+  docker exec -it ecommerce-postgres-<servicio> psql -U <usuario>_svc -d <servicio>_db -c "ALTER TABLE <tabla> ADD COLUMN IF NOT EXISTS <columna> <tipo>;"
+  ```
+- **Reiniciar el volumen de ese Postgres** (pierdes los datos de esa tabla, pero es más simple si no te importa perder los de prueba):
+  ```cmd
+  docker compose down
+  docker volume rm ecommerce_pg_<servicio>_data
+  docker compose up -d --build
+  ```
+
 ## Siguiente paso
 
 Queda un solo módulo del plan original: el **Frontend de clientes** (Vue +
