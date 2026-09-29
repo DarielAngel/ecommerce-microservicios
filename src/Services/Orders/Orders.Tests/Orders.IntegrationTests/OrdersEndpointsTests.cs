@@ -259,4 +259,40 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task ListAll_ConRolCliente_DeberiaDevolver403()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+
+        var response = await _client.SendAsync(WithAuth(HttpMethod.Get, "/api/orders/all", token));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task ListAll_ConRolAdmin_DeberiaIncluirOrdenesDeDistintosUsuarios()
+    {
+        var user1Token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var user2Token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var adminToken = OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin");
+
+        foreach (var token in new[] { user1Token, user2Token })
+        {
+            var variantId = Guid.NewGuid();
+            _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+            _factory.FakeInventory.ShouldReserveSucceed = true;
+
+            var checkout = WithAuth(HttpMethod.Post, "/api/orders/checkout", token);
+            checkout.Content = JsonContent.Create(new { VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123" });
+            await _client.SendAsync(checkout);
+        }
+
+        var response = await _client.SendAsync(WithAuth(HttpMethod.Get, "/api/orders/all?count=500", adminToken));
+        var orders = await response.Content.ReadFromJsonAsync<List<AdminOrderResult>>();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        orders!.Select(o => o.UserId).Distinct().Count().Should().BeGreaterThanOrEqualTo(2);
+        orders.Should().OnlyContain(o => !string.IsNullOrEmpty(o.UserEmail));
+    }
 }

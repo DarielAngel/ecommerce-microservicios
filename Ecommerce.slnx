@@ -1,0 +1,79 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Gateway/Gateway.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Cart/">
+    <Project Path="src/Services/Cart/Cart.Api/Cart.Api.csproj" />
+    <Project Path="src/Services/Cart/Cart.Application/Cart.Application.csproj" />
+    <Project Path="src/Services/Cart/Cart.Domain/Cart.Domain.csproj" />
+    <Project Path="src/Services/Cart/Cart.Infrastructure/Cart.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Cart/Cart.Tests/">
+    <Project Path="src/Services/Cart/Cart.Tests/Cart.IntegrationTests/Cart.IntegrationTests.csproj" />
+    <Project Path="src/Services/Cart/Cart.Tests/Cart.UnitTests/Cart.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Catalog/">
+    <Project Path="src/Services/Catalog/Catalog.Api/Catalog.Api.csproj" />
+    <Project Path="src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" />
+    <Project Path="src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <Project Path="src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Catalog/Catalog.Tests/">
+    <Project Path="src/Services/Catalog/Catalog.Tests/Catalog.IntegrationTests/Catalog.IntegrationTests.csproj" />
+    <Project Path="src/Services/Catalog/Catalog.Tests/Catalog.UnitTests/Catalog.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Inventory/">
+    <Project Path="src/Services/Inventory/Inventory.Api/Inventory.Api.csproj" />
+    <Project Path="src/Services/Inventory/Inventory.Application/Inventory.Application.csproj" />
+    <Project Path="src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
+    <Project Path="src/Services/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Inventory/Inventory.Tests/">
+    <Project Path="src/Services/Inventory/Inventory.Tests/Inventory.IntegrationTests/Inventory.IntegrationTests.csproj" />
+    <Project Path="src/Services/Inventory/Inventory.Tests/Inventory.UnitTests/Inventory.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Notifications/">
+    <Project Path="src/Services/Notifications/Notifications.Api/Notifications.Api.csproj" />
+    <Project Path="src/Services/Notifications/Notifications.Application/Notifications.Application.csproj" />
+    <Project Path="src/Services/Notifications/Notifications.Domain/Notifications.Domain.csproj" />
+    <Project Path="src/Services/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Notifications/Notifications.Tests/">
+    <Project Path="src/Services/Notifications/Notifications.Tests/Notifications.IntegrationTests/Notifications.IntegrationTests.csproj" />
+    <Project Path="src/Services/Notifications/Notifications.Tests/Notifications.UnitTests/Notifications.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Orders/">
+    <Project Path="src/Services/Orders/Orders.Api/Orders.Api.csproj" />
+    <Project Path="src/Services/Orders/Orders.Application/Orders.Application.csproj" />
+    <Project Path="src/Services/Orders/Orders.Domain/Orders.Domain.csproj" />
+    <Project Path="src/Services/Orders/Orders.Infrastructure/Orders.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Orders/Orders.Tests/">
+    <Project Path="src/Services/Orders/Orders.Tests/Orders.IntegrationTests/Orders.IntegrationTests.csproj" />
+    <Project Path="src/Services/Orders/Orders.Tests/Orders.UnitTests/Orders.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Payments/">
+    <Project Path="src/Services/Payments/Payments.Api/Payments.Api.csproj" />
+    <Project Path="src/Services/Payments/Payments.Application/Payments.Application.csproj" />
+    <Project Path="src/Services/Payments/Payments.Domain/Payments.Domain.csproj" />
+    <Project Path="src/Services/Payments/Payments.Infrastructure/Payments.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Payments/Payments.Tests/">
+    <Project Path="src/Services/Payments/Payments.Tests/Payments.IntegrationTests/Payments.IntegrationTests.csproj" />
+    <Project Path="src/Services/Payments/Payments.Tests/Payments.UnitTests/Payments.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Users/">
+    <Project Path="src/Services/Users/Users.Api/Users.Api.csproj" />
+    <Project Path="src/Services/Users/Users.Application/Users.Application.csproj" />
+    <Project Path="src/Services/Users/Users.Domain/Users.Domain.csproj" />
+    <Project Path="src/Services/Users/Users.Infrastructure/Users.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Users/Users.Tests/">
+    <Project Path="src/Services/Users/Users.Tests/Users.IntegrationTests/Users.IntegrationTests.csproj" />
+    <Project Path="src/Services/Users/Users.Tests/Users.UnitTests/Users.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/Contracts/Contracts.csproj" />
+  </Folder>
+</Solution>

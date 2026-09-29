@@ -101,4 +101,13 @@ public class OrdersController : ControllerBase
         var result = await _mediator.Send(new ListMyOrdersQuery(GetUserId()), ct);
         return Ok(result);
     }
+
+    /// <summary>Todas las órdenes del sistema, con datos del comprador — solo Admin.</summary>
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IReadOnlyList<AdminOrderResult>>> ListAll([FromQuery] int count = 100, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new ListAllOrdersQuery(count), ct);
+        return Ok(result);
+    }
 }

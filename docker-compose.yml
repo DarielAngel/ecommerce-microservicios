@@ -392,6 +392,24 @@ services:
     networks:
       - ecommerce-net
 
+  # ------------------------------------------------------------------
+  # Panel de Administración (SPA de Vue, compilada y servida por nginx)
+  # ------------------------------------------------------------------
+  admin-panel:
+    build:
+      context: .
+      dockerfile: admin-panel/Dockerfile
+      args:
+        VITE_API_BASE_URL: "http://localhost:5000"
+        VITE_ADMIN_SITE_KEY: "${ADMIN_PANEL_SITE_KEY:-clave-panel-de-desarrollo}"
+    container_name: ecommerce-admin-panel
+    ports:
+      - "8081:80"
+    depends_on:
+      - gateway
+    networks:
+      - ecommerce-net
+
 networks:
   ecommerce-net:
     driver: bridge

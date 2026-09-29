@@ -1,0 +1,1 @@
+{"id":"90b7c310-32d5-46a9-8dc9-d4b1f31c21fb","name":"Producto Prueba Inventario","description":"Para probar el evento","slug":"producto-prueba-inventario-90b7c310","categoryId":"d25941f4-4072-407b-adf7-37cc1be40cf8","isActive":true,"variants":[{"id":"d67d7418-8c00-4b20-99ad-75b12f467124","sku":"INV-TEST-001","price":15.00,"attributes":{"Talla":"U"},"isActive":true}],"images":[]}

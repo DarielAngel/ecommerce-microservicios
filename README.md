@@ -970,3 +970,73 @@ Quedan los módulos de superficie sobre esta base: **Panel de Administración**
 y **Frontend (Vue + Tailwind)**.
 
 Si algo falla, incluye `docker compose logs notifications-service --tail 60`.
+
+---
+
+# Módulo 9: Panel de Administración (Vue + Tailwind)
+
+Una SPA de Vue 3, compilada y servida por nginx en su propio contenedor.
+Habla con los microservicios **siempre a través del Gateway** — nunca
+directo a un servicio — igual que hará el frontend de clientes más adelante.
+
+## Cómo funciona el login (dos capas, a propósito)
+
+1. **Clave de sitio** (`VITE_ADMIN_SITE_KEY`): protege que cualquiera que
+   encuentre la URL vea siquiera la pantalla de login. Se compara en el
+   navegador — no es seguridad real, es una cortina.
+2. **Login real** contra `/api/auth/login` (Users), igual que cualquier
+   otro cliente. Si el rol no es `Admin`, se rechaza. El JWT que devuelve
+   es el que de verdad autoriza cada llamada a la API.
+
+## Qué incluye
+
+| Sección | Qué hace |
+|---|---|
+| Productos | Crear productos con variantes, editar datos básicos, subir imágenes |
+| Categorías | Listar y crear (con categoría padre opcional) |
+| Inventario | Consultar/ajustar stock por variante, ver alertas de bajo stock |
+| Órdenes | Ver todas las órdenes del sistema, marcar como enviadas |
+| Administradores | Crear nuevas cuentas Admin (pide la API key de aprovisionamiento del Módulo 2) |
+| Notificaciones | Auditoría de los emails enviados |
+
+## 1. Instalar dependencias y correr en modo desarrollo (opcional, sin Docker)
+
+```bash
+cd admin-panel
+corepack enable && corepack prepare pnpm@9.15.9 --activate   # una sola vez, si no tienes pnpm
+pnpm install
+pnpm run dev
+```
+
+Abre `http://localhost:5174`. Necesitas el Gateway y los demás servicios
+corriendo (`docker compose up -d`) para que las llamadas a la API funcionen.
+
+## 2. Levantar todo con Docker (recomendado)
+
+```cmd
+docker compose up -d --build
+```
+
+El panel queda en **http://localhost:8081**.
+
+## 3. Checklist de verificación manual
+
+1. Abre `http://localhost:8081` — debe pedir la clave de sitio (`clave-panel-de-desarrollo` por defecto, o la que hayas puesto en `ADMIN_PANEL_SITE_KEY`).
+2. Después de la clave, inicia sesión con un usuario **Admin** real (el que creaste en el Módulo 2, ej. `admin@test.com` / `Password123`).
+3. **Categorías**: crea una categoría nueva, confirma que aparece en la tabla.
+4. **Productos**: crea un producto nuevo con al menos una variante (SKU + precio). Al guardar te lleva a "editar" — sube una imagen ahí.
+5. **Inventario**: pega el `Id` de la variante que acabas de crear en el buscador, ajusta la cantidad en mano, confirma que se actualiza.
+6. **Órdenes**: si tienes alguna orden en estado `Paid` (Módulo 7), debe aparecer aquí con el botón "Marcar enviada".
+7. **Administradores**: crea un segundo Admin (necesitas la `ADMIN_PROVISIONING_KEY` del `docker-compose.yml`).
+8. **Notificaciones**: debe listar los emails que ya se enviaron en el Módulo 8.
+
+## Siguiente paso
+
+Queda un solo módulo del plan original: el **Frontend de clientes** (Vue +
+Tailwind) — navegar el catálogo, armar el carrito, y hacer checkout, todo
+desde una interfaz real en vez de `curl`.
+
+Si algo falla, incluye `docker compose logs admin-panel --tail 60` (poco
+probable, es solo nginx sirviendo archivos estáticos) o abre la consola
+del navegador (F12) para ver el error real de la llamada a la API.
+

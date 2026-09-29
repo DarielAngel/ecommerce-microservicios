@@ -11,8 +11,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>
     {
-        // En desarrollo local el frontend Vue corre en un puerto distinto (5173 por defecto).
-        policy.WithOrigins("http://localhost:5173")
+        // 5173: reservado para el futuro frontend de clientes. 5174: 'pnpm run dev' del
+        // panel de Admin. 8081: el panel ya compilado, servido por nginx en Docker.
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:8081")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

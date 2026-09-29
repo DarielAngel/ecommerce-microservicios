@@ -23,6 +23,12 @@ public class OrderRepository : IOrderRepository
             .OrderByDescending(o => o.CreatedAtUtc)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Order>> ListAllAsync(int count, CancellationToken ct) =>
+        await _context.Orders
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .Take(count)
+            .ToListAsync(ct);
+
     public async Task AddAsync(Order order, CancellationToken ct) =>
         await _context.Orders.AddAsync(order, ct);
 
