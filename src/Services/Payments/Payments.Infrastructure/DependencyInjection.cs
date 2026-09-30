@@ -26,25 +26,39 @@ public static class DependencyInjection
 
         services.Configure<PayPalSettings>(configuration.GetSection(PayPalSettings.SectionName));
 
-        var payPalBaseUrl = configuration[$"{PayPalSettings.SectionName}:BaseUrl"] ?? "https://api-m.sandbox.paypal.com";
+        // Por defecto, siempre el cliente REAL de PayPal. El simulado solo se activa si se
+        // pide explícitamente (PayPal:Provider=Fake) — pensado para desarrollo local, nunca
+        // para producción. Es la misma interfaz IPayPalClient que ya usan los tests, ahora
+        // también disponible para correr dentro de Docker.
+        var useFakeProvider = string.Equals(
+            configuration[$"{PayPalSettings.SectionName}:Provider"], "Fake", StringComparison.OrdinalIgnoreCase);
 
-        // Named client (no typed client) para el token provider: así PayPalAccessTokenProvider
-        // puede registrarse como singleton "de verdad" (para que el cacheo del token en memoria
-        // persista entre requests) sin chocar con el ciclo de vida que impone AddHttpClient<T>.
-        services.AddHttpClient("PayPal-OAuth", client =>
+        if (useFakeProvider)
         {
-            client.BaseAddress = new Uri(payPalBaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(20);
-        });
-        services.AddSingleton<PayPalAccessTokenProvider>();
+            services.AddSingleton<IPayPalClient, FakePayPalClient>();
+        }
+        else
+        {
+            var payPalBaseUrl = configuration[$"{PayPalSettings.SectionName}:BaseUrl"] ?? "https://api-m.sandbox.paypal.com";
 
-        // PayPalClient sí puede ser un typed client normal (transient/scoped): no cachea nada
-        // en memoria por sí mismo, delega el cacheo del token al provider de arriba.
-        services.AddHttpClient<IPayPalClient, PayPalClient>(client =>
-        {
-            client.BaseAddress = new Uri(payPalBaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(20);
-        });
+            // Named client (no typed client) para el token provider: así PayPalAccessTokenProvider
+            // puede registrarse como singleton "de verdad" (para que el cacheo del token en memoria
+            // persista entre requests) sin chocar con el ciclo de vida que impone AddHttpClient<T>.
+            services.AddHttpClient("PayPal-OAuth", client =>
+            {
+                client.BaseAddress = new Uri(payPalBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(20);
+            });
+            services.AddSingleton<PayPalAccessTokenProvider>();
+
+            // PayPalClient sí puede ser un typed client normal (transient/scoped): no cachea nada
+            // en memoria por sí mismo, delega el cacheo del token al provider de arriba.
+            services.AddHttpClient<IPayPalClient, PayPalClient>(client =>
+            {
+                client.BaseAddress = new Uri(payPalBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(20);
+            });
+        }
 
         return services;
     }

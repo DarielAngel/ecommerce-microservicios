@@ -1030,6 +1030,91 @@ El panel queda en **http://localhost:8081**.
 7. **Administradores**: crea un segundo Admin (necesitas la `ADMIN_PROVISIONING_KEY` del `docker-compose.yml`).
 8. **Notificaciones**: debe listar los emails que ya se enviaron en el Módulo 8.
 
+## Configurar las claves una sola vez (`.env`), en vez de `set` en cada terminal
+
+A lo largo de este README vas a ver comandos como `set RESEND_API_KEY=...`
+antes de `docker compose up`. Eso funciona, pero **solo dura mientras esa
+ventana de `cmd` siga abierta** — si abres una terminal nueva, o corres
+`docker compose up --build` de otro servicio en una ventana donde nunca
+hiciste el `set`, Docker recrea ese contenedor **sin** la variable, y
+vuelves a ver el mismo error de "falta la API key" que ya resolviste antes
+(nos pasó de verdad con Resend).
+
+La forma correcta de evitar esto: copia `.env.example` a `.env` (sin el
+`.example`) en la raíz del repo, y completa ahí tus valores reales una
+sola vez.
+
+```cmd
+copy .env.example .env
+notepad .env
+```
+
+Docker Compose lee `.env` automáticamente en cada `docker compose up` —
+nunca más hace falta `set`. El archivo `.env` real **nunca se sube a
+git** (ya está en `.gitignore`); solo `.env.example` (sin valores reales)
+se commitea, como plantilla para quien clone el repo después.
+
+## Probar el checkout completo sin PayPal real (modo simulado, opcional)
+
+Si no tienes acceso a una cuenta de PayPal (por región, o cualquier otro
+motivo), puedes probar el flujo completo — pagar → orden `Paid` → marcar
+`Shipped` desde el panel de Admin → emails de confirmación y de envío —
+sin salir de tu máquina. Pagos tiene un `IPayPalClient` simulado
+(`FakePayPalClient`), la misma interfaz que ya usan los tests
+automatizados, activable solo por configuración. **Por defecto siempre
+usa el PayPal real** — esto nunca se activa solo.
+
+```cmd
+set PAYPAL_PROVIDER=Fake
+docker compose up -d --build payments-service
+```
+
+Con esto activo, al hacer checkout desde el storefront:
+- No se abre ninguna pestaña de PayPal (`approveUrl` viene vacío a propósito).
+- En la pantalla de espera (`/orders/{id}/pending`), el botón "Ya aprobé el pago — confirmar" captura el pago simulado — siempre exitoso.
+- La orden queda `Paid` de verdad en tu base de datos, dispara el email de confirmación (Módulo 8), y desde el panel de Admin puedes marcarla `Shipped` y ver el segundo email.
+
+Para volver a PayPal real: `set PAYPAL_PROVIDER=Real` (o simplemente no
+definas la variable) y reconstruye `payments-service` de nuevo.
+**Nunca actives esto en producción** — un pago "simulado" nunca mueve
+dinero de verdad, aunque la orden quede marcada como pagada.
+
+## Troubleshooting general: `no such host` / `dial tcp` al construir imágenes
+
+Si `docker compose up --build` falla con algo como:
+```
+failed to resolve source metadata for ...: dialing registry-1.docker.io:443 ...: no such host
+```
+(o lo mismo con `mcr.microsoft.com`, `deb.nodesource.com`, o al descargar paquetes de NuGet/npm a mitad de un build) — **no es un bug del proyecto**, es Docker Desktop perdiendo resolución DNS dentro de WSL2, algo intermitente y conocido. Ya nos pasó antes con timeouts de NuGet.
+
+**Primero, lo más simple**: reintenta el mismo comando una o dos veces — Docker reusa todo lo que ya se cacheó, así que un reintento suele completar solo la parte que falló.
+
+**Si se repite seguido**, el arreglo de fondo es forzar el modo de red "mirrored" de WSL2:
+1. Crea (o edita) `C:\Users\<tu_usuario>\.wslconfig`:
+   ```ini
+   [wsl2]
+   networkingMode=mirrored
+   ```
+2. Cierra Docker Desktop.
+3. `wsl --shutdown` (en cmd.exe o PowerShell).
+4. Vuelve a abrir Docker Desktop y espera a que arranque del todo.
+5. Reintenta `docker compose up -d --build`.
+
+## Troubleshooting general: `.dockerignore` — solo el de la raíz cuenta
+
+Todos los servicios usan `context: .` (la raíz del repo) en `docker-compose.yml`,
+`admin-panel` y `storefront` incluidos. **Docker solo lee el `.dockerignore` que
+está en la raíz del contexto de build** — uno dentro de una subcarpeta (ej.
+`storefront/.dockerignore`) se ignora en silencio, sin ningún error. Por eso
+existe un único `.dockerignore` en la raíz del repo, con reglas para .NET
+(`**/bin`, `**/obj`) y Node (`**/node_modules`, `**/dist`) a la vez. Si algún
+día agregas un servicio nuevo y sus artefactos de build locales empiezan a
+"colarse" en la imagen (errores raros de módulos no encontrados, conflictos
+de tipo "cannot replace directory with file", contextos de build
+sospechosamente grandes en el log de `docker compose up --build`), revisa
+que el patrón esté cubierto acá, no crees un `.dockerignore` nuevo en la
+subcarpeta — no serviría de nada.
+
 ## Troubleshooting general: `column ... does not exist` (esquema desactualizado)
 
 Todo el proyecto usa `EnsureCreatedAsync()` en vez de migraciones reales de
@@ -1064,4 +1149,69 @@ desde una interfaz real en vez de `curl`.
 Si algo falla, incluye `docker compose logs admin-panel --tail 60` (poco
 probable, es solo nginx sirviendo archivos estáticos) o abre la consola
 del navegador (F12) para ver el error real de la llamada a la API.
+
+---
+
+# Módulo 10: Frontend de clientes (Vue + Tailwind)
+
+El último módulo del plan original. Una SPA de Vue 3, mismo patrón que el
+panel de Admin (pnpm, Vite, Tailwind, Pinia, nginx en Docker) — pero
+orientada al comprador, no al administrador.
+
+## Qué incluye
+
+| Sección | Qué hace |
+|---|---|
+| Catálogo | Buscar/filtrar productos por categoría, ver el detalle con sus variantes |
+| Cuenta | Registrarse e iniciar sesión (el access token se renueva solo cuando expira, con el refresh token) |
+| Carrito | Agregar, editar cantidades, quitar ítems, elegir cuáles llevar al checkout |
+| Checkout | Dirección de envío + pagar con PayPal (mismo flujo del Módulo 7: se abre una pestaña de PayPal, y al volver hay que confirmar) |
+| Mis pedidos | Historial de las propias órdenes, con el detalle de cada una |
+
+## 1. Instalar y correr en modo desarrollo (opcional, sin Docker)
+
+`corepack` activa `pnpm` para **todo tu sistema**, no por carpeta — si ya lo
+hiciste en el Módulo 9, `pnpm --version` ya te va a funcionar acá también,
+no hace falta repetirlo (y si lo repites en una terminal sin permisos de
+Administrador, en Windows puede darte `EPERM` al intentar escribir en
+`C:\Program Files\nodejs\` — ignóralo si `pnpm --version` ya responde).
+
+```bash
+cd storefront
+pnpm --version   # si no imprime nada, corre 'corepack enable && corepack prepare pnpm@9.15.9 --activate' como Administrador
+pnpm install
+pnpm run dev
+```
+
+Abre `http://localhost:5173`.
+
+## 2. Levantar todo con Docker
+
+```cmd
+docker compose up -d --build
+```
+
+## 3. Checklist de verificación manual
+
+1. Abre `http://localhost:5173` — debe verse la grilla de productos (los que ya creaste desde el panel de Admin).
+2. Busca por nombre y filtra por categoría — confirma que la grilla se actualiza.
+3. Entra a un producto, elige variante y cantidad, "Agregar al carrito" — como no estás logueado, te manda a `/login`.
+4. **Regístrate** con un usuario nuevo (o inicia sesión con uno existente).
+5. Vuelve al producto y agrégalo de verdad — el número en el ícono del carrito del header debe actualizarse.
+6. Ve a **Carrito**, ajusta una cantidad, quita otro ítem si tienes varios, confirma que el subtotal se recalcula.
+7. Selecciona los ítems que quieres comprar (checkbox) y dale a "Continuar al checkout".
+8. Llena la dirección de envío y dale a "Pagar con PayPal" — se abre una pestaña nueva con el `approveUrl` real.
+9. Si tienes acceso a PayPal: aprueba el pago ahí, vuelve a la pestaña del storefront, y dale a "Ya aprobé el pago — confirmar". Si no tienes acceso a PayPal (ver Módulo 6), este paso va a fallar con el mismo `502` de siempre — es esperado, no un bug nuevo.
+10. Ve a **Mis pedidos** — debe listar la orden que acabas de crear, con su estado real.
+
+## Con esto, el plan original de 10 módulos queda completo
+
+Infraestructura → Users → Catálogo → Inventario → Carrito → Pagos →
+Órdenes → Notificaciones → Panel de Admin → Frontend de clientes. Todo
+con tests automatizados, verificado manualmente donde fue posible, y con
+cada bug real que apareció en el camino documentado en este README.
+
+Si algo falla, incluye `docker compose logs storefront --tail 60` (poco
+probable, es solo nginx) o la consola del navegador (F12) para el error
+real de la llamada a la API.
 

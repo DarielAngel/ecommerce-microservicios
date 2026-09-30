@@ -1,0 +1,19 @@
+# Docker Compose usa `context: .` (la raíz del repo) para TODOS los servicios — .NET y
+# Node por igual. Docker solo lee el .dockerignore que está en la raíz del contexto de
+# build, nunca uno dentro de una subcarpeta — por eso este es el único que existe en
+# todo el proyecto. Cada Dockerfile hace su propio build limpio dentro del contenedor;
+# nada de lo compilado/instalado localmente debe viajar como parte del contexto.
+
+# .NET: builds locales (de correr `dotnet build`/`dotnet test`/`dotnet publish` en la máquina)
+**/bin
+**/obj
+
+# Node: dependencias y builds locales (de correr `pnpm install`/`pnpm run build` en la máquina)
+**/node_modules
+**/dist
+
+# Nunca deben viajar al contexto de build
+**/.env
+**/.env.local
+.git
+.gitignore

@@ -288,6 +288,7 @@ services:
       Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
       Jwt__Issuer: "Ecommerce.Users"
       Jwt__Audience: "Ecommerce.Clients"
+      PayPal__Provider: "${PAYPAL_PROVIDER:-Real}"
       PayPal__BaseUrl: "https://api-m.sandbox.paypal.com"
       PayPal__ClientId: "${PAYPAL_CLIENT_ID:-}"
       PayPal__ClientSecret: "${PAYPAL_CLIENT_SECRET:-}"
@@ -405,6 +406,23 @@ services:
     container_name: ecommerce-admin-panel
     ports:
       - "8081:80"
+    depends_on:
+      - gateway
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
+  # Frontend de clientes (SPA de Vue, compilada y servida por nginx)
+  # ------------------------------------------------------------------
+  storefront:
+    build:
+      context: .
+      dockerfile: storefront/Dockerfile
+      args:
+        VITE_API_BASE_URL: "http://localhost:5000"
+    container_name: ecommerce-storefront
+    ports:
+      - "5173:80"
     depends_on:
       - gateway
     networks:

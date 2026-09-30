@@ -6,7 +6,7 @@ WORKDIR /app
 # corepack ya viene con Node 20; esto activa pnpm sin tener que instalarlo aparte.
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
-COPY admin-panel/package.json admin-panel/pnpm-lock.yaml ./
+COPY admin-panel/package.json admin-panel/pnpm-lock.yaml admin-panel/.npmrc ./
 RUN pnpm install --frozen-lockfile
 
 COPY admin-panel/ .

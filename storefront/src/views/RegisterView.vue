@@ -1,0 +1,49 @@
+<script setup>
+import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+
+const auth = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+
+const fullName = ref('')
+const email = ref('')
+const password = ref('')
+
+async function submit() {
+  const ok = await auth.register(email.value, password.value, fullName.value)
+  if (ok) router.push(route.query.redirect || { name: 'home' })
+}
+</script>
+
+<template>
+  <div class="max-w-sm mx-auto mt-8">
+    <h1 class="text-xl font-semibold text-gray-900 mb-6">Crear cuenta</h1>
+    <form @submit.prevent="submit" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+        <input v-model="fullName" required autofocus
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input v-model="email" type="email" required
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input v-model="password" type="password" required minlength="8"
+          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+      </div>
+      <p v-if="auth.error" class="text-sm text-red-600">{{ auth.error }}</p>
+      <button type="submit" :disabled="auth.loading"
+        class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg py-2.5">
+        {{ auth.loading ? 'Creando...' : 'Crear cuenta' }}
+      </button>
+      <p class="text-sm text-gray-500 text-center">
+        ¿Ya tienes cuenta? <router-link :to="{ name: 'login' }" class="text-brand-600 font-medium">Inicia sesión</router-link>
+      </p>
+    </form>
+  </div>
+</template>
