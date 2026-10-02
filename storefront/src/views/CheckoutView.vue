@@ -87,8 +87,8 @@ async function submit() {
 
     <form @submit.prevent="submit" class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Dirección de envío</label>
-        <textarea v-model="shippingAddress" required rows="3" placeholder="Calle, número, ciudad, país..."
+        <label for="shipping-address" class="block text-sm font-medium text-gray-700 mb-1">Dirección de envío</label>
+        <textarea id="shipping-address" v-model="shippingAddress" required rows="3" placeholder="Calle, número, ciudad, país..."
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
       </div>
 

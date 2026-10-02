@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  backend-tests:
+    name: Backend (.NET) — unitarios e integración
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # Un proyecto a la vez, en vez de depender del formato del .slnx (más portable).
+      # Los tests de integración usan Testcontainers — los runners de GitHub ya traen
+      # Docker corriendo, así que no hace falta nada especial para eso.
+      - name: Restaurar y correr los tests de los 8 microservicios
+        run: |
+          set -e
+          for proj in $(find src -name "*.Tests.csproj" -not -path "*/obj/*" -not -path "*/bin/*" | sort); do
+            echo "::group::$proj"
+            dotnet test "$proj" --configuration Release --logger "console;verbosity=normal"
+            echo "::endgroup::"
+          done
+
+  frontend-unit-tests:
+    name: Frontend (${{ matrix.project }}) — Vitest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [admin-panel, storefront]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: ${{ matrix.project }}/pnpm-lock.yaml
+
+      - name: Instalar dependencias
+        working-directory: ${{ matrix.project }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Correr tests unitarios
+        working-directory: ${{ matrix.project }}
+        run: pnpm run test:unit
+
+  e2e-tests:
+    name: End-to-end (Playwright) — stack completo en Docker
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Claves de prueba, no secretos reales — PAYPAL_PROVIDER=Fake evita necesitar una
+      # cuenta de PayPal (ver "Probar el checkout completo sin PayPal real" en el README).
+      - name: Crear .env para Docker Compose (solo para este job, nunca se commitea)
+        run: |
+          cat > .env <<EOF
+          ADMIN_PROVISIONING_KEY=ci-admin-key
+          ADMIN_PANEL_SITE_KEY=ci-panel-key
+          JWT_SECRET=ci-jwt-secret-solo-para-pruebas-1234567890
+          PAYPAL_CLIENT_ID=
+          PAYPAL_CLIENT_SECRET=
+          PAYPAL_PROVIDER=Fake
+          RESEND_API_KEY=
+          RESEND_FROM_ADDRESS=onboarding@resend.dev
+          EOF
+
+      - name: Levantar los 18 servicios
+        run: docker compose up -d --build
+
+      - name: Esperar a que el Gateway responda
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:5000/api/categories > /dev/null; then
+              echo "Gateway listo."
+              exit 0
+            fi
+            echo "Esperando al Gateway... ($i/60)"
+            sleep 5
+          done
+          echo "::error::El Gateway nunca respondió a tiempo."
+          exit 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: e2e/pnpm-lock.yaml
+
+      - name: Instalar Playwright y sus navegadores
+        working-directory: e2e
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Correr los tests end-to-end
+        working-directory: e2e
+        env:
+          STOREFRONT_URL: http://localhost:5173
+          ADMIN_PANEL_URL: http://localhost:8081
+          GATEWAY_URL: http://localhost:5000
+          ADMIN_PANEL_SITE_KEY: ci-panel-key
+          ADMIN_PROVISIONING_KEY: ci-admin-key
+        run: pnpm test
+
+      - name: Logs de los servicios (si algo falló)
+        if: failure()
+        run: docker compose logs --tail 100
+
+      - name: Subir el reporte de Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
+      - name: Apagar el stack
+        if: always()
+        run: docker compose down -v

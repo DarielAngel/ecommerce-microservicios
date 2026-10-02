@@ -112,3 +112,22 @@ bash create-github-issue-modulo8.sh
 Ese issue se crea **abierto** — ciérralo con `gh issue close <numero>` cuando
 hayas verificado los tests y el checklist.
 
+## Completar el historial de issues (Módulos 9 y 10, bugs y pendientes)
+
+Si ya corriste `create-github-issues.sh` (Módulos 1-7) y
+`create-github-issue-modulo8.sh` antes, este script completa el resto sin
+duplicar nada: los Módulos 9 y 10, los bugs reales que encontramos y
+corregimos en el camino (ya cerrados, con la explicación de cada uno), y
+lo que queda genuinamente pendiente (abierto a propósito — no son bugs,
+son mejoras futuras fuera del alcance actual).
+
+```cmd
+bash sync-github-issues-9-10.sh
+```
+
+Al terminar deberías tener en tu repo: **10 issues de módulos** (todos
+cerrados), **7 issues de bugs/mejoras** encontrados durante la
+verificación (todos cerrados), y **4 issues de trabajo pendiente**
+(abiertos — no los cierres hasta que de verdad los resuelvas, por ejemplo
+si en algún momento consigues acceso a una cuenta de PayPal real).
+

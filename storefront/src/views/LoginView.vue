@@ -21,13 +21,13 @@ async function submit() {
     <h1 class="text-xl font-semibold text-gray-900 mb-6">Iniciar sesión</h1>
     <form @submit.prevent="submit" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input v-model="email" type="email" required autofocus
+        <label for="login-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input id="login-email" v-model="email" type="email" required autofocus
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-        <input v-model="password" type="password" required
+        <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input id="login-password" v-model="password" type="password" required
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <p v-if="auth.error" class="text-sm text-red-600">{{ auth.error }}</p>

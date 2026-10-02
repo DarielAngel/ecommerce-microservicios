@@ -53,13 +53,13 @@ onMounted(loadCategories)
       <h2 class="text-sm font-medium text-gray-900 mb-3">Nueva categoría</h2>
       <form @submit.prevent="createCategory" class="flex flex-wrap gap-3 items-end">
         <div class="flex-1 min-w-[180px]">
-          <label class="block text-xs font-medium text-gray-500 mb-1">Nombre</label>
-          <input v-model="newName" required
+          <label for="category-name" class="block text-xs font-medium text-gray-500 mb-1">Nombre</label>
+          <input id="category-name" v-model="newName" required
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         <div class="flex-1 min-w-[180px]">
-          <label class="block text-xs font-medium text-gray-500 mb-1">Categoría padre (opcional)</label>
-          <select v-model="newParentId"
+          <label for="category-parent" class="block text-xs font-medium text-gray-500 mb-1">Categoría padre (opcional)</label>
+          <select id="category-parent" v-model="newParentId"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             <option value="">— Ninguna —</option>
             <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>

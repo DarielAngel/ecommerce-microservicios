@@ -98,8 +98,8 @@ async function addToCart() {
       </div>
 
       <div v-if="product.variants.length > 1" class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Variante</label>
-        <select v-model="selectedVariantId" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        <label for="variant-select" class="block text-sm font-medium text-gray-700 mb-1">Variante</label>
+        <select id="variant-select" v-model="selectedVariantId" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
           <option v-for="v in product.variants" :key="v.id" :value="v.id">
             {{ v.sku }} — {{ Object.entries(v.attributes).map(([k, val]) => `${k}: ${val}`).join(', ') || 'Sin atributos' }}
           </option>
@@ -108,11 +108,9 @@ async function addToCart() {
 
       <div class="flex items-end gap-3 mb-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Cantidad
-            <span v-if="availableStock !== null" class="text-gray-400 font-normal">({{ availableStock }} disponibles)</span>
-          </label>
-          <input v-model="quantity" type="number" min="1" :max="availableStock ?? undefined"
+          <label for="quantity-input" class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+          <p v-if="availableStock !== null" class="text-xs text-gray-400 mb-1">{{ availableStock }} disponibles</p>
+          <input id="quantity-input" v-model="quantity" type="number" min="1" :max="availableStock ?? undefined"
             class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm" />
         </div>
         <button @click="addToCart" :disabled="adding || !selectedVariantId"

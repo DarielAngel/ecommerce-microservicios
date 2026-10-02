@@ -162,18 +162,18 @@ async function uploadImage() {
     <form v-else @submit.prevent="submit" class="space-y-5">
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-          <input v-model="name" required
+          <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+          <input id="product-name" v-model="name" required
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-          <textarea v-model="description" required rows="3"
+          <label for="product-description" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea id="product-description" v-model="description" required rows="3"
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-          <select v-model="categoryId" required
+          <label for="product-category" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+          <select id="product-category" v-model="categoryId" required
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
             <option value="" disabled>Selecciona una categoría</option>
             <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>

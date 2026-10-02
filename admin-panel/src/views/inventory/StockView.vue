@@ -75,7 +75,8 @@ onMounted(loadLowStock)
     <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
       <h2 class="text-sm font-medium text-gray-900 mb-3">Consultar / ajustar stock por variante</h2>
       <form @submit.prevent="() => lookup()" class="flex gap-3 mb-4">
-        <input v-model="variantId" placeholder="Id de la variante (GUID)" required
+        <label for="variant-id-search" class="sr-only">Id de la variante</label>
+        <input id="variant-id-search" v-model="variantId" placeholder="Id de la variante (GUID)" required
           class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500" />
         <button type="submit" :disabled="looking"
           class="bg-gray-800 hover:bg-gray-900 disabled:opacity-60 text-white text-sm font-medium rounded-lg px-4 py-2">
@@ -93,8 +94,8 @@ onMounted(loadLowStock)
         </div>
         <div class="flex items-end gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1">Nueva cantidad en mano</label>
-            <input v-model="newQuantity" type="number" min="0"
+            <label for="new-quantity" class="block text-xs font-medium text-gray-500 mb-1">Nueva cantidad en mano</label>
+            <input id="new-quantity" v-model="newQuantity" type="number" min="0"
               class="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-sm" />
           </div>
           <button @click="adjust" :disabled="adjusting"

@@ -22,18 +22,18 @@ async function submit() {
     <h1 class="text-xl font-semibold text-gray-900 mb-6">Crear cuenta</h1>
     <form @submit.prevent="submit" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
-        <input v-model="fullName" required autofocus
+        <label for="register-fullname" class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+        <input id="register-fullname" v-model="fullName" required autofocus
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input v-model="email" type="email" required
+        <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input id="register-email" v-model="email" type="email" required
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-        <input v-model="password" type="password" required minlength="8"
+        <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input id="register-password" v-model="password" type="password" required minlength="8"
           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <p v-if="auth.error" class="text-sm text-red-600">{{ auth.error }}</p>

@@ -1030,6 +1030,53 @@ El panel queda en **http://localhost:8081**.
 7. **Administradores**: crea un segundo Admin (necesitas la `ADMIN_PROVISIONING_KEY` del `docker-compose.yml`).
 8. **Notificaciones**: debe listar los emails que ya se enviaron en el Módulo 8.
 
+## Tests de los frontends (Vitest + Playwright)
+
+Además de los tests de los 8 microservicios (unitarios + integración, ya
+cubiertos desde el Módulo 2), el panel de Admin y el storefront tienen su
+propia cobertura.
+
+### Unitarios (Vitest) — no necesitan nada corriendo
+
+Prueban los stores de Pinia (`auth`, `cart`) y el cliente HTTP, en
+aislamiento. Corren en milisegundos.
+
+```bash
+cd admin-panel && pnpm install && pnpm run test:unit
+cd ../storefront && pnpm install && pnpm run test:unit
+```
+
+### End-to-end (Playwright) — necesitan el stack completo corriendo
+
+Prueban el flujo real contra los 18 servicios: login en dos capas del
+panel, catálogo, carrito, checkout completo con PayPal simulado, gestión
+de categorías/productos/inventario, etc. Un `globalSetup` siembra sus
+propios datos de prueba (categoría, producto, variante, stock, un Admin)
+vía la API antes de correr — no dependen de que ya hayas creado nada a mano.
+
+```bash
+# 1. Asegúrate de tener PAYPAL_PROVIDER=Fake en tu .env (si no, el test de
+#    checkout va a fallar con el mismo 502 esperado de siempre).
+docker compose up -d --build
+
+# 2. En otra terminal:
+cd e2e
+pnpm install
+pnpm exec playwright install --with-deps chromium
+pnpm test
+```
+
+`pnpm run test:ui` (en vez de `pnpm test`) abre la interfaz visual de
+Playwright, útil para ver paso a paso qué está haciendo cada test.
+
+### En GitHub Actions (automático)
+
+`.github/workflows/ci.yml` corre los tres niveles en cada push/PR a
+`main`/`master`: backend (.NET), frontends (Vitest), y end-to-end
+(Playwright, levantando el stack completo en Docker con `PAYPAL_PROVIDER=Fake`
+— sin necesitar ningún secreto real). Si un test end-to-end falla, el
+workflow sube el reporte HTML de Playwright como artefacto descargable.
+
 ## Configurar las claves una sola vez (`.env`), en vez de `set` en cada terminal
 
 A lo largo de este README vas a ver comandos como `set RESEND_API_KEY=...`

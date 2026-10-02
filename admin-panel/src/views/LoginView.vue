@@ -36,8 +36,8 @@ async function submitLogin() {
       <form v-if="!showLoginForm" @submit.prevent="submitSiteKey" class="space-y-4">
         <p class="text-sm text-gray-600">Ingresa la clave de acceso al panel.</p>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Clave de acceso</label>
-          <input v-model="siteKey" type="password" required autofocus
+          <label for="site-key" class="block text-sm font-medium text-gray-700 mb-1">Clave de acceso</label>
+          <input id="site-key" v-model="siteKey" type="password" required autofocus
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         <p v-if="siteKeyError" class="text-sm text-red-600">{{ siteKeyError }}</p>
@@ -50,13 +50,13 @@ async function submitLogin() {
       <form v-else @submit.prevent="submitLogin" class="space-y-4">
         <p class="text-sm text-gray-600">Inicia sesión con tu cuenta de Administrador.</p>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input v-model="email" type="email" required autofocus
+          <label for="admin-login-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input id="admin-login-email" v-model="email" type="email" required autofocus
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-          <input v-model="password" type="password" required
+          <label for="admin-login-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+          <input id="admin-login-password" v-model="password" type="password" required
             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
         <p v-if="auth.error" class="text-sm text-red-600">{{ auth.error }}</p>
