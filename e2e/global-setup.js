@@ -67,12 +67,30 @@ async function seedCatalog(adminToken, suffix) {
   const product = await productResponse.json()
   const variantId = product.variants[0].id
 
-  const stockResponse = await fetch(`${GATEWAY_URL}/api/stock/${variantId}/adjust`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-    body: JSON.stringify({ newQuantityOnHand: 50 })
-  })
-  if (!stockResponse.ok) throw new Error(`No se pudo ajustar el stock de prueba (${stockResponse.status})`)
+  // Catálogo publica VariantCreatedEvent por RabbitMQ al crear la variante, pero Inventario
+  // lo consume de forma ASÍNCRONA — la fila de stock para esta variante puede no existir
+  // todavía apenas termina la llamada de arriba. Reintentamos con backoff corto en vez de
+  // asumir que ya está lista: es la forma correcta de manejar consistencia eventual entre
+  // servicios, no un parche sobre un bug.
+  let stockResponse
+  const maxAttempts = 10
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    stockResponse = await fetch(`${GATEWAY_URL}/api/stock/${variantId}/adjust`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ newQuantityOnHand: 50 })
+    })
+    if (stockResponse.ok) break
+    if (stockResponse.status !== 404 || attempt === maxAttempts) break
+    await new Promise((resolve) => setTimeout(resolve, 500 * attempt)) // 0.5s, 1s, 1.5s...
+  }
+  if (!stockResponse.ok) {
+    throw new Error(
+      `No se pudo ajustar el stock de prueba (${stockResponse.status}) después de ${maxAttempts} intentos. ` +
+      `Si sigue dando 404, revisa que notifications-service/inventory-service estén consumiendo RabbitMQ ` +
+      `correctamente ('docker compose logs inventory-service').`
+    )
+  }
 
   return { categoryId: category.id, productId: product.id, productName, sku, variantId }
 }

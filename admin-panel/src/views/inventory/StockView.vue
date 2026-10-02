@@ -98,7 +98,7 @@ onMounted(loadLowStock)
             <input id="new-quantity" v-model="newQuantity" type="number" min="0"
               class="w-32 rounded-lg border border-gray-300 px-3 py-1.5 text-sm" />
           </div>
-          <button @click="adjust" :disabled="adjusting"
+          <button @click="adjust" :disabled="adjusting" data-testid="stock-adjust-main"
             class="bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg px-4 py-1.5">
             {{ adjusting ? 'Ajustando...' : 'Ajustar' }}
           </button>

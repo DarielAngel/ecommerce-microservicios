@@ -63,7 +63,10 @@ test.describe('Panel de Admin — gestión', () => {
     await expect(page.getByText('Disponible').locator('..').getByText('50')).toBeVisible()
 
     await page.getByLabel('Nueva cantidad en mano').fill('42')
-    await page.getByRole('button', { name: 'Ajustar' }).click()
+    // No getByRole('button', { name: 'Ajustar' }): la tabla de "bajo stock" puede tener sus
+    // propios botones "Ajustar" (uno por fila, con datos reales de pruebas manuales
+    // anteriores) — el data-testid distingue el botón principal sin ambigüedad.
+    await page.getByTestId('stock-adjust-main').click()
 
     await expect(page.getByText('Stock actualizado.')).toBeVisible()
   })
