@@ -1030,6 +1030,20 @@ El panel queda en **http://localhost:8081**.
 7. **Administradores**: crea un segundo Admin (necesitas la `ADMIN_PROVISIONING_KEY` del `docker-compose.yml`).
 8. **Notificaciones**: debe listar los emails que ya se enviaron en el Módulo 8.
 
+## Mejora: buscar producto/variante en Inventario (sin DevTools)
+
+Antes, para ajustar el stock de una variante había que copiar su Id desde
+las herramientas de desarrollador del navegador — nada intuitivo. Ahora
+Inventario tiene un buscador real: escribes el nombre del producto, eliges
+uno de los resultados, y eliges la variante (SKU + atributos + precio,
+nada de GUIDs) — eso dispara la consulta de stock sola. El campo de Id
+directo sigue existiendo como opción avanzada, colapsado detrás de "O
+pega el Id de la variante directamente".
+
+También se puede llegar a Inventario con una variante ya preseleccionada
+desde la pantalla de edición de un producto (botón "Ver/ajustar stock" en
+cada fila de la tabla de variantes).
+
 ## Mejora: imágenes reales y búsqueda avanzada en el storefront
 
 - **Imágenes reales**: el backend de Catálogo ya tenía todo esto construido

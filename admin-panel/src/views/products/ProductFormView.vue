@@ -213,7 +213,10 @@ async function uploadImage() {
         <h2 class="text-sm font-medium text-gray-900 mb-3">Variantes</h2>
         <table class="w-full text-sm">
           <thead class="text-gray-500 text-xs uppercase">
-            <tr><th class="text-left py-1">SKU</th><th class="text-left py-1">Precio</th><th class="text-left py-1">Atributos</th></tr>
+            <tr>
+              <th class="text-left py-1">SKU</th><th class="text-left py-1">Precio</th><th class="text-left py-1">Atributos</th>
+              <th class="py-1"></th>
+            </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
             <tr v-for="v in existingVariants" :key="v.id">
@@ -221,6 +224,12 @@ async function uploadImage() {
               <td class="py-1.5">${{ v.price.toFixed(2) }}</td>
               <td class="py-1.5 text-gray-500">
                 {{ Object.entries(v.attributes).map(([k, val]) => `${k}: ${val}`).join(', ') || '—' }}
+              </td>
+              <td class="py-1.5 text-right">
+                <router-link :to="{ name: 'inventory', query: { variantId: v.id } }"
+                  class="text-brand-600 hover:text-brand-700 font-medium text-xs">
+                  Ver/ajustar stock
+                </router-link>
               </td>
             </tr>
           </tbody>

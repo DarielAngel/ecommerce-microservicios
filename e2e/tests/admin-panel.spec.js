@@ -55,12 +55,17 @@ test.describe('Panel de Admin — gestión', () => {
     await expect(page.getByRole('cell', { name: seed.productName })).toBeVisible()
   })
 
-  test('consulta el stock de la variante sembrada y lo ajusta', async ({ page }) => {
+  test('busca un producto por nombre, elige su variante y ajusta el stock (sin usar el Id directo)', async ({ page }) => {
     const seed = await loadSeedData()
 
     await page.goto(`${ADMIN_PANEL_URL}/inventory`)
-    await page.getByLabel('Id de la variante').fill(seed.variantId)
-    await page.getByRole('button', { name: 'Buscar' }).click()
+    await page.getByLabel('Buscar producto por nombre').fill(seed.productName)
+
+    // El dropdown de resultados aparece sin navegar — click directo en la fila del producto.
+    await page.getByRole('button', { name: new RegExp(seed.productName) }).click()
+
+    // Al elegir el producto, aparecen sus variantes como botones — click en la que corresponde.
+    await page.getByRole('button', { name: new RegExp(seed.sku) }).click()
 
     await expect(page.getByText('Disponible').locator('..').getByText('50')).toBeVisible()
 
