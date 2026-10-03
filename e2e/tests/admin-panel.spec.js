@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { loadSeedData, loginToAdminPanel } from './helpers.js'
-import { ADMIN_PANEL_URL } from '../playwright.config.js'
+import { ADMIN_PANEL_URL, ADMIN_PANEL_SITE_KEY } from '../playwright.config.js'
 
 test.describe('Panel de Admin — acceso', () => {
   test('pide la clave de sitio y luego el login real, en ese orden', async ({ page }) => {
@@ -16,7 +16,9 @@ test.describe('Panel de Admin — acceso', () => {
 
   test('un login con credenciales invalidas muestra el error del servidor, no un error generico', async ({ page }) => {
     await page.goto(`${ADMIN_PANEL_URL}/login`)
-    await page.getByLabel('Clave de acceso').fill('clave-panel-de-desarrollo')
+    // Nunca un valor hardcodeado acá: en CI la clave real es distinta (viene del .env de
+    // ese job), y la constante ya está pensada exactamente para esto.
+    await page.getByLabel('Clave de acceso').fill(ADMIN_PANEL_SITE_KEY)
     await page.getByRole('button', { name: 'Continuar' }).click()
 
     await page.getByLabel('Email').fill('no-existe@test.com')
