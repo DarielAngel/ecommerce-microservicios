@@ -9,11 +9,16 @@ public record SearchProductsQuery(
     Guid? CategoryId,
     decimal? MinPrice,
     decimal? MaxPrice,
+    string? SortBy = null,
     int Page = 1,
     int PageSize = 20) : IRequest<PagedResult<ProductSummary>>;
 
 public class SearchProductsQueryValidator : AbstractValidator<SearchProductsQuery>
 {
+    // "name" (por defecto) es el único valor sin cambios de comportamiento respecto a antes.
+    private static readonly string[] ValidSortValues =
+        ["name", "price_asc", "price_desc", "newest"];
+
     public SearchProductsQueryValidator()
     {
         RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
@@ -22,6 +27,10 @@ public class SearchProductsQueryValidator : AbstractValidator<SearchProductsQuer
             .GreaterThanOrEqualTo(x => x.MinPrice!.Value)
             .When(x => x.MinPrice.HasValue && x.MaxPrice.HasValue)
             .WithMessage("El precio máximo debe ser mayor o igual al precio mínimo.");
+        RuleFor(x => x.SortBy)
+            .Must(s => ValidSortValues.Contains(s))
+            .When(x => !string.IsNullOrWhiteSpace(x.SortBy))
+            .WithMessage($"sortBy debe ser uno de: {string.Join(", ", ValidSortValues)}.");
     }
 }
 
@@ -41,6 +50,7 @@ public class SearchProductsQueryHandler : IRequestHandler<SearchProductsQuery, P
             request.CategoryId,
             request.MinPrice,
             request.MaxPrice,
+            request.SortBy,
             request.Page,
             request.PageSize);
 

@@ -64,8 +64,15 @@ public class ProductRepository : IProductRepository
 
         var categoriesQuery = _context.Categories;
 
+        query = filter.SortBy switch
+        {
+            "price_asc" => query.OrderBy(p => p.Variants.Min(v => v.Price)),
+            "price_desc" => query.OrderByDescending(p => p.Variants.Min(v => v.Price)),
+            "newest" => query.OrderByDescending(p => p.CreatedAtUtc),
+            _ => query.OrderBy(p => p.Name) // "name" o sin especificar: comportamiento de siempre
+        };
+
         var items = await query
-            .OrderBy(p => p.Name)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Select(p => new ProductSummary(

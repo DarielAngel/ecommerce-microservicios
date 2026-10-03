@@ -122,6 +122,50 @@ public class CatalogEndpointsTests : IClassFixture<CatalogApiFactory>
     }
 
     [Fact]
+    public async Task SearchProducts_ConSortByPrecio_DeberiaOrdenarAscendenteYDescendente()
+    {
+        var category = await CreateCategoryAsAdmin($"Orden-{Guid.NewGuid():N}");
+        AuthenticateAs("Admin");
+
+        var baratoName = $"Producto Barato {Guid.NewGuid():N}";
+        var caroName = $"Producto Caro {Guid.NewGuid():N}";
+
+        async Task CrearProducto(string name, decimal precio)
+        {
+            var response = await _client.PostAsJsonAsync("/api/products", new
+            {
+                Name = name,
+                Description = "Descripción",
+                CategoryId = category.Id,
+                Variants = new[] { new { Sku = $"SKU-{Guid.NewGuid():N}", Price = precio, Attributes = new Dictionary<string, string>() } }
+            });
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+        }
+
+        await CrearProducto(baratoName, 10m);
+        await CrearProducto(caroName, 500m);
+
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var ascResponse = await _client.GetAsync($"/api/products?categoryId={category.Id}&sortBy=price_asc");
+        var ascPage = await ascResponse.Content.ReadFromJsonAsync<PagedResult<ProductSummary>>();
+        ascPage!.Items.First().Name.Should().Be(baratoName);
+        ascPage.Items.Last().Name.Should().Be(caroName);
+
+        var descResponse = await _client.GetAsync($"/api/products?categoryId={category.Id}&sortBy=price_desc");
+        var descPage = await descResponse.Content.ReadFromJsonAsync<PagedResult<ProductSummary>>();
+        descPage!.Items.First().Name.Should().Be(caroName);
+        descPage.Items.Last().Name.Should().Be(baratoName);
+    }
+
+    [Fact]
+    public async Task SearchProducts_ConSortByInvalido_DeberiaDevolver400()
+    {
+        var response = await _client.GetAsync("/api/products?sortBy=precio-al-azar");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task CreateProduct_ConCategoriaInexistente_DeberiaDevolver404()
     {
         AuthenticateAs("Admin");

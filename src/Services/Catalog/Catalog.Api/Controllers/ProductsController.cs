@@ -33,12 +33,13 @@ public class ProductsController : ControllerBase
         [FromQuery] Guid? categoryId,
         [FromQuery] decimal? minPrice,
         [FromQuery] decimal? maxPrice,
+        [FromQuery] string? sortBy,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
         var result = await _mediator.Send(
-            new SearchProductsQuery(searchTerm, categoryId, minPrice, maxPrice, page, pageSize), ct);
+            new SearchProductsQuery(searchTerm, categoryId, minPrice, maxPrice, sortBy, page, pageSize), ct);
         return Ok(result);
     }
 

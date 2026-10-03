@@ -1030,6 +1030,23 @@ El panel queda en **http://localhost:8081**.
 7. **Administradores**: crea un segundo Admin (necesitas la `ADMIN_PROVISIONING_KEY` del `docker-compose.yml`).
 8. **Notificaciones**: debe listar los emails que ya se enviaron en el Módulo 8.
 
+## Mejora: imágenes reales y búsqueda avanzada en el storefront
+
+- **Imágenes reales**: el backend de Catálogo ya tenía todo esto construido
+  desde el Módulo 3 (subida de imágenes en el panel de Admin, servidas en
+  `/images/{fileName}` a través del Gateway) — pero el storefront nunca las
+  mostraba, siempre ponía un emoji de relleno. Ahora el catálogo y el
+  detalle de producto muestran la imagen real (la marcada como principal
+  primero), con el emoji solo como respaldo cuando el producto no tiene
+  ninguna imagen subida. El detalle de producto además muestra una tira de
+  miniaturas cuando hay más de una imagen.
+- **Ordenar por precio o más reciente**: nuevo parámetro `sortBy` en
+  `GET /api/products` (`name` por defecto, `price_asc`, `price_desc`,
+  `newest`), con su propio test de integración.
+- **Filtrar por rango de precio**: esto ya existía en el backend
+  (`minPrice`/`maxPrice`) desde antes, solo nunca estuvo expuesto en el
+  storefront — ahora hay dos campos para eso en el catálogo.
+
 ## Tests de los frontends (Vitest + Playwright)
 
 Además de los tests de los 8 microservicios (unitarios + integración, ya

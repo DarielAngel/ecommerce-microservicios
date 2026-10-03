@@ -12,6 +12,7 @@ public record ProductSearchFilter(
     Guid? CategoryId,
     decimal? MinPrice,
     decimal? MaxPrice,
+    string? SortBy,
     int Page,
     int PageSize);
 

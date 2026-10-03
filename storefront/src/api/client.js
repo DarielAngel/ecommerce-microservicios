@@ -44,4 +44,4 @@ export const api = {
   delete: (path, opts) => request('DELETE', path, opts)
 }
 
-export { ApiError }
+export { ApiError, BASE_URL }

@@ -5,6 +5,7 @@ import { api } from '../api/client'
 import { useApi } from '../api/useApi'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
+import { imageUrl } from '../utils/images'
 
 const props = defineProps({ id: { type: String, required: true } })
 
@@ -23,9 +24,20 @@ const adding = ref(false)
 const addError = ref('')
 const addSuccess = ref(false)
 const availableStock = ref(null) // null = no cargado (o no logueado todavía)
+const selectedImageId = ref(null)
 
 const selectedVariant = computed(() =>
   product.value?.variants.find(v => v.id === selectedVariantId.value) ?? null
+)
+
+// La imagen marcada como principal va primero; el resto, en el orden que ya trae la API.
+const orderedImages = computed(() => {
+  if (!product.value) return []
+  return [...product.value.images].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0))
+})
+
+const heroImage = computed(() =>
+  orderedImages.value.find(img => img.id === selectedImageId.value) ?? orderedImages.value[0] ?? null
 )
 
 // El endpoint de stock exige estar logueado — si el visitante todavía no inició
@@ -85,8 +97,18 @@ async function addToCart() {
   <div v-else-if="error" class="text-center text-red-600 py-16">{{ error }}</div>
 
   <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    <div class="aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-7xl">
-      🛒
+    <div>
+      <div class="aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-7xl overflow-hidden">
+        <img v-if="heroImage" :src="imageUrl(heroImage.fileName)" :alt="product.name" class="w-full h-full object-cover" />
+        <span v-else>🛍️</span>
+      </div>
+      <div v-if="orderedImages.length > 1" class="flex gap-2 mt-3">
+        <button v-for="img in orderedImages" :key="img.id" @click="selectedImageId = img.id"
+          class="w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0"
+          :class="heroImage?.id === img.id ? 'border-brand-600' : 'border-transparent'">
+          <img :src="imageUrl(img.fileName)" :alt="product.name" class="w-full h-full object-cover" />
+        </button>
+      </div>
     </div>
 
     <div>
