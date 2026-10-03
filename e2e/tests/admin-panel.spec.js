@@ -65,7 +65,9 @@ test.describe('Panel de Admin — gestión', () => {
     await page.getByRole('button', { name: new RegExp(seed.productName) }).click()
 
     // Al elegir el producto, aparecen sus variantes como botones — click en la que corresponde.
-    await page.getByRole('button', { name: new RegExp(seed.sku) }).click()
+    // Case-insensitive: el dominio normaliza el SKU a mayúsculas (ToUpperInvariant), a
+    // propósito — seed.sku viene tal como se envió, en minúsculas.
+    await page.getByRole('button', { name: new RegExp(seed.sku, 'i') }).click()
 
     await expect(page.getByText('Disponible').locator('..').getByText('50')).toBeVisible()
 

@@ -41,7 +41,17 @@ async function loadLowStock() {
 }
 
 let searchTimeout
+// Al elegir un producto, escribimos su nombre en productSearch para que se vea en el input
+// — pero eso por sí solo dispararía este watcher de nuevo 350ms después, reabriendo el
+// dropdown de resultados encima de los botones de variante que acabamos de mostrar. Esta
+// bandera distingue "lo escribió el usuario" de "lo acabamos de setear nosotros".
+const suppressNextSearch = ref(false)
+
 watch(productSearch, () => {
+  if (suppressNextSearch.value) {
+    suppressNextSearch.value = false
+    return
+  }
   clearTimeout(searchTimeout)
   if (!productSearch.value.trim()) {
     productResults.value = []
@@ -62,6 +72,7 @@ watch(productSearch, () => {
 
 async function selectProduct(summary) {
   productResults.value = []
+  suppressNextSearch.value = true
   productSearch.value = summary.name
   selectedProduct.value = await api.get(`/api/products/${summary.id}`)
 }
