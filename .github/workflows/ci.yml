@@ -21,10 +21,25 @@ jobs:
       # Un proyecto a la vez, en vez de depender del formato del .slnx (más portable).
       # Los tests de integración usan Testcontainers — los runners de GitHub ya traen
       # Docker corriendo, así que no hace falta nada especial para eso.
-      - name: Restaurar y correr los tests de los 8 microservicios
+      - name: Restaurar y correr los tests de todos los microservicios
         run: |
           set -e
-          for proj in $(find src -name "*.Tests.csproj" -not -path "*/obj/*" -not -path "*/bin/*" | sort); do
+          # El patrón es *Tests.csproj (sin punto) para cubrir Cart.UnitTests.csproj y
+          # Cart.IntegrationTests.csproj. Con "*.Tests.csproj" no encontraba ninguno y el job
+          # salía en verde sin probar nada.
+          projects=$(find src -name "*Tests.csproj" -not -path "*/obj/*" -not -path "*/bin/*" | sort)
+          count=$(echo "$projects" | grep -c . || true)
+
+          # Candado: si por un cambio de nombres dejamos de encontrar proyectos, el job FALLA
+          # en vez de pasar en silencio. 16 = 8 servicios x (unitarios + integración).
+          if [ "$count" -lt 16 ]; then
+            echo "::error::Se esperaban al menos 16 proyectos de test y se encontraron $count"
+            echo "$projects"
+            exit 1
+          fi
+          echo "Proyectos de test encontrados: $count"
+
+          for proj in $projects; do
             echo "::group::$proj"
             dotnet test "$proj" --configuration Release --logger "console;verbosity=normal"
             echo "::endgroup::"
