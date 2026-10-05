@@ -11,7 +11,11 @@ RUN pnpm install --frozen-lockfile
 COPY storefront/ .
 
 ARG VITE_API_BASE_URL=http://localhost:5000
+ARG VITE_STORE_NAME=Tienda
+ARG VITE_STORE_TAGLINE="Todo lo que necesitas, en un solo lugar"
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_STORE_NAME=$VITE_STORE_NAME
+ENV VITE_STORE_TAGLINE=$VITE_STORE_TAGLINE
 
 RUN pnpm run build
 

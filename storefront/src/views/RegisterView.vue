@@ -19,30 +19,30 @@ async function submit() {
 
 <template>
   <div class="max-w-sm mx-auto mt-8">
-    <h1 class="text-xl font-semibold text-gray-900 mb-6">Crear cuenta</h1>
-    <form @submit.prevent="submit" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+    <h1 class="text-xl font-semibold text-ink mb-6">Crear cuenta</h1>
+    <form @submit.prevent="submit" class="bg-surface border border-line rounded-xl p-6 space-y-4">
       <div>
-        <label for="register-fullname" class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+        <label for="register-fullname" class="block text-sm font-medium text-ink-soft mb-1">Nombre completo</label>
         <input id="register-fullname" v-model="fullName" required autofocus
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <div>
-        <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label for="register-email" class="block text-sm font-medium text-ink-soft mb-1">Email</label>
         <input id="register-email" v-model="email" type="email" required
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
       <div>
-        <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <label for="register-password" class="block text-sm font-medium text-ink-soft mb-1">Contraseña</label>
         <input id="register-password" v-model="password" type="password" required minlength="8"
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
-      <p v-if="auth.error" class="text-sm text-red-600">{{ auth.error }}</p>
+      <p v-if="auth.error" class="text-sm text-red-600 dark:text-red-400">{{ auth.error }}</p>
       <button type="submit" :disabled="auth.loading"
         class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg py-2.5">
         {{ auth.loading ? 'Creando...' : 'Crear cuenta' }}
       </button>
-      <p class="text-sm text-gray-500 text-center">
-        ¿Ya tienes cuenta? <router-link :to="{ name: 'login' }" class="text-brand-600 font-medium">Inicia sesión</router-link>
+      <p class="text-sm text-ink-muted text-center">
+        ¿Ya tienes cuenta? <router-link :to="{ name: 'login' }" class="text-brand-ink font-medium">Inicia sesión</router-link>
       </p>
     </form>
   </div>

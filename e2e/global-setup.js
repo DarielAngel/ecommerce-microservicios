@@ -3,17 +3,26 @@ import { GATEWAY_URL, ADMIN_PROVISIONING_KEY } from './playwright.config.js'
 
 const SEED_FILE = new URL('./.auth/test-data.json', import.meta.url)
 
-async function waitForGateway(maxAttempts = 30, delayMs = 2000) {
+async function waitForUrl(url, label, maxAttempts = 30, delayMs = 2000) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const response = await fetch(`${GATEWAY_URL}/api/categories`)
+      const response = await fetch(url)
       if (response.ok) return
     } catch {
-      // el Gateway (o Catalog detrás de él) todavía no responde — reintentar
+      // el servicio todavía no responde — reintentar
     }
     await new Promise((resolve) => setTimeout(resolve, delayMs))
   }
-  throw new Error(`El Gateway en ${GATEWAY_URL} no respondió después de ${maxAttempts} intentos. ¿Corriste 'docker compose up -d'?`)
+  throw new Error(`${label} (${url}) no respondió después de ${maxAttempts} intentos. ¿Corriste 'docker compose up -d'?`)
+}
+
+// El Gateway (con Catálogo detrás) y el servicio de Reseñas arrancan por separado.
+async function waitForGateway() {
+  await waitForUrl(`${GATEWAY_URL}/api/categories`, 'El Gateway')
+  await waitForUrl(
+    `${GATEWAY_URL}/api/reviews/products/00000000-0000-0000-0000-000000000001/summary`,
+    'El servicio de Reseñas'
+  )
 }
 
 async function ensureAdmin(email, password, fullName) {

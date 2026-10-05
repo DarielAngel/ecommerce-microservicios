@@ -79,7 +79,7 @@ jobs:
           RESEND_FROM_ADDRESS=onboarding@resend.dev
           EOF
 
-      - name: Levantar los 18 servicios
+      - name: Levantar los 20 servicios
         run: docker compose up -d --build
 
       - name: Esperar a que el Gateway responda
@@ -93,6 +93,19 @@ jobs:
             sleep 5
           done
           echo "::error::El Gateway nunca respondió a tiempo."
+          exit 1
+
+      - name: Esperar a que Reseñas responda a través del Gateway
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:5000/api/reviews/products/00000000-0000-0000-0000-000000000001/summary > /dev/null; then
+              echo "Reseñas listo."
+              exit 0
+            fi
+            echo "Esperando a Reseñas... ($i/60)"
+            sleep 5
+          done
+          echo "::error::El servicio de Reseñas nunca respondió a tiempo."
           exit 1
 
       - uses: pnpm/action-setup@v4

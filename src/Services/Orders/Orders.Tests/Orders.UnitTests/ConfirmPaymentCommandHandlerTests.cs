@@ -46,6 +46,36 @@ public class ConfirmPaymentCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ConCapturaExitosa_DeberiaPublicarElEventoConLosIdsDeProductoSinRepetir()
+    {
+        var orderId = Guid.NewGuid();
+        var productA = Guid.NewGuid();
+        var productB = Guid.NewGuid();
+        var order = Order.Create(
+            orderId, Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123",
+            new[]
+            {
+                (Guid.NewGuid(), productA, "Camiseta", "SKU-1", 20m, 1),
+                (Guid.NewGuid(), productA, "Camiseta (otra talla)", "SKU-2", 20m, 1), // mismo producto, otra variante
+                (Guid.NewGuid(), productB, "Gorra", "SKU-3", 10m, 1)
+            });
+
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>())
+            .Returns(new CapturePaymentResult(true, "Captured"));
+
+        Ecommerce.Contracts.Events.OrderPaidEvent? published = null;
+        await _eventPublisher.PublishAsync(
+            Arg.Do<Ecommerce.Contracts.Events.OrderPaidEvent>(e => published = e), Arg.Any<CancellationToken>());
+
+        await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        published.Should().NotBeNull();
+        published!.ProductIds.Should().NotBeNull();
+        published.ProductIds.Should().BeEquivalentTo(new[] { productA, productB }, "los productos se informan una sola vez aunque se compren dos variantes");
+    }
+
+    [Fact]
     public async Task Handle_ConCapturaFallida_DeberiaMarcarFallidaYLiberarElStock()
     {
         var orderId = Guid.NewGuid();

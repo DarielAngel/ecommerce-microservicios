@@ -13,7 +13,12 @@ async function request(method, path, { body, token, params } = {}) {
   const url = new URL(BASE_URL + path)
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, value)
+      if (Array.isArray(value)) {
+        // ASP.NET enlaza Guid[] desde parámetros repetidos (ids=a&ids=b), no desde "a,b".
+        value.forEach((item) => url.searchParams.append(key, item))
+      } else if (value !== undefined && value !== null && value !== '') {
+        url.searchParams.set(key, value)
+      }
     })
   }
 

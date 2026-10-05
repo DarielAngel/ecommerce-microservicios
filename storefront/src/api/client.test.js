@@ -65,3 +65,24 @@ describe('api client (storefront)', () => {
     expect(error.message).toContain('500')
   })
 })
+
+describe('api client (storefront) — parámetros de tipo arreglo', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn().mockResolvedValue(mockFetchResponse({ body: [] }))
+  })
+
+  it('envía los arreglos como parámetros repetidos (ids=a&ids=b), que es lo que ASP.NET espera para Guid[]', async () => {
+    await api.get('/api/reviews/summaries', { params: { productIds: ['a', 'b'], q: 'z' } })
+
+    const url = new URL(global.fetch.mock.calls[0][0])
+    expect(url.searchParams.getAll('productIds')).toEqual(['a', 'b'])
+    expect(url.searchParams.get('q')).toBe('z')
+  })
+
+  it('omite los arreglos vacíos', async () => {
+    await api.get('/api/reviews/summaries', { params: { productIds: [] } })
+
+    const url = new URL(global.fetch.mock.calls[0][0])
+    expect(url.searchParams.has('productIds')).toBe(false)
+  })
+})

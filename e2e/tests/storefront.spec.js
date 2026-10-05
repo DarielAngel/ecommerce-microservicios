@@ -7,7 +7,10 @@ test.describe('Storefront — catálogo público', () => {
     const seed = await loadSeedData()
 
     await page.goto(`${STOREFRONT_URL}/`)
-    await page.getByPlaceholder('Buscar productos...').fill(seed.productName)
+    // El buscador vive en el encabezado: se escribe y se confirma con Enter.
+    const search = page.getByPlaceholder('Buscar productos...')
+    await search.fill(seed.productName)
+    await search.press('Enter')
 
     const card = page.getByRole('link', { name: new RegExp(seed.productName) })
     await expect(card).toBeVisible()
@@ -83,5 +86,52 @@ test.describe('Storefront — carrito y checkout', () => {
     await page.getByRole('link', { name: 'Ver mis pedidos' }).click()
     await expect(page).toHaveURL(/\/orders$/)
     await expect(page.getByText('Pagada')).toBeVisible()
+  })
+})
+
+test.describe('Storefront — identidad visual y navegación', () => {
+  test('el modo oscuro se activa con el botón y se conserva al recargar', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.goto(`${STOREFRONT_URL}/`)
+    const html = page.locator('html')
+    await expect(html).not.toHaveClass(/dark/)
+
+    await page.getByRole('button', { name: 'Cambiar a modo oscuro' }).click()
+    await expect(html).toHaveClass(/dark/)
+
+    await page.reload()
+    await expect(html).toHaveClass(/dark/)
+    await expect(page.getByRole('button', { name: 'Cambiar a modo claro' })).toBeVisible()
+  })
+
+  test('respeta la preferencia de modo oscuro del sistema en la primera visita', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.goto(`${STOREFRONT_URL}/`)
+
+    await expect(page.locator('html')).toHaveClass(/dark/)
+  })
+
+  test('el buscador del encabezado funciona desde cualquier pantalla', async ({ page }) => {
+    const seed = await loadSeedData()
+    await page.goto(`${STOREFRONT_URL}/login`)
+
+    const search = page.getByPlaceholder('Buscar productos...')
+    await search.fill(seed.productName)
+    await search.press('Enter')
+
+    await expect(page).toHaveURL(/\?q=/)
+    await expect(page.getByRole('link', { name: new RegExp(seed.productName) })).toBeVisible()
+  })
+
+  test('la portada muestra el banner de bienvenida solo cuando no hay búsqueda', async ({ page }) => {
+    await page.goto(`${STOREFRONT_URL}/`)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+    const search = page.getByPlaceholder('Buscar productos...')
+    await search.fill('algo')
+    await search.press('Enter')
+
+    await expect(page).toHaveURL(/\?q=algo/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(0)
   })
 })

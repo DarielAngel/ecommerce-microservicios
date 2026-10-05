@@ -155,6 +155,25 @@ services:
     networks:
       - ecommerce-net
 
+  postgres-reviews:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-reviews
+    environment:
+      POSTGRES_DB: reviews_db
+      POSTGRES_USER: reviews_svc
+      POSTGRES_PASSWORD: reviews_pass_dev
+    ports:
+      - "5440:5432"
+    volumes:
+      - pg_reviews_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reviews_svc -d reviews_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Microservicio: Users / Auth
   # ------------------------------------------------------------------
@@ -372,6 +391,34 @@ services:
       - ecommerce-net
 
   # ------------------------------------------------------------------
+  # Microservicio: Reseñas y calificaciones (Fase 1 del roadmap)
+  # ------------------------------------------------------------------
+  reviews-service:
+    build:
+      context: .
+      dockerfile: src/Services/Reviews/Reviews.Api/Dockerfile
+    container_name: ecommerce-reviews-service
+    environment:
+      ConnectionStrings__ReviewsDb: "Host=postgres-reviews;Port=5432;Database=reviews_db;Username=reviews_svc;Password=reviews_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5008:8080"
+    depends_on:
+      postgres-reviews:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
   # Gateway — único punto de entrada para el frontend
   # ------------------------------------------------------------------
   gateway:
@@ -390,6 +437,7 @@ services:
       - payments-service
       - orders-service
       - notifications-service
+      - reviews-service
     networks:
       - ecommerce-net
 
@@ -420,6 +468,8 @@ services:
       dockerfile: storefront/Dockerfile
       args:
         VITE_API_BASE_URL: "http://localhost:5000"
+        VITE_STORE_NAME: "${STORE_NAME:-Tienda}"
+        VITE_STORE_TAGLINE: "${STORE_TAGLINE:-Todo lo que necesitas, en un solo lugar}"
     container_name: ecommerce-storefront
     ports:
       - "5173:80"
@@ -440,4 +490,5 @@ volumes:
   pg_orders_data:
   pg_payments_data:
   pg_notifications_data:
+  pg_reviews_data:
   catalog_images:

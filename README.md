@@ -1079,7 +1079,7 @@ cd ../storefront && pnpm install && pnpm run test:unit
 
 ### End-to-end (Playwright) — necesitan el stack completo corriendo
 
-Prueban el flujo real contra los 18 servicios: login en dos capas del
+Prueban el flujo real contra los 20 servicios: login en dos capas del
 panel, catálogo, carrito, checkout completo con PayPal simulado, gestión
 de categorías/productos/inventario, etc. Un `globalSetup` siembra sus
 propios datos de prueba (categoría, producto, variante, stock, un Admin)
@@ -1292,4 +1292,87 @@ cada bug real que apareció en el camino documentado en este README.
 Si algo falla, incluye `docker compose logs storefront --tail 60` (poco
 probable, es solo nginx) o la consola del navegador (F12) para el error
 real de la llamada a la API.
+
+---
+
+# Fase de crecimiento: funcionalidades inspiradas en el mercado
+
+Después de los 10 módulos originales se analizaron 25 plataformas de comercio electrónico
+(ver [`docs/ANALISIS-MERCADO.md`](docs/ANALISIS-MERCADO.md)) y se armó un roadmap por fases
+(ver [`docs/ROADMAP-FUNCIONALIDADES.md`](docs/ROADMAP-FUNCIONALIDADES.md)). Cada tarea se
+construye con **las pruebas escritas primero** y respetando la arquitectura: un bounded context
+por microservicio, su propia base de datos, eventos por RabbitMQ y todo detrás del Gateway.
+
+## Fase 0 — Identidad visual (storefront)
+
+- **Tokens de diseño semánticos** (`bg-surface`, `text-ink`, `border-line`, `text-brand-ink`...):
+  cambian solos entre modo claro y oscuro mediante variables CSS, así ninguna vista necesita
+  variantes `dark:` para sus superficies y textos.
+- **Modo oscuro** con botón en el encabezado; respeta la preferencia del sistema la primera vez y
+  recuerda la elección. Un script en `index.html` lo aplica antes de pintar (sin parpadeo).
+- **Encabezado** con buscador global (`?q=`), carrito con contador y menú de usuario; **portada**
+  con banner; tarjetas de producto unificadas; esqueletos de carga; avisos (toasts); pie de página.
+- **Nombre y lema configurables** en `.env`, aplicados al reconstruir el storefront:
+  ```
+  STORE_NAME=Mi Tienda
+  STORE_TAGLINE=Lo mejor para tu casa
+  ```
+  ```cmd
+  docker compose up -d --build storefront
+  ```
+
+## Fase 1 — Reseñas y calificaciones (servicio `Reviews`, puerto 5008)
+
+- Una reseña por cliente y producto (índice UNIQUE en la base: es la defensa real ante dos
+  requests simultáneos), calificación 1–5, título (máx. 100) y comentario opcional (máx. 2000).
+- El nombre se muestra protegido (**"Ana P."**) y la API pública **nunca** expone el id del usuario.
+- **Compra verificada**: Órdenes publica `OrderPaidEvent` con los `ProductIds` comprados y Reseñas
+  lo consume. Si el cliente ya había reseñado antes de comprar, su reseña pasa a verificada.
+- Endpoints (todos por el Gateway, `http://localhost:5000`):
+
+  | Método | Ruta | Acceso |
+  |---|---|---|
+  | GET | `/api/reviews/products/{id}?sort=newest\|highest\|lowest&page=&pageSize=` | público |
+  | GET | `/api/reviews/products/{id}/summary` | público |
+  | GET | `/api/reviews/summaries?productIds=a&productIds=b` | público (hasta 100) |
+  | GET | `/api/reviews/products/{id}/mine` | cliente (404 si aún no reseñó) |
+  | POST | `/api/reviews/products/{id}` | cliente (409 si ya reseñó) |
+  | PUT | `/api/reviews/{reviewId}` | autor |
+  | DELETE | `/api/reviews/{reviewId}` | autor o **Admin** (moderación) |
+
+- **Cola propia por servicio**: el consumidor de Reseñas usa el prefijo `reviews-`
+  (`reviews-order-paid`). Si usara el mismo nombre que el de Notificaciones, ambos compartirían una
+  cola y RabbitMQ le entregaría cada evento a *uno solo* de los dos. Hay una prueba que lo protege.
+- Compatibilidad: `OrderPaidEvent.ProductIds` es un campo **opcional al final**; los consumidores
+  y eventos anteriores siguen funcionando.
+
+### Cómo probarlo
+
+```cmd
+:: Servicios nuevos (Postgres + Reseñas) y el Gateway con su nueva ruta:
+docker compose up -d --build reviews-service postgres-reviews gateway storefront
+
+:: Pruebas del servicio (Docker requerido: levantan Postgres y RabbitMQ reales)
+dotnet test src\Services\Reviews\Reviews.Tests\Reviews.UnitTests
+dotnet test src\Services\Reviews\Reviews.Tests\Reviews.IntegrationTests
+
+:: Cambió el contrato compartido y Órdenes: vuelve a correr sus pruebas
+dotnet test src\Services\Orders\Orders.Tests\Orders.UnitTests
+dotnet test src\Services\Notifications\Notifications.Tests\Notifications.UnitTests
+
+:: Frontend
+cd storefront && pnpm install && pnpm run test:unit
+cd ..\e2e && pnpm test
+```
+
+Checklist manual: abre un producto → verás **"Opiniones de clientes"**. Como invitado se ve la
+invitación a iniciar sesión; con sesión, el formulario (estrellas con mouse y con las flechas del
+teclado). Publica, edita y elimina (la eliminación pide confirmación). En la portada las tarjetas
+muestran estrellas y cantidad. Compra el producto (PayPal simulado) y vuelve: tu reseña tendrá la
+insignia **Compra verificada**.
+
+> **Si ya tenías datos locales**: el servicio crea su esquema solo (`EnsureCreated`) en su propia
+> base nueva, no hay nada que migrar.
+
+> **Contenedores**: ahora son **20** (se suman `postgres-reviews` y `reviews-service`).
 

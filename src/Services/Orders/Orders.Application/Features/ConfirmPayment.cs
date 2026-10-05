@@ -71,7 +71,9 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
         try
         {
             await _eventPublisher.PublishAsync(
-                new OrderPaidEvent(order.Id, order.UserId, order.UserEmail, order.UserFullName, order.TotalAmount, "USD", DateTime.UtcNow), ct);
+                new OrderPaidEvent(
+                    order.Id, order.UserId, order.UserEmail, order.UserFullName, order.TotalAmount, "USD", DateTime.UtcNow,
+                    order.Lines.Select(l => l.ProductId).Distinct().ToList()), ct);
         }
         catch (Exception ex)
         {

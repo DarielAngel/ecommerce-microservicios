@@ -6,6 +6,9 @@ import { useApi } from '../api/useApi'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import { imageUrl } from '../utils/images'
+import { formatMoney } from '../utils/format'
+import StarRating from '../components/StarRating.vue'
+import ReviewsSection from '../components/ReviewsSection.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 
@@ -15,6 +18,7 @@ const cartStore = useCartStore()
 const apiClient = useApi()
 
 const product = ref(null)
+const rating = ref(null) // resumen de reseñas, lo emite ReviewsSection y se mantiene al día
 const loading = ref(true)
 const error = ref('')
 
@@ -93,12 +97,13 @@ async function addToCart() {
 </script>
 
 <template>
-  <div v-if="loading" class="text-center text-gray-400 py-16">Cargando...</div>
-  <div v-else-if="error" class="text-center text-red-600 py-16">{{ error }}</div>
+  <div v-if="loading" class="text-center text-ink-muted py-16">Cargando...</div>
+  <div v-else-if="error" class="text-center text-red-600 dark:text-red-400 py-16">{{ error }}</div>
 
-  <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <div v-else>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
     <div>
-      <div class="aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-7xl overflow-hidden">
+      <div class="aspect-square overflow-hidden rounded-2xl border border-line bg-surface-muted flex items-center justify-center text-7xl">
         <img v-if="heroImage" :src="imageUrl(heroImage.fileName)" :alt="product.name" class="w-full h-full object-cover" />
         <span v-else>🛍️</span>
       </div>
@@ -112,16 +117,23 @@ async function addToCart() {
     </div>
 
     <div>
-      <h1 class="text-2xl font-semibold text-gray-900 mb-2">{{ product.name }}</h1>
-      <p class="text-gray-600 mb-4">{{ product.description }}</p>
+      <h1 class="text-3xl font-bold tracking-tight text-ink mb-2">{{ product.name }}</h1>
+      <a href="#resenas" class="mb-3 inline-flex items-center gap-2 text-sm text-ink-muted hover:text-brand-ink" data-testid="rating-link">
+        <template v-if="rating && rating.count > 0">
+          <StarRating :value="rating.average" size="sm" />
+          <span>{{ rating.average.toFixed(1) }} · {{ rating.count }} {{ rating.count === 1 ? 'reseña' : 'reseñas' }}</span>
+        </template>
+        <span v-else>Sé el primero en opinar</span>
+      </a>
+      <p class="text-ink-soft mb-5">{{ product.description }}</p>
 
-      <div v-if="selectedVariant" class="text-2xl font-semibold text-gray-900 mb-4">
-        ${{ selectedVariant.price.toFixed(2) }}
+      <div v-if="selectedVariant" class="text-3xl font-bold text-brand-ink mb-5" data-testid="product-price">
+        {{ formatMoney(selectedVariant.price) }}
       </div>
 
       <div v-if="product.variants.length > 1" class="mb-4">
-        <label for="variant-select" class="block text-sm font-medium text-gray-700 mb-1">Variante</label>
-        <select id="variant-select" v-model="selectedVariantId" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        <label for="variant-select" class="block text-sm font-medium text-ink-soft mb-1">Variante</label>
+        <select id="variant-select" v-model="selectedVariantId" class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
           <option v-for="v in product.variants" :key="v.id" :value="v.id">
             {{ v.sku }} — {{ Object.entries(v.attributes).map(([k, val]) => `${k}: ${val}`).join(', ') || 'Sin atributos' }}
           </option>
@@ -130,21 +142,30 @@ async function addToCart() {
 
       <div class="flex items-end gap-3 mb-4">
         <div>
-          <label for="quantity-input" class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-          <p v-if="availableStock !== null" class="text-xs text-gray-400 mb-1">{{ availableStock }} disponibles</p>
+          <label for="quantity-input" class="block text-sm font-medium text-ink-soft mb-1">Cantidad</label>
+          <p v-if="availableStock !== null" class="text-xs text-ink-muted mb-1">{{ availableStock }} disponibles</p>
           <input id="quantity-input" v-model="quantity" type="number" min="1" :max="availableStock ?? undefined"
-            class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            class="w-24 rounded-lg border border-line px-3 py-2 text-sm" />
         </div>
         <button @click="addToCart" :disabled="adding || !selectedVariantId"
-          class="bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg px-6 py-2.5">
+          class="rounded-full bg-brand-600 px-7 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-brand-700 disabled:opacity-60">
           {{ adding ? 'Agregando...' : 'Agregar al carrito' }}
         </button>
       </div>
 
-      <p v-if="addError" class="text-sm text-red-600">{{ addError }}</p>
-      <p v-if="addSuccess" class="text-sm text-green-600">
+      <p v-if="addError" class="text-sm text-red-600 dark:text-red-400">{{ addError }}</p>
+      <p v-if="addSuccess" class="text-sm text-green-600 dark:text-green-400">
         Agregado al carrito. <router-link :to="{ name: 'cart' }" class="underline font-medium">Ver carrito</router-link>
       </p>
+
+      <ul class="mt-6 space-y-2 border-t border-line pt-5 text-sm text-ink-muted">
+        <li class="flex items-center gap-2"><span aria-hidden="true">🔒</span> Pago seguro con PayPal</li>
+        <li class="flex items-center gap-2"><span aria-hidden="true">📦</span> Disponibilidad verificada en tiempo real</li>
+        <li class="flex items-center gap-2"><span aria-hidden="true">✉️</span> Te avisamos por correo cuando se envíe</li>
+      </ul>
     </div>
+  </div>
+
+  <ReviewsSection :product-id="id" class="mt-14" @summary="rating = $event" />
   </div>
 </template>

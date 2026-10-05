@@ -71,34 +71,34 @@ async function submit() {
 
 <template>
   <div class="max-w-2xl mx-auto">
-    <h1 class="text-xl font-semibold text-gray-900 mb-6">Checkout</h1>
+    <h1 class="text-xl font-semibold text-ink mb-6">Checkout</h1>
 
-    <div class="bg-white border border-gray-200 rounded-xl p-5 mb-5">
-      <h2 class="text-sm font-medium text-gray-900 mb-3">Resumen</h2>
+    <div class="bg-surface border border-line rounded-xl p-5 mb-5">
+      <h2 class="text-sm font-medium text-ink mb-3">Resumen</h2>
       <div v-for="item in selectedItems" :key="item.variantId" class="flex justify-between text-sm py-1.5">
-        <span class="text-gray-600">{{ item.quantity }}× {{ item.productName }}</span>
-        <span class="text-gray-900">${{ item.lineTotal.toFixed(2) }}</span>
+        <span class="text-ink-soft">{{ item.quantity }}× {{ item.productName }}</span>
+        <span class="text-ink">${{ item.lineTotal.toFixed(2) }}</span>
       </div>
-      <div class="flex justify-between text-base font-semibold pt-3 mt-2 border-t border-gray-100">
+      <div class="flex justify-between text-base font-semibold pt-3 mt-2 border-t border-line">
         <span>Total</span>
         <span>${{ total.toFixed(2) }}</span>
       </div>
     </div>
 
-    <form @submit.prevent="submit" class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+    <form @submit.prevent="submit" class="bg-surface border border-line rounded-xl p-5 space-y-4">
       <div>
-        <label for="shipping-address" class="block text-sm font-medium text-gray-700 mb-1">Dirección de envío</label>
+        <label for="shipping-address" class="block text-sm font-medium text-ink-soft mb-1">Dirección de envío</label>
         <textarea id="shipping-address" v-model="shippingAddress" required rows="3" placeholder="Calle, número, ciudad, país..."
-          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+          class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
       </div>
 
-      <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+      <p v-if="error" class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
 
       <button type="submit" :disabled="submitting || selectedItems.length === 0"
         class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg py-2.5">
         {{ submitting ? 'Procesando...' : 'Pagar con PayPal' }}
       </button>
-      <p class="text-xs text-gray-400 text-center">
+      <p class="text-xs text-ink-muted text-center">
         Se abrirá una pestaña nueva de PayPal para aprobar el pago.
       </p>
     </form>

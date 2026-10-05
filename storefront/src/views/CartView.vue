@@ -107,26 +107,26 @@ onMounted(load)
 
 <template>
   <div>
-    <h1 class="text-xl font-semibold text-gray-900 mb-6">Tu carrito</h1>
+    <h1 class="text-xl font-semibold text-ink mb-6">Tu carrito</h1>
 
-    <div v-if="loading" class="text-center text-gray-400 py-16">Cargando...</div>
-    <div v-else-if="error" class="text-center text-red-600 py-16">{{ error }}</div>
-    <div v-else-if="!cartStore.cart || cartStore.cart.items.length === 0" class="text-center text-gray-400 py-16">
-      Tu carrito está vacío. <router-link :to="{ name: 'home' }" class="text-brand-600 underline">Ir a comprar</router-link>
+    <div v-if="loading" class="text-center text-ink-muted py-16">Cargando...</div>
+    <div v-else-if="error" class="text-center text-red-600 dark:text-red-400 py-16">{{ error }}</div>
+    <div v-else-if="!cartStore.cart || cartStore.cart.items.length === 0" class="text-center text-ink-muted py-16">
+      Tu carrito está vacío. <router-link :to="{ name: 'home' }" class="text-brand-ink underline">Ir a comprar</router-link>
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-3">
         <div v-for="item in cartStore.cart.items" :key="item.variantId"
-          class="bg-white border border-gray-200 rounded-xl p-4">
+          class="bg-surface border border-line rounded-xl p-4">
           <div class="flex items-center gap-4">
             <input type="checkbox" :checked="selected.has(item.variantId)" @change="toggleSelected(item.variantId)"
-              class="w-4 h-4 rounded border-gray-300" />
+              class="w-4 h-4 rounded border-line" />
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">{{ item.productName }}</p>
-              <p class="text-xs text-gray-500">
+              <p class="text-sm font-medium text-ink truncate">{{ item.productName }}</p>
+              <p class="text-xs text-ink-muted">
                 {{ item.sku }} · ${{ item.unitPrice.toFixed(2) }} c/u
-                <span v-if="stockByVariant[item.variantId] !== undefined" class="text-gray-400">
+                <span v-if="stockByVariant[item.variantId] !== undefined" class="text-ink-muted">
                   · {{ stockByVariant[item.variantId] }} disponibles
                 </span>
               </p>
@@ -134,19 +134,19 @@ onMounted(load)
             <input v-model.number="quantities[item.variantId]" type="number" min="0"
               :max="stockByVariant[item.variantId]" :disabled="busyVariantId === item.variantId"
               @change="onQuantityChange(item)"
-              class="w-16 rounded-lg border border-gray-300 px-2 py-1 text-sm text-center" />
-            <p class="text-sm font-semibold text-gray-900 w-20 text-right">${{ item.lineTotal.toFixed(2) }}</p>
+              class="w-16 rounded-lg border border-line px-2 py-1 text-sm text-center" />
+            <p class="text-sm font-semibold text-ink w-20 text-right">${{ item.lineTotal.toFixed(2) }}</p>
             <button @click="removeItem(item.variantId)" :disabled="busyVariantId === item.variantId"
-              class="text-red-500 hover:text-red-700 text-sm">✕</button>
+              class="text-red-500 dark:text-red-400 hover:text-red-700 text-sm">✕</button>
           </div>
-          <p v-if="rowError[item.variantId]" class="text-xs text-red-600 mt-2 pl-8">{{ rowError[item.variantId] }}</p>
+          <p v-if="rowError[item.variantId]" class="text-xs text-red-600 dark:text-red-400 mt-2 pl-8">{{ rowError[item.variantId] }}</p>
         </div>
       </div>
 
-      <div class="bg-white border border-gray-200 rounded-xl p-5 h-fit">
+      <div class="bg-surface border border-line rounded-xl p-5 h-fit">
         <div class="flex justify-between text-sm mb-2">
-          <span class="text-gray-500">Ítems seleccionados</span>
-          <span class="text-gray-900">{{ selected.size }}</span>
+          <span class="text-ink-muted">Ítems seleccionados</span>
+          <span class="text-ink">{{ selected.size }}</span>
         </div>
         <div class="flex justify-between text-lg font-semibold mb-4">
           <span>Subtotal</span>
@@ -156,7 +156,7 @@ onMounted(load)
           class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5">
           Continuar al checkout
         </button>
-        <p class="text-xs text-gray-400 mt-2 text-center">
+        <p class="text-xs text-ink-muted mt-2 text-center">
           El subtotal de arriba es de todo el carrito — el checkout usa solo lo marcado.
         </p>
       </div>
