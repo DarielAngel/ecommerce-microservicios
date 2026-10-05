@@ -134,4 +134,23 @@ test.describe('Storefront — identidad visual y navegación', () => {
     await expect(page).toHaveURL(/\?q=algo/)
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(0)
   })
+
+  test('las categorías nunca desbordan la portada: máximo 8 chips; el resto va en "Más categorías"', async ({ page }) => {
+    await page.goto(`${STOREFRONT_URL}/`)
+    const group = page.getByRole('group', { name: 'Categorías' })
+    await expect(group.getByRole('button', { name: 'Todas' })).toBeVisible()
+
+    // "Todas" + hasta 7 categorías, sin importar cuántas existan en la base de datos.
+    expect(await group.getByRole('button').count()).toBeLessThanOrEqual(8)
+
+    // Si hay más de 7, el resto vive en el selector, y elegir una la deja visible como chip.
+    const more = page.getByTestId('more-categories')
+    if (await more.count()) {
+      const options = more.locator('option:not([disabled])')
+      const name = (await options.first().textContent())?.trim()
+      await more.selectOption({ index: 1 })
+      await expect(group.getByRole('button', { name })).toBeVisible()
+      expect(await group.getByRole('button').count()).toBeLessThanOrEqual(8)
+    }
+  })
 })

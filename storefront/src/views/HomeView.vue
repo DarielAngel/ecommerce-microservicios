@@ -6,6 +6,7 @@ import { STORE } from '../config'
 import { fetchRatingSummaries } from '../api/reviews'
 import ProductCard from '../components/ProductCard.vue'
 import SkeletonCard from '../components/SkeletonCard.vue'
+import { splitCategories } from '../utils/categories'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,6 +31,9 @@ const sortOptions = [
   { value: 'price_asc', label: 'Precio: menor a mayor' },
   { value: 'price_desc', label: 'Precio: mayor a menor' }
 ]
+
+const MAX_CATEGORY_CHIPS = 7
+const categoryGroups = computed(() => splitCategories(categories.value, categoryId.value, MAX_CATEGORY_CHIPS))
 
 const hasActiveFilters = computed(() =>
   !!(searchTerm.value || categoryId.value || minPrice.value !== '' || maxPrice.value !== '')
@@ -122,11 +126,18 @@ onMounted(async () => {
           :class="categoryId === '' ? 'border-brand-600 bg-brand-600 text-white' : 'border-line bg-surface text-ink-soft hover:border-brand-300'">
           Todas
         </button>
-        <button v-for="c in categories" :key="c.id" type="button" @click="categoryId = c.id"
-          class="rounded-full border px-4 py-1.5 text-sm transition-colors"
-          :class="categoryId === c.id ? 'border-brand-600 bg-brand-600 text-white' : 'border-line bg-surface text-ink-soft hover:border-brand-300'">
+        <button v-for="c in categoryGroups.visible" :key="c.id" type="button" @click="categoryId = c.id"
+          class="max-w-[14rem] truncate rounded-full border px-4 py-1.5 text-sm transition-colors"
+          :class="categoryId === c.id ? 'border-brand-600 bg-brand-600 text-white' : 'border-line bg-surface text-ink-soft hover:border-brand-300'"
+          :title="c.name">
           {{ c.name }}
         </button>
+        <select v-if="categoryGroups.overflow.length" aria-label="Más categorías" data-testid="more-categories" value=""
+          @change="categoryId = $event.target.value"
+          class="rounded-full border border-line bg-surface px-4 py-1.5 text-sm text-ink-soft focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <option value="" disabled selected>Más categorías ({{ categoryGroups.overflow.length }})</option>
+          <option v-for="c in categoryGroups.overflow" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
       </div>
 
       <div class="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-line bg-surface p-3 text-sm">

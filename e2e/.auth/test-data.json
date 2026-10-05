@@ -1,9 +1,9 @@
 {
-  "adminEmail": "e2e-admin-muvs5ddl@test.com",
+  "adminEmail": "e2e-admin-muvt3tli@test.com",
   "adminPassword": "E2ePassword123.",
-  "categoryId": "f707a0cc-d74a-4ef5-b12d-009372a2b494",
-  "productId": "118f788c-cbc9-48b0-89d1-1032502cbbe7",
-  "productName": "Producto E2E muvs5ddl",
-  "sku": "E2E-muvs5ddl",
-  "variantId": "2fae8b2c-bb78-4744-ad37-54b772d20d28"
+  "categoryId": "de4aaeb9-0825-421d-8a09-45e6ab5cff0f",
+  "productId": "ef73d142-c6a6-409a-8854-771b3e09f2bd",
+  "productName": "Producto E2E muvt3tli",
+  "sku": "E2E-muvt3tli",
+  "variantId": "b871bbcf-e9f4-45e1-be5f-95a9693d52fc"
 }
