@@ -10,7 +10,8 @@
 # REQUISITOS (en TU máquina, no en el sandbox de Claude):
 #   1. GitHub CLI instalado y autenticado: gh auth login
 #   2. Correr este script DESDE DENTRO del repo ya clonado/conectado a GitHub.
-#   3. Correrlo UNA sola vez (no detecta duplicados).
+#   3. Es IDEMPOTENTE: si un issue con el mismo título ya existe (abierto o cerrado) lo
+#      salta, así que correrlo dos veces no crea duplicados.
 # ============================================================================
 
 set -e
@@ -28,8 +29,16 @@ gh label create "fase-5" --color "BFD4F2" --description "Checkout rápido y segu
 gh label create "fase-6" --color "BFD4F2" --description "Lealtad y recuperación" 2>/dev/null || true
 gh label create "mejora-futura" --color "FBCA04" --description "Pendiente, fuera del alcance actual" 2>/dev/null || true
 
+# Títulos que ya existen en el repo (abiertos Y cerrados), consultados UNA vez al inicio.
+EXISTING_TITLES=$(gh issue list --state all --limit 1000 --json title --jq '.[].title')
+
+issue_exists () {
+  printf '%s\n' "$EXISTING_TITLES" | grep -Fxq -- "$1"
+}
+
 create_and_close () {
   local title="$1" body="$2" labels="$3"
+  if issue_exists "$title"; then echo "-> [ya existe, se omite] $title"; return; fi
   echo "-> [cerrado] $title"
   local url number
   url=$(gh issue create --title "$title" --body "$body" --label "$labels")
@@ -39,6 +48,7 @@ create_and_close () {
 
 create_open () {
   local title="$1" body="$2" labels="$3"
+  if issue_exists "$title"; then echo "-> [ya existe, se omite] $title"; return; fi
   echo "-> [abierto] $title"
   gh issue create --title "$title" --body "$body" --label "$labels" > /dev/null
 }
