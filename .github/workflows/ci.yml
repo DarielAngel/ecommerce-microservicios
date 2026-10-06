@@ -23,7 +23,6 @@ jobs:
       # Docker corriendo, así que no hace falta nada especial para eso.
       - name: Restaurar y correr los tests de todos los microservicios
         run: |
-          set -e
           # El patrón es *Tests.csproj (sin punto) para cubrir Cart.UnitTests.csproj y
           # Cart.IntegrationTests.csproj. Con "*.Tests.csproj" no encontraba ninguno y el job
           # salía en verde sin probar nada.
@@ -39,11 +38,23 @@ jobs:
           fi
           echo "Proyectos de test encontrados: $count"
 
+          # Se ejecutan TODOS los proyectos aunque alguno falle, y recién al final se falla el job:
+          # así una sola corrida lista cada proyecto roto, en vez de mostrar solo el primero.
+          failed=""
           for proj in $projects; do
             echo "::group::$proj"
-            dotnet test "$proj" --configuration Release --logger "console;verbosity=normal"
+            if ! dotnet test "$proj" --configuration Release --logger "console;verbosity=normal"; then
+              failed="$failed$proj"$'\n'
+              echo "::error::Fallaron las pruebas de $proj"
+            fi
             echo "::endgroup::"
           done
+
+          if [ -n "$failed" ]; then
+            echo "::error::Proyectos con fallos:"
+            echo "$failed"
+            exit 1
+          fi
 
   frontend-unit-tests:
     name: Frontend (${{ matrix.project }}) — Vitest
