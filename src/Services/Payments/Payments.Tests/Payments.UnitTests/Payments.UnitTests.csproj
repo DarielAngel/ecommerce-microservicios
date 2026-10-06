@@ -19,6 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Payments.Domain\Payments.Domain.csproj" />
     <ProjectReference Include="..\..\Payments.Application\Payments.Application.csproj" />
+    <!-- FakePayPalClientTests prueba FakePayPalClient, que vive en Infrastructure. Sin esta
+         referencia el proyecto no compilaba (error CS0234/CS0246) y el CI de backend fallaba. -->
+    <ProjectReference Include="..\..\Payments.Infrastructure\Payments.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
