@@ -73,6 +73,14 @@ Carga **23 categorías, 105 productos reales con imagen y stock, 10 cupones, 10 
 
 Se puede correr de nuevo cuando quieras: no duplica nada.
 
+> **¿Ves "Categoría E2E …" o "Producto E2E …" en la tienda?** Son restos de haber corrido las
+> pruebas end-to-end contra tu Docker. Bórralos (no toca tus usuarios, pedidos ni los datos de
+> demostración) y recarga la página:
+> ```cmd
+> node scripts\limpiar-datos-e2e.mjs
+> ```
+> Con `--simular` solo muestra qué borraría.
+
 ---
 
 ## 4. Recorrido como cliente (tienda — http://localhost:5173)
@@ -181,6 +189,7 @@ pnpm test
 | El script de datos dice *No se pudo crear el Admin* | La `ADMIN_PROVISIONING_KEY` del `.env` no coincide con la del contenedor `users-service`: reconstrúyelo con `docker compose up -d --build users-service`. |
 | "Esperando a el servicio de cupones…" sin fin | `promotions-service` no arrancó: `docker compose logs promotions-service`. |
 | Quiero empezar con la base vacía | `docker compose down -v` (**borra todos los datos**) y luego `docker compose up -d` y el script de datos otra vez. |
+| La tienda muestra solo productos "E2E" | No se cargaron los datos de demostración en esta base: `node scripts\seed-demo-data.mjs`. Los restos de las pruebas se borran con `node scripts\limpiar-datos-e2e.mjs`. |
 | La búsqueda sin tildes no encuentra nada | Catálogo instala la extensión `unaccent` al arrancar; si se cayó antes, reinícialo: `docker compose restart catalog-service`. |
 | `no such host` al construir imágenes | Problema de DNS de Docker/WSL: ver *Troubleshooting general* en el README. |
 | `Resource temporarily unavailable (api.nuget.org)` o `short read / unexpected EOF` al construir | Se cortó la red o el DNS de Docker a mitad de la descarga. Vuelve a correr el mismo comando: lo ya descargado (imágenes y paquetes NuGet/pnpm) queda en caché y solo se baja lo que faltaba. Si la red está muy inestable, construye de a un servicio (ver abajo). |
