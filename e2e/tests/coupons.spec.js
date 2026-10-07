@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loadSeedData, loginToAdminPanel, registerNewCustomer } from './helpers.js'
+import { loadSeedData, loginToAdminPanel, registerNewCustomer, fillShippingAddress } from './helpers.js'
 import { ADMIN_PANEL_URL, GATEWAY_URL, STOREFRONT_URL } from '../playwright.config.js'
 
 /** Crea un cupón por la API como el Admin sembrado. Devuelve el código (único por corrida). */
@@ -52,7 +52,7 @@ test.describe('Cupones — checkout', () => {
     await expect(page.getByTestId('checkout-discount')).toHaveText('−$2.55')
     await expect(page.getByTestId('checkout-total')).toHaveText('$22.95')
 
-    await page.getByLabel('Dirección de envío').fill('Calle Falsa 123, Ciudad de Prueba')
+    await fillShippingAddress(page)
     await page.getByRole('button', { name: 'Pagar con PayPal' }).click()
     await expect(page).toHaveURL(/\/orders\/.+\/pending$/)
     await page.getByRole('button', { name: 'Ya aprobé el pago — confirmar' }).click()

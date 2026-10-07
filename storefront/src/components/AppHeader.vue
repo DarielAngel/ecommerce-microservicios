@@ -69,7 +69,9 @@ function logout() {
         <ThemeToggle />
 
         <template v-if="auth.isAuthenticated">
-          <span class="ml-1 hidden max-w-[10rem] truncate text-ink-soft md:inline">{{ auth.fullName }}</span>
+          <!-- El nombre lleva a la cuenta del cliente: por ahora, su libreta de direcciones. -->
+          <router-link :to="{ name: 'addresses' }" title="Mis direcciones" data-testid="account-link"
+            class="ml-1 hidden max-w-[10rem] truncate rounded-full px-2 py-2 text-ink-soft transition-colors hover:bg-surface-muted md:inline">{{ auth.fullName }}</router-link>
           <button type="button" data-testid="logout" @click="logout"
             class="rounded-full px-3 py-2 text-ink-soft transition-colors hover:bg-surface-muted">Salir</button>
         </template>

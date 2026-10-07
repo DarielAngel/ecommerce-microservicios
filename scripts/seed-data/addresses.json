@@ -1,0 +1,206 @@
+[
+ {
+  "email": "ana.martinez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Ana Martínez",
+    "phone": "+54 351 555-0142",
+    "street": "Av. Rafael Núñez 4520",
+    "details": "Piso 2, depto B",
+    "city": "Córdoba",
+    "region": "Córdoba",
+    "postalCode": "5009",
+    "country": "Argentina"
+   },
+   {
+    "label": "Oficina",
+    "recipientName": "Ana Martínez",
+    "phone": "+54 351 555-0199",
+    "street": "Bv. San Juan 312",
+    "details": "Oficina 7",
+    "city": "Córdoba",
+    "region": "Córdoba",
+    "postalCode": "5000",
+    "country": "Argentina"
+   }
+  ]
+ },
+ {
+  "email": "carlos.rodriguez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Carlos Rodríguez",
+    "phone": "+52 55 5555 0123",
+    "street": "Av. Insurgentes Sur 1602",
+    "details": "Depto 804",
+    "city": "Ciudad de México",
+    "region": "CDMX",
+    "postalCode": "03940",
+    "country": "México"
+   }
+  ]
+ },
+ {
+  "email": "lucia.fernandez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Lucía Fernández",
+    "phone": "+34 611 555 012",
+    "street": "Calle de Alcalá 145",
+    "details": "3º izquierda",
+    "city": "Madrid",
+    "region": "Madrid",
+    "postalCode": "28009",
+    "country": "España"
+   },
+   {
+    "label": "Casa de mis padres",
+    "recipientName": "Lucía Fernández",
+    "phone": null,
+    "street": "Calle Mayor 22",
+    "details": null,
+    "city": "Salamanca",
+    "region": "Castilla y León",
+    "postalCode": "37002",
+    "country": "España"
+   }
+  ]
+ },
+ {
+  "email": "javier.gomez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Javier Gómez",
+    "phone": "+57 300 555 0144",
+    "street": "Carrera 43A # 1-50",
+    "details": "Apto 1102, Torre 2",
+    "city": "Medellín",
+    "region": "Antioquia",
+    "postalCode": "050021",
+    "country": "Colombia"
+   }
+  ]
+ },
+ {
+  "email": "sofia.lopez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Sofía López",
+    "phone": "+56 9 5555 0123",
+    "street": "Av. Providencia 1208",
+    "details": "Depto 1504",
+    "city": "Santiago",
+    "region": "Región Metropolitana",
+    "postalCode": "7500000",
+    "country": "Chile"
+   },
+   {
+    "label": "Trabajo",
+    "recipientName": "Sofía López",
+    "phone": "+56 9 5555 0456",
+    "street": "Av. Apoquindo 3000",
+    "details": "Piso 12",
+    "city": "Las Condes",
+    "region": "Región Metropolitana",
+    "postalCode": "7550000",
+    "country": "Chile"
+   }
+  ]
+ },
+ {
+  "email": "mateo.diaz@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Mateo Díaz",
+    "phone": "+51 987 555 012",
+    "street": "Av. José Larco 812",
+    "details": "Dpto 302",
+    "city": "Miraflores",
+    "region": "Lima",
+    "postalCode": "15074",
+    "country": "Perú"
+   }
+  ]
+ },
+ {
+  "email": "valentina.perez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Valentina Pérez",
+    "phone": "+598 99 555 012",
+    "street": "Bulevar Artigas 1120",
+    "details": "Apto 501",
+    "city": "Montevideo",
+    "region": "Montevideo",
+    "postalCode": "11300",
+    "country": "Uruguay"
+   }
+  ]
+ },
+ {
+  "email": "diego.sanchez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Diego Sánchez",
+    "phone": "+593 99 555 0123",
+    "street": "Av. República de El Salvador N34-127",
+    "details": null,
+    "city": "Quito",
+    "region": "Pichincha",
+    "postalCode": "170135",
+    "country": "Ecuador"
+   }
+  ]
+ },
+ {
+  "email": "camila.torres@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Camila Torres",
+    "phone": "+506 8555 0123",
+    "street": "Avenida Central, calle 5",
+    "details": "Casa esquinera portón negro",
+    "city": "San José",
+    "region": "San José",
+    "postalCode": "10101",
+    "country": "Costa Rica"
+   }
+  ]
+ },
+ {
+  "email": "andres.ramirez@demo-tienda.test",
+  "addresses": [
+   {
+    "label": "Casa",
+    "recipientName": "Andrés Ramírez",
+    "phone": "+1 787 555 0123",
+    "street": "Calle Loíza 1905",
+    "details": "Apt 3B",
+    "city": "San Juan",
+    "region": null,
+    "postalCode": "00911",
+    "country": "Puerto Rico"
+   },
+   {
+    "label": "Oficina",
+    "recipientName": "Andrés Ramírez",
+    "phone": null,
+    "street": "Ave. Ponce de León 250",
+    "details": "Suite 1100",
+    "city": "San Juan",
+    "region": null,
+    "postalCode": "00918",
+    "country": "Puerto Rico"
+   }
+  ]
+ }
+]

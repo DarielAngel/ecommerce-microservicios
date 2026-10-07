@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loadSeedData, registerNewCustomer } from './helpers.js'
+import { loadSeedData, registerNewCustomer, fillShippingAddress } from './helpers.js'
 import { STOREFRONT_URL } from '../playwright.config.js'
 
 /** Escribe y publica una reseña desde la página del producto (el cliente ya debe tener sesión). */
@@ -119,7 +119,7 @@ test.describe('Storefront — reseñas y calificaciones', () => {
 
     await page.goto(`${STOREFRONT_URL}/cart`)
     await page.getByRole('button', { name: 'Continuar al checkout' }).click()
-    await page.getByLabel('Dirección de envío').fill('Calle Falsa 123, Ciudad de Prueba')
+    await fillShippingAddress(page)
     await page.getByRole('button', { name: 'Pagar con PayPal' }).click()
     await expect(page).toHaveURL(/\/orders\/.+\/pending$/)
     await page.getByRole('button', { name: 'Ya aprobé el pago — confirmar' }).click()

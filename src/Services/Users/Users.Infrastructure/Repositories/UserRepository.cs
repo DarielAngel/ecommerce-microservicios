@@ -57,3 +57,24 @@ public class RefreshTokenRepository : IRefreshTokenRepository
     public Task SaveChangesAsync(CancellationToken ct) =>
         _context.SaveChangesAsync(ct);
 }
+
+public class AddressRepository : IAddressRepository
+{
+    private readonly UsersDbContext _context;
+
+    public AddressRepository(UsersDbContext context)
+    {
+        _context = context;
+    }
+
+    public Task<List<Address>> ListByUserAsync(Guid userId, CancellationToken ct) =>
+        _context.Addresses.Where(a => a.UserId == userId).ToListAsync(ct);
+
+    public async Task AddAsync(Address address, CancellationToken ct) =>
+        await _context.Addresses.AddAsync(address, ct);
+
+    public void Remove(Address address) => _context.Addresses.Remove(address);
+
+    public Task SaveChangesAsync(CancellationToken ct) =>
+        _context.SaveChangesAsync(ct);
+}

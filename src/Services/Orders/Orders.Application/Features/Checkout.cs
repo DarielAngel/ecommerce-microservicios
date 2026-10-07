@@ -11,20 +11,30 @@ public record CheckoutCommand(
     List<Guid> VariantIdsToCheckout, string ShippingAddress, string AccessToken,
     string? CouponCode = null) : IRequest<CheckoutResult>;
 
-public record OrderLineResult(Guid VariantId, string ProductName, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal);
+public record OrderLineResult(Guid VariantId, string ProductName, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal,
+    Guid ProductId = default)
+{
+    public static OrderLineResult From(OrderLine l) =>
+        new(l.VariantId, l.ProductName, l.Sku, l.UnitPrice, l.Quantity, l.LineTotal, l.ProductId);
+}
 
 /// <summary>
 /// La orden tal como la ve el cliente. TotalAmount es lo que se cobra (ya con el descuento);
-/// Subtotal y DiscountAmount permiten mostrar el desglose.
+/// Subtotal y DiscountAmount permiten mostrar el desglose. Las fechas y la entrega estimada
+/// (Fase 5) arman la línea de tiempo de "Mis pedidos".
 /// </summary>
 public record CheckoutResult(
     Guid OrderId, string Status, decimal TotalAmount, IReadOnlyList<OrderLineResult> Lines, string? ApproveUrl,
-    decimal Subtotal, decimal DiscountAmount, string? CouponCode)
+    decimal Subtotal, decimal DiscountAmount, string? CouponCode,
+    string ShippingAddress = "", DateTime CreatedAtUtc = default, DateTime? PaidAtUtc = null, DateTime? ShippedAtUtc = null,
+    DateOnly? EstimatedDeliveryFrom = null, DateOnly? EstimatedDeliveryTo = null)
 {
     public static CheckoutResult From(Order order, string? approveUrl = null) => new(
         order.Id, order.Status.ToString(), order.TotalAmount,
-        order.Lines.Select(l => new OrderLineResult(l.VariantId, l.ProductName, l.Sku, l.UnitPrice, l.Quantity, l.LineTotal)).ToList(),
-        approveUrl, order.Subtotal, order.DiscountAmount, order.CouponCode);
+        order.Lines.Select(OrderLineResult.From).ToList(),
+        approveUrl, order.Subtotal, order.DiscountAmount, order.CouponCode,
+        order.ShippingAddress, order.CreatedAtUtc, order.PaidAtUtc, order.ShippedAtUtc,
+        order.EstimatedDelivery?.From, order.EstimatedDelivery?.To);
 }
 
 public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>

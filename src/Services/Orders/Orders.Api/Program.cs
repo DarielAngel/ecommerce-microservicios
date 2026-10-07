@@ -53,6 +53,9 @@ using (var scope = app.Services.CreateScope())
         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code character varying(30) NULL;");
     await dbContext.Database.ExecuteSqlRawAsync(
         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount numeric(12,2) NOT NULL DEFAULT 0;");
+    // Fase 5 (seguimiento del pedido): cuándo se envió.
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at_utc timestamp with time zone NULL;");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

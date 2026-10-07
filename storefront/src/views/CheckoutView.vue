@@ -3,14 +3,27 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../api/useApi'
 import { useCartStore } from '../stores/cart'
+import { useAuthStore } from '../stores/auth'
+import { addressesApi } from '../api/addresses'
+import { emptyAddress, formatAddress, isComplete, errorText } from '../utils/addresses'
 import CouponField from '../components/CouponField.vue'
+import AddressForm from '../components/AddressForm.vue'
 
 const apiClient = useApi()
 const cartStore = useCartStore()
 const router = useRouter()
+const auth = useAuthStore()
 
 const variantIds = ref([])
-const shippingAddress = ref('')
+
+// Dirección de envío (Fase 5): una de la libreta (la predeterminada ya viene elegida) u otra nueva,
+// que por defecto se guarda para la próxima compra.
+const addresses = ref([])
+const addressesLoaded = ref(false)
+const selectedAddressId = ref('new')
+const newAddress = ref(emptyAddress(auth.fullName ?? ''))
+const saveNewAddress = ref(true)
+const usingNewAddress = computed(() => selectedAddressId.value === 'new')
 const submitting = ref(false)
 const error = ref('')
 
@@ -30,11 +43,47 @@ onMounted(() => {
 
   if (variantIds.value.length === 0) {
     router.replace({ name: 'cart' })
+    return
   }
+  loadAddresses()
 })
+
+async function loadAddresses() {
+  try {
+    addresses.value = await addressesApi.list(apiClient)
+    const preferred = addresses.value.find((a) => a.isDefault) ?? addresses.value[0]
+    if (preferred) selectedAddressId.value = preferred.id
+  } catch {
+    // Sin libreta (o Users caído) se puede pagar igual escribiendo la dirección.
+    addresses.value = []
+  } finally {
+    addressesLoaded.value = true
+  }
+}
+
+/** El texto que viaja a Órdenes; si la dirección es nueva y se guarda, usa el del servidor. */
+async function resolveShippingAddress() {
+  if (!usingNewAddress.value) {
+    return addresses.value.find((a) => a.id === selectedAddressId.value).formatted
+  }
+  if (!saveNewAddress.value) return formatAddress(newAddress.value)
+
+  const saved = await addressesApi.create(apiClient, {
+    ...newAddress.value,
+    makeDefault: addresses.value.length === 0
+  })
+  // Desde ahora es una dirección más de la libreta: si el pago falla y reintenta, ya aparece elegida.
+  addresses.value = [...addresses.value, saved]
+  selectedAddressId.value = saved.id
+  return saved.formatted
+}
 
 async function submit() {
   error.value = ''
+  if (usingNewAddress.value && !isComplete(newAddress.value)) {
+    error.value = 'Completa la dirección de envío: quién recibe, la calle y el número, la ciudad y el país.'
+    return
+  }
   submitting.value = true
 
   // Clave para que el navegador NO bloquee el pop-up: la ventana se abre acá, de forma
@@ -45,9 +94,10 @@ async function submit() {
   const paypalWindow = window.open('', '_blank')
 
   try {
+    const shippingAddress = await resolveShippingAddress()
     const result = await apiClient.post('/api/orders/checkout', {
       variantIds: variantIds.value,
-      shippingAddress: shippingAddress.value,
+      shippingAddress,
       couponCode: coupon.value?.code ?? null
     })
     sessionStorage.removeItem('checkout-variant-ids')
@@ -66,7 +116,7 @@ async function submit() {
     router.push({ name: 'order-pending', params: { id: result.orderId } })
   } catch (err) {
     paypalWindow?.close()
-    error.value = err.message
+    error.value = errorText(err)
     // Si lo que falló fue el cupón (se agotó o venció mientras tanto), lo quitamos para que el
     // cliente pueda pagar sin él o probar otro.
     if (coupon.value && /cup[oó]n/i.test(err.message || '')) coupon.value = null
@@ -106,11 +156,42 @@ async function submit() {
     </div>
 
     <form @submit.prevent="submit" class="bg-surface border border-line rounded-xl p-5 space-y-4">
-      <div>
-        <label for="shipping-address" class="block text-sm font-medium text-ink-soft mb-1">Dirección de envío</label>
-        <textarea id="shipping-address" v-model="shippingAddress" required rows="3" placeholder="Calle, número, ciudad, país..."
-          class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
-      </div>
+      <fieldset>
+        <legend class="mb-2 flex w-full items-center justify-between text-sm font-medium text-ink-soft">
+          <span>Dirección de envío</span>
+          <router-link :to="{ name: 'addresses' }" class="text-xs font-normal text-brand-ink hover:underline">Administrar direcciones</router-link>
+        </legend>
+
+        <div v-if="!addressesLoaded" class="py-3 text-sm text-ink-muted">Cargando tus direcciones...</div>
+        <div v-else class="space-y-2" data-testid="checkout-addresses">
+          <label v-for="a in addresses" :key="a.id" data-testid="checkout-address-option"
+            class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm"
+            :class="selectedAddressId === a.id ? 'border-brand-500 bg-brand-soft' : 'border-line'">
+            <input v-model="selectedAddressId" type="radio" name="shipping" :value="a.id" class="mt-1" />
+            <span class="min-w-0">
+              <span class="block font-medium text-ink">
+                {{ a.label }}
+                <span v-if="a.isDefault" class="ml-1 text-xs font-normal text-ink-muted">(predeterminada)</span>
+              </span>
+              <span class="block text-ink-soft">{{ a.formatted }}</span>
+            </span>
+          </label>
+
+          <label v-if="addresses.length" class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm"
+            :class="usingNewAddress ? 'border-brand-500 bg-brand-soft' : 'border-line'">
+            <input v-model="selectedAddressId" type="radio" name="shipping" value="new" data-testid="checkout-address-new" />
+            <span class="font-medium text-ink">Enviar a otra dirección</span>
+          </label>
+
+          <div v-if="usingNewAddress" class="space-y-3 rounded-lg border border-line p-3" data-testid="checkout-new-address">
+            <AddressForm v-model="newAddress" id-prefix="shipping" :show-label="saveNewAddress" :show-make-default="false" />
+            <label class="flex items-center gap-2 text-sm text-ink-soft">
+              <input v-model="saveNewAddress" type="checkbox" class="h-4 w-4" data-testid="checkout-save-address" />
+              Guardarla en mis direcciones para la próxima compra
+            </label>
+          </div>
+        </div>
+      </fieldset>
 
       <p v-if="error" class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
 

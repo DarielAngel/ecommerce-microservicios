@@ -220,6 +220,34 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
     }
 
     [Fact]
+    public async Task LineaDeTiempo_PagadaYLuegoEnviada_TraeFechasYEntregaEstimada()
+    {
+        var userToken = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var orderId = await CreatePaidOrderAsync(userToken);
+
+        var paid = await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken));
+        var paidJson = await paid.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        paidJson.GetProperty("status").GetString().Should().Be("Paid");
+        paidJson.GetProperty("shippingAddress").GetString().Should().Be("Calle Falsa 123");
+        paidJson.GetProperty("paidAtUtc").GetDateTime().Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
+        paidJson.GetProperty("shippedAtUtc").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+        // Las fechas estimadas viajan como "aaaa-mm-dd" (días, no instantes).
+        paidJson.GetProperty("estimatedDeliveryFrom").GetString().Should().MatchRegex(@"^\d{4}-\d{2}-\d{2}$");
+        paidJson.GetProperty("lines")[0].GetProperty("productId").GetGuid().Should().NotBeEmpty();
+
+        var adminToken = OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin");
+        await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/ship", adminToken));
+
+        var shipped = await (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken)))
+            .Content.ReadFromJsonAsync<CheckoutResult>();
+        shipped!.Status.Should().Be("Shipped");
+        shipped.ShippedAtUtc.Should().NotBeNull();
+        shipped.EstimatedDeliveryFrom.Should().Be(
+            Ecommerce.Orders.Domain.Entities.DeliveryEstimate.AddBusinessDays(shipped.ShippedAtUtc!.Value, 1));
+        shipped.EstimatedDeliveryTo.Should().BeOnOrAfter(shipped.EstimatedDeliveryFrom!.Value);
+    }
+
+    [Fact]
     public async Task Ship_LlamadoDosVeces_DeberiaSerIdempotente()
     {
         var orderId = await CreatePaidOrderAsync(OrdersApiFactory.CreateToken(Guid.NewGuid()));

@@ -53,6 +53,29 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // EnsureCreated no toca una base que ya existía: la tabla de la libreta de direcciones
+    // (Fase 5) se crea acá si falta, así tu base local sigue sirviendo sin borrarla.
+    // Debe coincidir con el mapeo de UsersDbContext.
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS user_addresses (
+            id uuid NOT NULL PRIMARY KEY,
+            user_id uuid NOT NULL CONSTRAINT fk_user_addresses_users REFERENCES users ("Id") ON DELETE CASCADE,
+            label character varying(40) NOT NULL,
+            recipient_name character varying(120) NOT NULL,
+            phone character varying(30) NULL,
+            street character varying(200) NOT NULL,
+            details character varying(200) NULL,
+            city character varying(100) NOT NULL,
+            region character varying(100) NULL,
+            postal_code character varying(20) NULL,
+            country character varying(60) NOT NULL,
+            is_default boolean NOT NULL,
+            created_at_utc timestamp with time zone NOT NULL,
+            updated_at_utc timestamp with time zone NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS ix_user_addresses_user_id ON user_addresses (user_id);
+        """);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

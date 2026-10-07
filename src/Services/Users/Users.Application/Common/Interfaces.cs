@@ -11,6 +11,16 @@ public interface IUserRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+/// <summary>Libreta de direcciones (Fase 5): siempre se trabaja con TODAS las del cliente.</summary>
+public interface IAddressRepository
+{
+    /// <summary>Las direcciones del cliente, con seguimiento de cambios (para editarlas y guardar).</summary>
+    Task<List<Address>> ListByUserAsync(Guid userId, CancellationToken ct);
+    Task AddAsync(Address address, CancellationToken ct);
+    void Remove(Address address);
+    Task SaveChangesAsync(CancellationToken ct);
+}
+
 public interface IRefreshTokenRepository
 {
     Task AddAsync(RefreshToken token, CancellationToken ct);

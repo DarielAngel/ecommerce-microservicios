@@ -18,7 +18,8 @@ async function mountHeader() {
       { path: '/login', name: 'login', component: stub },
       { path: '/register', name: 'register', component: stub },
       { path: '/orders', name: 'orders', component: stub },
-      { path: '/favorites', name: 'wishlist', component: stub }
+      { path: '/favorites', name: 'wishlist', component: stub },
+      { path: '/addresses', name: 'addresses', component: stub }
     ]
   })
   router.push('/')
@@ -93,6 +94,18 @@ describe('AppHeader', () => {
   it('no muestra el contador si el carrito está vacío', async () => {
     const { wrapper } = await mountHeader()
     expect(wrapper.find('[data-testid="cart-badge"]').exists()).toBe(false)
+  })
+
+  it('el nombre del cliente lleva a Mis direcciones', async () => {
+    const { wrapper, router } = await mountHeader()
+    useAuthStore().$patch({ accessToken: 'token', user: { fullName: 'Ana Pérez' } })
+    await flushPromises()
+
+    const link = wrapper.get('[data-testid="account-link"]')
+    expect(link.text()).toBe('Ana Pérez')
+    await link.trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('addresses')
   })
 
   it('Salir cierra la sesión y vuelve a la portada', async () => {

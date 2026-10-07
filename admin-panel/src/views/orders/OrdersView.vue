@@ -91,6 +91,9 @@ onMounted(load)
                   class="text-brand-600 hover:text-brand-700 font-medium text-xs disabled:opacity-50">
                   {{ shippingId === o.orderId ? 'Marcando...' : 'Marcar enviada' }}
                 </button>
+                <span v-else-if="o.shippedAtUtc" class="text-xs text-gray-500" data-testid="shipped-at">
+                  Enviada {{ new Date(o.shippedAtUtc).toLocaleString() }}
+                </span>
               </td>
             </tr>
             <tr v-if="expandedId === o.orderId" class="bg-gray-50">

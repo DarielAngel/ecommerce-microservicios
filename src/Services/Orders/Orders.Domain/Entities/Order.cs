@@ -19,6 +19,12 @@ public class Order
     public DateTime UpdatedAtUtc { get; private set; }
     public DateTime? PaidAtUtc { get; private set; }
 
+    /// <summary>Cuándo el Admin lo marcó como enviado (null en pedidos enviados antes de la Fase 5).</summary>
+    public DateTime? ShippedAtUtc { get; private set; }
+
+    /// <summary>Ventana de entrega estimada para mostrar al cliente (null si todavía no está pagado).</summary>
+    public DeliveryEstimate? EstimatedDelivery => DeliveryEstimate.For(Status, PaidAtUtc, ShippedAtUtc ?? (Status == OrderStatus.Shipped ? UpdatedAtUtc : null));
+
     /// <summary>Código del cupón aplicado (ya normalizado por Promociones), o null si no hubo cupón.</summary>
     public string? CouponCode { get; private set; }
 
@@ -152,6 +158,7 @@ public class Order
         }
 
         Status = OrderStatus.Shipped;
-        UpdatedAtUtc = DateTime.UtcNow;
+        ShippedAtUtc = DateTime.UtcNow;
+        UpdatedAtUtc = ShippedAtUtc.Value;
     }
 }

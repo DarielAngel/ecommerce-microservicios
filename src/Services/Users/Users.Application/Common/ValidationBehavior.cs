@@ -4,7 +4,7 @@ using MediatR;
 namespace Ecommerce.Users.Application.Common;
 
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull // (no IRequest<TResponse>: así también se validan los comandos sin respuesta)
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 

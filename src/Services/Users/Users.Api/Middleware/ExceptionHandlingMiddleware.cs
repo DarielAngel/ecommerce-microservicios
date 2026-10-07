@@ -46,6 +46,10 @@ public class ExceptionHandlingMiddleware
         ValidationAppException validationEx => (StatusCodes.Status400BadRequest,
             (object)new { message = validationEx.Message, errors = validationEx.Errors }),
 
+        // Antes que DomainException: es una de ellas, pero para el cliente es un 404.
+        Ecommerce.Users.Domain.Entities.AddressNotFoundException notFoundAddress => (StatusCodes.Status404NotFound,
+            new { message = notFoundAddress.Message }),
+
         DomainException domainEx => (StatusCodes.Status400BadRequest,
             new { message = domainEx.Message }),
 

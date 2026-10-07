@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loadSeedData, registerNewCustomer } from './helpers.js'
+import { loadSeedData, registerNewCustomer, fillShippingAddress } from './helpers.js'
 import { STOREFRONT_URL } from '../playwright.config.js'
 
 test.describe('Storefront — catálogo público', () => {
@@ -73,7 +73,7 @@ test.describe('Storefront — carrito y checkout', () => {
     await page.getByRole('button', { name: 'Continuar al checkout' }).click()
 
     await expect(page).toHaveURL(/\/checkout$/)
-    await page.getByLabel('Dirección de envío').fill('Calle Falsa 123, Ciudad de Prueba')
+    await fillShippingAddress(page)
     await page.getByRole('button', { name: 'Pagar con PayPal' }).click()
 
     // Con PayPal:Provider=Fake, approveUrl viene vacío — no se abre ninguna pestaña, se

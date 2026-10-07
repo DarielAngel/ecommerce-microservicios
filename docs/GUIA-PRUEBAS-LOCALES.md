@@ -62,8 +62,8 @@ docker compose ps
 node scripts\seed-demo-data.mjs
 ```
 
-Carga **23 categorías, 105 productos reales con imagen y stock, 10 cupones, 10 clientes y
-344 reseñas**. Tarda 1–3 minutos. Al terminar imprime los accesos:
+Carga **23 categorías, 105 productos reales con imagen y stock, 10 cupones, 10 clientes con
+14 direcciones y 344 reseñas**. Tarda 1–3 minutos. Al terminar imprime los accesos:
 
 | Rol | Usuario | Contraseña |
 |---|---|---|
@@ -121,10 +121,25 @@ Marca cada punto a medida que lo pruebas.
   | `blackfriday` | "Todavía no está vigente" (empieza el próximo Black Friday). |
   | `noexiste` | "El cupón "NOEXISTE" no existe." |
 
-- [ ] Con un cupón aplicado: escribe una dirección y *Pagar con PayPal*. Con `PAYPAL_PROVIDER=Fake` no se abre PayPal; en la pantalla de espera pulsa **"Ya aprobé el pago — confirmar"**.
+- [ ] **Dirección (Fase 5)**: Ana ya tiene "Casa" y "Oficina" en su libreta, y la predeterminada viene
+  elegida. Prueba también *Enviar a otra dirección*: el formulario trae su nombre en *Quién recibe* y,
+  si dejas marcado *Guardarla en mis direcciones*, la próxima compra ya aparece en la lista.
+- [ ] Con un cupón aplicado, *Pagar con PayPal*. Con `PAYPAL_PROVIDER=Fake` no se abre PayPal; en la pantalla de espera pulsa **"Ya aprobé el pago — confirmar"**.
 - [ ] Verás **¡Pago confirmado!**, el total pagado y *"Ahorraste $X con el cupón …"*.
 - [ ] En **Mis pedidos** la orden aparece *Pagada* con el cupón usado.
 - [ ] Repite el checkout con `bienvenida10` en otra compra de la misma cuenta: ahora dice que **ya lo usaste**.
+
+### 4.5 Mis direcciones, seguimiento y "Comprar de nuevo" (Fase 5)
+- [ ] Toca tu nombre en el encabezado → **Mis direcciones**: agrega una, edítala, márcala como
+  predeterminada y borra otra (pide confirmación en la misma tarjeta). Si borras la predeterminada,
+  otra pasa a serlo sola.
+- [ ] En **Mis pedidos**, el pedido pagado dice *"Llega entre el … y el …"*. Ábrelo: línea de tiempo
+  (realizado → pago confirmado → enviado → entregado), productos y la dirección a la que se envía.
+- [ ] En el panel de Admin → **Órdenes**, márcalo como *enviado* y recarga *Mis pedidos*: "Enviado" queda
+  hecho con su hora y la estimación se acorta (1 a 3 días hábiles desde el envío).
+- [ ] **Comprar de nuevo**: te lleva al carrito con los mismos productos y cantidades. Si en Inventario
+  dejas una variante en 1 unidad, agrega solo 1 y lo avisa; si desactivas el producto, dice que ya no
+  está disponible.
 
 ---
 

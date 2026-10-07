@@ -1507,6 +1507,38 @@ simulado) y revisa *Mis pedidos*. En el panel, el cupón pasa a "1" uso.
 
 Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (sección 4.1 y 4.2).
 
+## Fase 5 — Checkout rápido y seguimiento (Usuarios y Órdenes)
+
+- **Libreta de direcciones** (servicio `Users`, pantalla *Mis direcciones*, se llega desde el nombre del
+  cliente en el encabezado o desde *Mis pedidos*): hasta 10 direcciones con nombre ("Casa", "Oficina"),
+  quién recibe, teléfono opcional y una **predeterminada**. La primera queda predeterminada sola; si se
+  borra la predeterminada, pasa a serlo la usada más recientemente.
+- **Checkout con un clic en la dirección**: la predeterminada ya viene elegida; se puede elegir otra de la
+  libreta o escribir una nueva, que por defecto se guarda para la próxima compra. Órdenes sigue guardando
+  la dirección como **texto**, así que editar la libreta no cambia pedidos anteriores.
+- **Línea de tiempo del pedido** en *Mis pedidos*: realizado → pago confirmado → enviado → entregado, con
+  fecha y hora de cada paso y la dirección de envío.
+- **Entrega estimada** (días hábiles, sin fines de semana): pagado → entre 3 y 6 días desde el pago;
+  enviado → entre 1 y 3 días desde el envío. Se muestra en la lista ("Llega entre el lun 12 y el jue 15").
+- **"Comprar de nuevo"**: agrega al carrito todo lo del pedido con las mismas cantidades. Si no alcanza el
+  stock agrega 1 unidad, y avisa lo que ya no está disponible.
+- Bases que ya existían **no hay que borrarlas**: al arrancar, Users crea la tabla `user_addresses` y
+  Órdenes agrega la columna `shipped_at_utc` si faltan.
+
+  | Método | Ruta | Acceso |
+  |---|---|---|
+  | GET | `/api/addresses` | cliente (las suyas, la predeterminada primero) |
+  | POST | `/api/addresses` | cliente |
+  | PUT | `/api/addresses/{id}` | cliente (solo las suyas; ajenas → 404) |
+  | POST | `/api/addresses/{id}/default` | cliente |
+  | DELETE | `/api/addresses/{id}` | cliente |
+
+  Las respuestas de órdenes (`GET /api/orders`, `GET /api/orders/{id}`) suman `shippingAddress`,
+  `createdAtUtc`, `paidAtUtc`, `shippedAtUtc`, `estimatedDeliveryFrom`/`To` (`aaaa-mm-dd`) y el
+  `productId` de cada línea.
+
+Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (secciones 4.4 y 4.5).
+
 ## Datos de demostración
 
 Para probar con una tienda "viva" en vez de productos con códigos raros:
@@ -1526,6 +1558,7 @@ Carga, a través del Gateway (como lo haría un Admin):
   `MASCOTAS12`, `BLACKFRIDAY` (programado para el próximo Black Friday), `VERANO15` (vencido) y
   `NAVIDAD25` (pausado), para ver todos los estados en el panel.
 - **10 clientes** y **344 reseñas** en español con calificaciones realistas.
+- **14 direcciones** en la libreta de esos clientes (varios países), para que el checkout ya venga completo.
 
 Es **idempotente**: lo que ya existe se deja como está, así que se puede correr de nuevo sin duplicar.
 Al terminar imprime los accesos (Admin `admin@demo-tienda.test` / `Admin12345!`; clientes
@@ -1533,5 +1566,5 @@ Al terminar imprime los accesos (Admin `admin@demo-tienda.test` / `Admin12345!`;
 
 > Las imágenes son ilustraciones generadas (marca, nombre y un ícono del tipo de producto), no fotos
 > oficiales de las marcas: se pueden reemplazar desde el panel de Admin. Los datos fuente están en
-> `scripts/seed-data/` (`catalog.json`, `reviews.json`, `images/`).
+> `scripts/seed-data/` (`catalog.json`, `reviews.json`, `addresses.json`, `images/`).
 

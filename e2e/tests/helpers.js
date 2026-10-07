@@ -34,3 +34,13 @@ export async function registerNewCustomer(page) {
   await page.waitForURL(`${STOREFRONT_URL}/`)
   return { email, fullName }
 }
+
+/**
+ * En el checkout, completa una dirección nueva (Fase 5: el cliente sin libreta ve el formulario;
+ * "Quién recibe" ya viene con su nombre). Por defecto también queda guardada en su libreta.
+ */
+export async function fillShippingAddress(page, { street = 'Calle Falsa 123', city = 'Ciudad de Prueba', country = 'Argentina' } = {}) {
+  await page.getByLabel('Calle y número').fill(street)
+  await page.getByLabel('Ciudad', { exact: true }).fill(city)
+  await page.getByLabel('País').fill(country)
+}

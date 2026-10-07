@@ -47,10 +47,11 @@ const ADMIN = {
 
 const catalog = JSON.parse(await readFile(path.join(here, 'seed-data', 'catalog.json'), 'utf-8'))
 const reviewsData = JSON.parse(await readFile(path.join(here, 'seed-data', 'reviews.json'), 'utf-8'))
+const addressesData = JSON.parse(await readFile(path.join(here, 'seed-data', 'addresses.json'), 'utf-8'))
 
 // ---- Utilidades ----
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const summary = { categorías: 0, productos: 0, imágenes: 0, stock: 0, cupones: 0, clientes: 0, reseñas: 0, avisos: 0 }
+const summary = { categorías: 0, productos: 0, imágenes: 0, stock: 0, cupones: 0, clientes: 0, reseñas: 0, direcciones: 0, avisos: 0 }
 
 function warn(message) {
   summary.avisos++
@@ -342,7 +343,7 @@ async function customerToken(customer) {
   }
 }
 
-async function seedReviews(productIds) {
+async function customerTokens() {
   const tokens = new Map()
   for (const customer of reviewsData.customers) {
     try {
@@ -351,6 +352,10 @@ async function seedReviews(productIds) {
       warn(`Cliente ${customer.email}: ${err.message}`)
     }
   }
+  return tokens
+}
+
+async function seedReviews(productIds, tokens) {
 
   await mapLimit(reviewsData.reviews, 6, async (review) => {
     const productId = productIds.get(review.product)
@@ -365,6 +370,27 @@ async function seedReviews(productIds) {
       if (err.status !== 409) warn(`Reseña de ${review.email} para "${review.product}": ${err.message}`) // 409 = ya existía
     }
   })
+}
+
+// =====================================================================================
+// 6. Libreta de direcciones (Fase 5): así el checkout de los clientes demo ya viene completo.
+// =====================================================================================
+async function seedAddresses(tokens) {
+  for (const { email, addresses } of addressesData) {
+    const token = tokens.get(email)
+    if (!token) continue
+    try {
+      // Idempotente: si el cliente ya tiene direcciones (de una corrida anterior o propias), no se tocan.
+      const existing = await http('GET', '/api/addresses', { token })
+      if (existing.length > 0) continue
+      for (const [i, address] of addresses.entries()) {
+        await http('POST', '/api/addresses', { token, json: { ...address, makeDefault: i === 0 } })
+        summary.direcciones++
+      }
+    } catch (err) {
+      warn(`Direcciones de ${email}: ${err.message}`)
+    }
+  }
 }
 
 // =====================================================================================
@@ -386,7 +412,11 @@ async function main() {
   await seedCoupons()
 
   console.log('Clientes y reseñas...')
-  await seedReviews(productIds)
+  const tokens = await customerTokens()
+  await seedReviews(productIds, tokens)
+
+  console.log('Direcciones de los clientes...')
+  await seedAddresses(tokens)
 
   console.log('\nListo. Creados en esta corrida:')
   for (const [key, value] of Object.entries(summary)) console.log(`  ${key.padEnd(11)} ${value}`)
