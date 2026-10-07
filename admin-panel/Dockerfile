@@ -7,7 +7,9 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 COPY admin-panel/package.json admin-panel/pnpm-lock.yaml admin-panel/.npmrc ./
-RUN pnpm install --frozen-lockfile
+# Caché del almacén de pnpm: las dependencias se descargan una sola vez.
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store,sharing=locked \
+    pnpm install --frozen-lockfile --store-dir /pnpm/store
 
 COPY admin-panel/ .
 

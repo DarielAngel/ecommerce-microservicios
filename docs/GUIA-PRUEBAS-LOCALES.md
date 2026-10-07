@@ -2,7 +2,7 @@
 
 Recorrido paso a paso para levantar todo en tu máquina, cargar datos realistas y probar cada
 funcionalidad como cliente y como Admin. Los comandos son para **Windows (cmd)** desde la raíz
-del repo (`ecommerce-git`); en WSL/Linux cambia `\` por `/` y `copy` por `cp`.
+del repo; en WSL/Linux cambia `\` por `/` y `copy` por `cp`.
 
 ---
 
@@ -183,3 +183,11 @@ pnpm test
 | Quiero empezar con la base vacía | `docker compose down -v` (**borra todos los datos**) y luego `docker compose up -d` y el script de datos otra vez. |
 | La búsqueda sin tildes no encuentra nada | Catálogo instala la extensión `unaccent` al arrancar; si se cayó antes, reinícialo: `docker compose restart catalog-service`. |
 | `no such host` al construir imágenes | Problema de DNS de Docker/WSL: ver *Troubleshooting general* en el README. |
+| `Resource temporarily unavailable (api.nuget.org)` o `short read / unexpected EOF` al construir | Se cortó la red o el DNS de Docker a mitad de la descarga. Vuelve a correr el mismo comando: lo ya descargado (imágenes y paquetes NuGet/pnpm) queda en caché y solo se baja lo que faltaba. Si la red está muy inestable, construye de a un servicio (ver abajo). |
+| Reconstruyó **todos** los servicios aunque cambié poco | Microsoft publicó una versión nueva de la imagen `dotnet/sdk:8.0`. Ya no hace falta volver a bajar los paquetes: quedan en la caché de BuildKit, compartida por todos los servicios. **No** corras `docker builder prune` (borraría esa caché). |
+
+**Construir de a un servicio** (útil con internet inestable; cada uno que termina queda guardado):
+```cmd
+for %s in (gateway users-service catalog-service inventory-service cart-service payments-service orders-service notifications-service reviews-service wishlist-service promotions-service storefront admin-panel) do docker compose build %s
+docker compose up -d
+```
