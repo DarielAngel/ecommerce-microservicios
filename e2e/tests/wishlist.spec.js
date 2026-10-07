@@ -2,12 +2,16 @@ import { test, expect } from '@playwright/test'
 import { loadSeedData, registerNewCustomer } from './helpers.js'
 import { STOREFRONT_URL } from '../playwright.config.js'
 
+// En el detalle hay varios corazones: el del producto y uno por tarjeta de "También te puede
+// interesar". El del producto vive dentro de la ficha (data-testid="product-info").
+const detailHeart = (page) => page.getByTestId('product-info').getByTestId('favorite-toggle')
+
 test.describe('Storefront — favoritos', () => {
   test('un visitante que toca el corazón va a iniciar sesión', async ({ page }) => {
     const seed = await loadSeedData()
     await page.goto(`${STOREFRONT_URL}/products/${seed.productId}`)
 
-    await page.getByTestId('favorite-toggle').click()
+    await detailHeart(page).click()
 
     await page.waitForURL(/\/login\?redirect=/)
     await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible()
@@ -18,7 +22,7 @@ test.describe('Storefront — favoritos', () => {
     await registerNewCustomer(page)
     await page.goto(`${STOREFRONT_URL}/products/${seed.productId}`)
 
-    const heart = page.getByTestId('favorite-toggle')
+    const heart = detailHeart(page)
     await expect(heart).toHaveAttribute('aria-pressed', 'false')
     await heart.click()
     await expect(heart).toHaveAttribute('aria-pressed', 'true')
@@ -27,7 +31,7 @@ test.describe('Storefront — favoritos', () => {
 
     // Persistido en el servidor: sobrevive a recargar la página.
     await page.reload()
-    await expect(page.getByTestId('favorite-toggle')).toHaveAttribute('aria-pressed', 'true')
+    await expect(detailHeart(page)).toHaveAttribute('aria-pressed', 'true')
 
     await page.getByRole('link', { name: 'Mis favoritos' }).click()
     await page.waitForURL(`${STOREFRONT_URL}/favorites`)

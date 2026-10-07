@@ -78,6 +78,18 @@ describe('ProductDetailView — descubrimiento', () => {
     expect(wrapper.get('[data-testid="related-products"]').text()).toContain('Moto G84')
   })
 
+  it('el corazón del producto vive en su ficha, separado de los corazones de los relacionados', async () => {
+    const wrapper = mountView()
+    await flushPromises()
+
+    // Las pruebas E2E ubican el corazón del producto con [data-testid="product-info"]: debe haber
+    // exactamente uno ahí, y los de "También te puede interesar" quedan fuera de esa ficha.
+    const info = wrapper.get('[data-testid="product-info"]')
+    expect(info.findAll('favorite-button-stub')).toHaveLength(1)
+    expect(info.find('[data-testid="related-products"]').exists()).toBe(false)
+    expect(wrapper.findAll('favorite-button-stub').length).toBeGreaterThan(1)
+  })
+
   it('registra la visita (con su categoría) y no se muestra a sí mismo en "Vistos recientemente"', async () => {
     localStorage.setItem('storefront-recently-viewed', JSON.stringify([
       { id: 'p2', name: 'Pixel 8a', categoryName: 'Celulares', minPrice: 499, primaryImageFileName: null }

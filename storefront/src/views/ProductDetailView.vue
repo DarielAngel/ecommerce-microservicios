@@ -162,7 +162,7 @@ async function addToCart() {
       </div>
     </div>
 
-    <div>
+    <div data-testid="product-info">
       <div class="mb-2 flex items-start justify-between gap-3">
         <h1 class="text-3xl font-bold tracking-tight text-ink">{{ product.name }}</h1>
         <FavoriteButton :product-id="product.id" size="lg" class="flex-shrink-0" />
