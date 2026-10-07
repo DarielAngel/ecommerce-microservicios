@@ -30,7 +30,7 @@ const options = computed(() => [
 const activeId = computed(() => (activeIndex.value >= 0 ? `search-option-${activeIndex.value}` : undefined))
 
 function onInput() {
-  clearTimeout(timer)
+  cancelPending()
   const term = query.value
   if (term.trim().length < 2) {
     suggestions.value = []
@@ -49,7 +49,16 @@ function onInput() {
   }, props.debounceMs)
 }
 
+// Cancela la consulta pendiente y descarta la que esté en vuelo: si el cliente ya buscó
+// (Enter), eligió o salió del campo, una respuesta tardía no debe reabrir el menú encima
+// de los resultados.
+function cancelPending() {
+  clearTimeout(timer)
+  requestId++
+}
+
 function close() {
+  cancelPending()
   open.value = false
   activeIndex.value = -1
 }
@@ -61,6 +70,7 @@ function goToProduct(product) {
 
 function submitSearch() {
   close()
+  suggestions.value = [] // eran de lo escrito antes de buscar; al volver a enfocar no reaparecen
   const q = query.value.trim()
   router.push({ name: 'home', query: q ? { q } : {} })
 }

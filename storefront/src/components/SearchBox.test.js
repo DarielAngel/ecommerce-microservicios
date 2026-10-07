@@ -135,4 +135,34 @@ describe('SearchBox', () => {
     expect(wrapper.text()).toContain('Galaxy A15 5G')
     expect(wrapper.text()).not.toContain('Galaxy S24')
   })
+
+  it('Enter antes de que lleguen las sugerencias no deja el menú abierto encima de los resultados', async () => {
+    let resolveLate
+    fetchSuggestions.mockImplementationOnce(() => new Promise((r) => { resolveLate = r }))
+    const { wrapper, router } = await mountBox()
+    const input = await type(wrapper, 'galaxy') // consulta en vuelo
+
+    await wrapper.get('form').trigger('submit')
+    resolveLate(products)                       // la respuesta llega después del Enter
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/?q=galaxy')
+    expect(input.attributes('aria-expanded')).toBe('false')
+  })
+
+  it('Enter antes de que venza la espera no llega a consultar', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'home', component: stub }] })
+    router.push('/')
+    await router.isReady()
+    const wrapper = mount(SearchBox, { props: { debounceMs: 50 }, global: { plugins: [router] }, attachTo: document.body })
+    const input = wrapper.get('#global-search')
+    await input.setValue('galaxy')
+    await input.trigger('input')
+    await wrapper.get('form').trigger('submit')
+    await new Promise((r) => setTimeout(r, 80))
+    await flushPromises()
+
+    expect(fetchSuggestions).not.toHaveBeenCalled()
+    expect(input.attributes('aria-expanded')).toBe('false')
+  })
 })
