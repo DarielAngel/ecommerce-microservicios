@@ -52,3 +52,22 @@ public class SendOrderShippedEmailCommandHandler : IRequestHandler<SendOrderShip
         return _dispatcher.DispatchAsync(NotificationType.OrderShipped, request.OrderId, request.Email, subject, html, ct);
     }
 }
+
+// ---- Carrito abandonado (evento CartAbandoned, Fase 6) ----
+public record SendCartAbandonedEmailCommand(
+    Guid ReminderId, string Email, string FullName, IReadOnlyList<EmailTemplates.CartLine> Items, decimal Subtotal,
+    string CartUrl) : IRequest;
+
+public class SendCartAbandonedEmailCommandHandler : IRequestHandler<SendCartAbandonedEmailCommand>
+{
+    private readonly NotificationDispatcher _dispatcher;
+
+    public SendCartAbandonedEmailCommandHandler(NotificationDispatcher dispatcher) => _dispatcher = dispatcher;
+
+    public Task Handle(SendCartAbandonedEmailCommand request, CancellationToken ct)
+    {
+        if (request.Items.Count == 0) return Task.CompletedTask; // nada que recordar
+        var (subject, html) = EmailTemplates.CartAbandoned(request.FullName, request.Items, request.Subtotal, request.CartUrl);
+        return _dispatcher.DispatchAsync(NotificationType.CartAbandoned, request.ReminderId, request.Email, subject, html, ct);
+    }
+}

@@ -43,4 +43,34 @@ public class EmailTemplatesTests
 
         html.Should().NotContain("<b>X</b>");
     }
+
+    [Fact]
+    public void CartAbandoned_ListaLoQueDejo_ConEnlaceAlCarrito_YEscapaLosNombres()
+    {
+        var items = new List<EmailTemplates.CartLine>
+        {
+            new("Taza <b>rota</b>", 2, 8.5m),
+            new("Plato", 1, 5m)
+        };
+
+        var (subject, html) = EmailTemplates.CartAbandoned("Ana & Luis", items, 22m, "http://localhost:5173/cart");
+
+        subject.Should().Be("Dejaste productos en tu carrito");
+        html.Should().Contain("2× Taza &lt;b&gt;rota&lt;/b&gt;");
+        html.Should().Contain("17.00 USD");
+        html.Should().Contain("<b>Subtotal:</b> 22.00 USD");
+        html.Should().Contain("href=\"http://localhost:5173/cart\"");
+        html.Should().Contain("Ana &amp; Luis");
+    }
+
+    [Fact]
+    public void CartAbandoned_ConMuchosProductos_MuestraCincoYCuantosMas()
+    {
+        var items = Enumerable.Range(1, 7).Select(i => new EmailTemplates.CartLine($"Producto {i}", 1, 1m)).ToList();
+
+        var (_, html) = EmailTemplates.CartAbandoned("Ana", items, 7m, "http://x/cart");
+
+        html.Should().Contain("Producto 5").And.NotContain("Producto 6");
+        html.Should().Contain("…y 2 producto(s) más.");
+    }
 }

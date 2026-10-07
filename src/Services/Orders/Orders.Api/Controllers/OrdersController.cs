@@ -19,7 +19,7 @@ public class OrdersController : ControllerBase
         _mediator = mediator;
     }
 
-    public record CheckoutRequest(List<Guid> VariantIds, string ShippingAddress, string? CouponCode = null);
+    public record CheckoutRequest(List<Guid> VariantIds, string ShippingAddress, string? CouponCode = null, bool UsePoints = false);
 
     private Guid GetUserId()
     {
@@ -64,7 +64,7 @@ public class OrdersController : ControllerBase
         var (email, fullName) = GetUserEmailAndName();
         var result = await _mediator.Send(
             new CheckoutCommand(GetUserId(), email, fullName, request.VariantIds, request.ShippingAddress, GetRawAccessToken(),
-                request.CouponCode), ct);
+                request.CouponCode, request.UsePoints), ct);
         return Ok(result);
     }
 
@@ -75,7 +75,7 @@ public class OrdersController : ControllerBase
     [HttpPost("{orderId:guid}/confirm-payment")]
     public async Task<ActionResult<CheckoutResult>> ConfirmPayment(Guid orderId, CancellationToken ct)
     {
-        var result = await _mediator.Send(new ConfirmPaymentCommand(orderId, GetRawAccessToken()), ct);
+        var result = await _mediator.Send(new ConfirmPaymentCommand(orderId, GetRawAccessToken(), GetUserId()), ct);
         return Ok(result);
     }
 

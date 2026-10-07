@@ -48,6 +48,15 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CartDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // EnsureCreated no toca una base que ya existía: las columnas del recordatorio de carrito
+    // abandonado (Fase 6) se agregan si faltan, así tu base local sigue sirviendo sin borrarla.
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE carts ADD COLUMN IF NOT EXISTS contact_email character varying(256) NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE carts ADD COLUMN IF NOT EXISTS contact_name character varying(200) NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE carts ADD COLUMN IF NOT EXISTS abandoned_reminder_for_activity_at_utc timestamp with time zone NULL;");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

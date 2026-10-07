@@ -130,4 +130,35 @@ public class OrderTests
         var act = () => CreateWithCoupon(("X10", discount));
         act.Should().Throw<DomainException>().WithMessage("*descuento*");
     }
+
+    // ---- Puntos (Fase 6) ----
+
+    private static Order CreateWith((string, decimal)? coupon, (int, decimal)? loyalty) => Order.Create(
+        Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente", "Calle 1",
+        new[] { (Guid.NewGuid(), Guid.NewGuid(), "Camiseta", "SKU-1", 20m, 2) }, coupon, loyalty);
+
+    [Fact]
+    public void ConPuntos_ElTotalDescuentaCuponYPuntos()
+    {
+        var order = CreateWith(("VERANO10", 4m), (500, 5m));
+
+        order.LoyaltyPoints.Should().Be(500);
+        order.TotalAmount.Should().Be(31m);
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(100, 0)]
+    public void PuntosInvalidos_SeRechazan(int points, decimal discount)
+    {
+        var act = () => CreateWith(null, (points, discount));
+        act.Should().Throw<Ecommerce.Orders.Domain.Exceptions.DomainException>();
+    }
+
+    [Fact]
+    public void LosPuntosNoPuedenDejarLaOrdenEnCero()
+    {
+        var act = () => CreateWith(("VERANO10", 30m), (1000, 10m));
+        act.Should().Throw<Ecommerce.Orders.Domain.Exceptions.DomainException>().WithMessage("*menor que lo que queda por pagar*");
+    }
 }

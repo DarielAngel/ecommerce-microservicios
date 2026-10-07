@@ -19,6 +19,7 @@ public class CartApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public FakeCatalogServiceClient FakeCatalog { get; } = new();
     public FakeInventoryServiceClient FakeInventory { get; } = new();
+    public CapturingEventPublisher Published { get; } = new();
 
     private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
@@ -39,6 +40,10 @@ public class CartApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
             services.RemoveAll<IInventoryServiceClient>();
             services.AddSingleton<IInventoryServiceClient>(FakeInventory);
+
+            // Sin RabbitMQ en estas pruebas: el recordatorio se dispara a mano y se captura lo publicado.
+            services.RemoveAll<IEventPublisher>();
+            services.AddSingleton<IEventPublisher>(Published);
         });
     }
 
@@ -50,6 +55,7 @@ public class CartApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Secret", TestJwtSecret);
         Environment.SetEnvironmentVariable("Jwt__Issuer", TestJwtIssuer);
         Environment.SetEnvironmentVariable("Jwt__Audience", TestJwtAudience);
+        Environment.SetEnvironmentVariable("AbandonedCart__Enabled", "false");
 
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<CartDbContext>();
@@ -62,6 +68,7 @@ public class CartApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Secret", null);
         Environment.SetEnvironmentVariable("Jwt__Issuer", null);
         Environment.SetEnvironmentVariable("Jwt__Audience", null);
+        Environment.SetEnvironmentVariable("AbandonedCart__Enabled", null);
 
         await _postgresContainer.DisposeAsync();
     }

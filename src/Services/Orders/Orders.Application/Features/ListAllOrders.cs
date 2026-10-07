@@ -8,7 +8,8 @@ public record ListAllOrdersQuery(int Count = 100) : IRequest<IReadOnlyList<Admin
 public record AdminOrderResult(
     Guid OrderId, Guid UserId, string UserEmail, string UserFullName, string ShippingAddress,
     string Status, decimal TotalAmount, DateTime CreatedAtUtc, IReadOnlyList<OrderLineResult> Lines,
-    decimal DiscountAmount, string? CouponCode, DateTime? PaidAtUtc = null, DateTime? ShippedAtUtc = null);
+    decimal DiscountAmount, string? CouponCode, DateTime? PaidAtUtc = null, DateTime? ShippedAtUtc = null,
+    int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0);
 
 public class ListAllOrdersQueryHandler : IRequestHandler<ListAllOrdersQuery, IReadOnlyList<AdminOrderResult>>
 {
@@ -25,7 +26,8 @@ public class ListAllOrdersQueryHandler : IRequestHandler<ListAllOrdersQuery, IRe
             order.Id, order.UserId, order.UserEmail, order.UserFullName, order.ShippingAddress,
             order.Status.ToString(), order.TotalAmount, order.CreatedAtUtc,
             order.Lines.Select(OrderLineResult.From).ToList(),
-            order.DiscountAmount, order.CouponCode, order.PaidAtUtc, order.ShippedAtUtc
+            order.DiscountAmount, order.CouponCode, order.PaidAtUtc, order.ShippedAtUtc,
+            order.LoyaltyPoints, order.LoyaltyDiscount
         )).ToList();
     }
 }

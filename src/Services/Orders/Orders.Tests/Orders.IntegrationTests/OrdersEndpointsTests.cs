@@ -395,4 +395,59 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
         (await confirm.Content.ReadFromJsonAsync<CheckoutResult>())!.Status.Should().Be("Paid");
         _factory.FakeCoupons.ConfirmedOrders.Should().ContainKey(checkout.OrderId);
     }
+
+    // ---- Puntos (Fase 6) ----
+
+    [Fact]
+    public async Task Checkout_UsandoPuntos_DescuentaYConfirmaElCanjeAlPagar()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) }; // $40
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        _factory.FakePayments.ShouldCaptureSucceed = true;
+        _factory.FakeCoupons.ValidCoupons["MENOS10"] = 10m;
+        _factory.FakeLoyalty.Balance = 900;
+
+        var request = WithAuth(HttpMethod.Post, "/api/orders/checkout", token);
+        request.Content = JsonContent.Create(new
+        {
+            VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123", CouponCode = "MENOS10", UsePoints = true
+        });
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var checkout = (await response.Content.ReadFromJsonAsync<CheckoutResult>())!;
+        // $40 − $10 del cupón = $30; con puntos como mucho la mitad: $15 (1500 pts), pero hay 900 → $9.
+        _factory.FakeLoyalty.ReservedAmounts[checkout.OrderId].Should().Be(30m);
+        checkout.LoyaltyPoints.Should().Be(900);
+        checkout.LoyaltyDiscount.Should().Be(9m);
+        checkout.TotalAmount.Should().Be(21m);
+
+        var confirm = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{checkout.OrderId}/confirm-payment", token));
+        var paid = (await confirm.Content.ReadFromJsonAsync<CheckoutResult>())!;
+        paid.Status.Should().Be("Paid");
+        paid.LoyaltyDiscount.Should().Be(9m, "persistido en la base");
+        _factory.FakeLoyalty.ConfirmedOrders.Should().ContainKey(checkout.OrderId);
+    }
+
+    [Fact]
+    public async Task Checkout_SinPuntosSuficientes_Devuelve409ConElMotivoYLiberaElStock()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        _factory.FakeLoyalty.Balance = 40;
+        var releasedBefore = _factory.FakeInventory.ReleasedOrders.Count;
+
+        var request = WithAuth(HttpMethod.Post, "/api/orders/checkout", token);
+        request.Content = JsonContent.Create(new { VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle 1", UsePoints = true });
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("message").GetString()
+            .Should().Be("Necesitas al menos 100 puntos para usarlos (tienes 40).");
+        _factory.FakeInventory.ReleasedOrders.Count.Should().Be(releasedBefore + 1);
+    }
 }

@@ -41,6 +41,7 @@ public static class DependencyInjection
             busConfigurator.AddConsumer<UserRegisteredConsumer>();
             busConfigurator.AddConsumer<OrderPaidConsumer>();
             busConfigurator.AddConsumer<OrderShippedConsumer>();
+            busConfigurator.AddConsumer<CartAbandonedConsumer>();
 
             busConfigurator.UsingRabbitMq((context, rabbitConfigurator) =>
             {

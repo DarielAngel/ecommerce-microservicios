@@ -26,4 +26,17 @@ public class CartRepository : ICartRepository
 
     public Task SaveChangesAsync(CancellationToken ct) =>
         _context.SaveChangesAsync(ct);
+
+    public async Task<IReadOnlyList<CartAggregate>> ListIdleAsync(
+        DateTime updatedFrom, DateTime updatedUntil, int limit, CancellationToken ct) =>
+        await _context.Carts
+            .Where(c => c.UpdatedAtUtc >= updatedFrom && c.UpdatedAtUtc <= updatedUntil
+                        && c.ContactEmail != null && c.Items.Any()
+                        // Ya avisados por esta misma actividad: se filtran en SQL para que no ocupen el lote
+                        // y tapen a carritos que sí necesitan el correo.
+                        && (c.AbandonedReminderForActivityAtUtc == null
+                            || c.AbandonedReminderForActivityAtUtc != c.UpdatedAtUtc))
+            .OrderBy(c => c.UpdatedAtUtc)
+            .Take(limit)
+            .ToListAsync(ct);
 }

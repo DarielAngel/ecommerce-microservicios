@@ -53,7 +53,9 @@ public class CartController : ControllerBase
     public async Task<ActionResult<CartResult>> AddItem(AddItemRequest request, CancellationToken ct)
     {
         var result = await _mediator.Send(
-            new AddItemCommand(GetUserId(), request.VariantId, request.Quantity, GetRawAccessToken()), ct);
+            new AddItemCommand(GetUserId(), request.VariantId, request.Quantity, GetRawAccessToken(),
+                User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email"),
+                User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue("name")), ct);
         return Ok(result);
     }
 

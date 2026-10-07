@@ -80,3 +80,33 @@ public class FakeCouponServiceClient : ICouponServiceClient
         return Task.CompletedTask;
     }
 }
+
+public class FakeLoyaltyServiceClient : ILoyaltyServiceClient
+{
+    /// <summary>Puntos disponibles del "cliente" de las pruebas; la regla es la de Lealtad: hasta la mitad.</summary>
+    public int Balance { get; set; }
+    public ConcurrentDictionary<Guid, decimal> ReservedAmounts { get; } = new();
+    public ConcurrentDictionary<Guid, bool> ConfirmedOrders { get; } = new();
+    public ConcurrentDictionary<Guid, bool> ReleasedOrders { get; } = new();
+
+    public Task<LoyaltyReservation> ReserveAsync(Guid orderId, decimal amount, string accessToken, CancellationToken ct)
+    {
+        var points = Math.Min(Balance, (int)Math.Floor(amount * 0.5m / 0.01m));
+        if (points < 100) throw new ConflictAppException($"Necesitas al menos 100 puntos para usarlos (tienes {Balance}).");
+
+        ReservedAmounts[orderId] = amount;
+        return Task.FromResult(new LoyaltyReservation(points, points * 0.01m));
+    }
+
+    public Task ConfirmAsync(Guid orderId, string accessToken, CancellationToken ct)
+    {
+        ConfirmedOrders[orderId] = true;
+        return Task.CompletedTask;
+    }
+
+    public Task ReleaseAsync(Guid orderId, string accessToken, CancellationToken ct)
+    {
+        ReleasedOrders[orderId] = true;
+        return Task.CompletedTask;
+    }
+}

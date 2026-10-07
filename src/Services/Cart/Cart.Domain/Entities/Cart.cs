@@ -16,6 +16,17 @@ public class Cart
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
 
+    /// <summary>Email y nombre del dueño (tomados de su token al agregar productos), para el recordatorio.</summary>
+    public string? ContactEmail { get; private set; }
+    public string? ContactName { get; private set; }
+
+    /// <summary>
+    /// La "última actividad" (UpdatedAtUtc) del carrito que ya se le recordó. Si el cliente vuelve y lo
+    /// cambia, UpdatedAtUtc cambia y deja de coincidir: se le puede recordar de nuevo más adelante.
+    /// Comparar contra la actividad (y no contra la hora del envío) no depende de relojes desfasados.
+    /// </summary>
+    public DateTime? AbandonedReminderForActivityAtUtc { get; private set; }
+
     public decimal Subtotal => _items.Sum(i => i.LineTotal);
     public int TotalItemCount => _items.Sum(i => i.Quantity);
 
@@ -105,6 +116,31 @@ public class Cart
         _items.Clear();
         UpdatedAtUtc = DateTime.UtcNow;
     }
+
+    /// <summary>Guarda a quién escribirle si deja el carrito abandonado (lo último que llegó en su token).</summary>
+    public void SetContact(string? email, string? fullName)
+    {
+        if (!string.IsNullOrWhiteSpace(email)) ContactEmail = email.Trim();
+        if (!string.IsNullOrWhiteSpace(fullName)) ContactName = fullName.Trim();
+    }
+
+    /// <summary>
+    /// ¿Hay que recordarle al cliente este carrito? Sí cuando: tiene productos y a quién escribir; lleva al
+    /// menos <paramref name="idleFor"/> sin cambios pero no más de <paramref name="maxAge"/> (no escribimos
+    /// por carritos de hace semanas); y todavía no se le recordó desde su último cambio.
+    /// </summary>
+    public bool NeedsAbandonedReminder(DateTime nowUtc, TimeSpan idleFor, TimeSpan maxAge) =>
+        _items.Count > 0
+        && ContactEmail is not null
+        && UpdatedAtUtc <= nowUtc - idleFor
+        && UpdatedAtUtc >= nowUtc - maxAge
+        && AbandonedReminderForActivityAtUtc != UpdatedAtUtc;
+
+    /// <summary>No cambia UpdatedAtUtc: recordar no es actividad del cliente.</summary>
+    public void MarkAbandonedReminderSent() => AbandonedReminderForActivityAtUtc = UpdatedAtUtc;
+
+    /// <summary>Si el aviso no se pudo publicar, se deshace la marca para reintentar en la próxima vuelta.</summary>
+    public void UndoAbandonedReminder(DateTime? previous) => AbandonedReminderForActivityAtUtc = previous;
 
     /// <summary>Cantidad que ya hay en el carrito para una variante (0 si no está).</summary>
     public int GetCurrentQuantity(Guid variantId) =>

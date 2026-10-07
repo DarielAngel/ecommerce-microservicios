@@ -28,6 +28,7 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public FakeInventoryServiceClient FakeInventory { get; } = new();
     public FakePaymentServiceClient FakePayments { get; } = new();
     public FakeCouponServiceClient FakeCoupons { get; } = new();
+    public FakeLoyaltyServiceClient FakeLoyalty { get; } = new();
 
     private readonly PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
@@ -58,6 +59,9 @@ public class OrdersApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
             services.RemoveAll<ICouponServiceClient>();
             services.AddSingleton<ICouponServiceClient>(FakeCoupons);
+
+            services.RemoveAll<ILoyaltyServiceClient>();
+            services.AddSingleton<ILoyaltyServiceClient>(FakeLoyalty);
         });
     }
 

@@ -38,6 +38,7 @@ async function waitForGateway() {
   )
   // Cupones exige sesión: un 401 significa que el servicio ya responde detrás del Gateway.
   await waitForStatus(`${GATEWAY_URL}/api/coupons/validate?code=X&subtotal=1`, 'El servicio de Cupones', 401)
+  await waitForStatus(`${GATEWAY_URL}/api/loyalty/me`, 'El servicio de Lealtad (puntos)', 401)
 }
 
 async function ensureAdmin(email, password, fullName) {

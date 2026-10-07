@@ -11,6 +11,17 @@ public interface ICartRepository
     void TrackNewItem(Domain.Entities.CartItem item);
 
     Task SaveChangesAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Carritos con productos cuya última modificación cae entre <paramref name="updatedFrom"/> y
+    /// <paramref name="updatedUntil"/>, con sus ítems (candidatos a recordatorio de carrito abandonado).
+    /// </summary>
+    Task<IReadOnlyList<CartAggregate>> ListIdleAsync(DateTime updatedFrom, DateTime updatedUntil, int limit, CancellationToken ct);
+}
+
+public interface IEventPublisher
+{
+    Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : class;
 }
 
 public record VariantInfo(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal Price, bool IsActive);

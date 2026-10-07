@@ -33,6 +33,8 @@ public class OrdersDbContext : DbContext
             order.Ignore(o => o.EstimatedDelivery);
             order.Property(o => o.CouponCode).HasColumnName("coupon_code").HasMaxLength(30);
             order.Property(o => o.DiscountAmount).HasColumnName("discount_amount").HasColumnType("numeric(12,2)").IsRequired();
+            order.Property(o => o.LoyaltyPoints).HasColumnName("loyalty_points").IsRequired();
+            order.Property(o => o.LoyaltyDiscount).HasColumnName("loyalty_discount").HasColumnType("numeric(12,2)").IsRequired();
 
             order.OwnsMany(o => o.Lines, line =>
             {

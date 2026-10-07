@@ -99,4 +99,12 @@ describe('OrdersHistoryView', () => {
     expect(push).not.toHaveBeenCalled()
     expect(useToastStore().toasts.at(-1)).toMatchObject({ type: 'error', message: 'Ninguno de estos productos está disponible ahora.' })
   })
+
+  it('muestra los puntos usados y los que suma un pedido pagado', async () => {
+    const wrapper = await mountView([{ ...shipped, totalAmount: 31.5, loyaltyPoints: 500, loyaltyDiscount: 5 }, pending])
+
+    expect(orderItems(wrapper)[0].get('[data-testid="order-points-used"]').text()).toBe('· 500 puntos (−$5.00)')
+    expect(orderItems(wrapper)[0].get('[data-testid="order-points-earned"]').text()).toBe('· +31 puntos')
+    expect(orderItems(wrapper)[1].find('[data-testid="order-points-earned"]').exists()).toBe(false)
+  })
 })

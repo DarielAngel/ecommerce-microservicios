@@ -1079,7 +1079,7 @@ cd ../storefront && pnpm install && pnpm run test:unit
 
 ### End-to-end (Playwright) — necesitan el stack completo corriendo
 
-Prueban el flujo real contra los 20 servicios: login en dos capas del
+Prueban el flujo real contra todos los servicios: login en dos capas del
 panel, catálogo, carrito, checkout completo con PayPal simulado, gestión
 de categorías/productos/inventario, etc. Un `globalSetup` siembra sus
 propios datos de prueba (categoría, producto, variante, stock, un Admin)
@@ -1538,6 +1538,46 @@ Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-
   `productId` de cada línea.
 
 Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (secciones 4.4 y 4.5).
+
+## Fase 6 — Lealtad y retención (servicio `Loyalty`, puerto 5011; Carrito y Notificaciones)
+
+- **Puntos por compra**: cada orden pagada suma **1 punto por cada $1 cobrado** (redondeando hacia abajo,
+  sobre lo que de verdad se cobró, ya con cupón y puntos descontados). Lealtad los acredita al escuchar
+  `OrderPaidEvent`, una sola vez por orden aunque el evento llegue repetido.
+- **Canje en el checkout**: casilla "Usar mis puntos". **100 puntos = $1**, mínimo 100 puntos y como
+  máximo el **50 %** de lo que queda después del cupón. Sigue el mismo ciclo que el cupón dentro de la saga:
+  Inventario → Promociones → **Lealtad aparta los puntos** → Pagos cobra el total con ambos descuentos.
+  Pago capturado → se confirma el canje; pago rechazado → los puntos vuelven.
+- **Sin gastar dos veces los mismos puntos**: la cuenta del cliente se bloquea al apartar
+  (`SELECT ... FOR UPDATE`). Una reserva abandonada deja de contar a las 2 horas; si el cliente vuelve a
+  confirmar el pago después, Órdenes **vuelve a apartar los puntos antes de cobrar** y, si ya no alcanzan,
+  la orden queda fallida sin cobrar (se devuelve stock y cupón). Confirmar el mismo pago dos veces a la vez
+  ya no puede cobrar dos veces: Órdenes bloquea la fila de la orden mientras confirma.
+- **Pantalla *Mis puntos*** (pestaña junto a *Mis pedidos* y *Mis direcciones*): saldo, cuánto vale y el
+  historial. *Mis pedidos* muestra los puntos usados y los ganados en cada pedido.
+- **Recordatorio de carrito abandonado** (Carrito + Notificaciones): si un carrito con productos queda
+  quieto **1 hora**, el cliente recibe **un** correo con lo que dejó (hasta 5 productos) y un botón para
+  volver. No se repite mientras el carrito no cambie; si vuelve, lo cambia y lo deja de nuevo, se puede
+  recordar otra vez. Carritos de más de 24 h no se recuerdan. Se configura en `.env`:
+
+  | Variable | Por defecto | Qué hace |
+  |---|---|---|
+  | `CART_ABANDONED_AFTER` | `01:00:00` | Cuánto tiempo quieto antes del correo |
+  | `CART_ABANDONED_CHECK_EVERY` | `00:05:00` | Cada cuánto se revisa |
+  | `STORE_BASE_URL` | `http://localhost:5173` | Adónde lleva el botón del correo |
+
+  | Método | Ruta | Acceso |
+  |---|---|---|
+  | GET | `/api/loyalty/me` | cliente (saldo, valor, reglas e historial) |
+  | GET | `/api/loyalty/me/quote?amount=` | cliente (cuántos puntos usaría en esa compra; no aparta nada) |
+  | POST | `/internal/loyalty/redemptions` · `/{orderId}/confirm` · `/{orderId}/release` | solo Órdenes (no pasa por el Gateway) |
+
+- Bases que ya existían **no hay que borrarlas**: Órdenes agrega `loyalty_points` y `loyalty_discount`, y
+  Carrito agrega `contact_email`, `contact_name` y `abandoned_reminder_for_activity_at_utc` al arrancar.
+
+> **Contenedores**: ahora son **26** (se suman `postgres-loyalty` y `loyalty-service`).
+
+Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (secciones 4.6 y 4.7).
 
 ## Datos de demostración
 

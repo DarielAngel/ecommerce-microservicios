@@ -17,9 +17,17 @@ public class ConfirmPaymentCommandHandlerTests
     private readonly ICartServiceClient _cartClient = Substitute.For<ICartServiceClient>();
     private readonly IEventPublisher _eventPublisher = Substitute.For<IEventPublisher>();
     private readonly ICouponServiceClient _couponClient = Substitute.For<ICouponServiceClient>();
+    private readonly ILoyaltyServiceClient _loyaltyClient = Substitute.For<ILoyaltyServiceClient>();
+    private readonly IOrderLock _orderLock = Substitute.For<IOrderLock>();
+
+    public ConfirmPaymentCommandHandlerTests()
+    {
+        _orderLock.AcquireAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<IAsyncDisposable>(Substitute.For<IAsyncDisposable>()));
+    }
 
     private ConfirmPaymentCommandHandler CreateHandler() =>
-        new(_orderRepository, _inventoryClient, _paymentClient, _cartClient, _couponClient, _eventPublisher,
+        new(_orderRepository, _inventoryClient, _paymentClient, _cartClient, _couponClient, _loyaltyClient, _eventPublisher, _orderLock,
             NullLogger<ConfirmPaymentCommandHandler>.Instance);
 
     private static Order BuildPendingOrder(Guid orderId, Guid variantId) => Order.Create(
@@ -183,5 +191,99 @@ public class ConfirmPaymentCommandHandlerTests
         await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
 
         await _couponClient.DidNotReceiveWithAnyArgs().ConfirmAsync(default, default!, default);
+    }
+
+    // ---- Puntos (Fase 6) ----
+
+    private static Order BuildPendingOrderWithPoints(Guid orderId) => Order.Create(
+        orderId, Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123",
+        new[] { (Guid.NewGuid(), Guid.NewGuid(), "Camiseta", "SKU-1", 20m, 2) },
+        loyalty: (500, 5m));
+
+    [Fact]
+    public async Task Handle_ConCapturaExitosaYPuntos_ConfirmaElCanjeYPublicaElTotalCobrado()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrderWithPoints(orderId));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(true, "COMPLETED"));
+
+        var result = await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        result.TotalAmount.Should().Be(35m);
+        await _loyaltyClient.Received(1).ConfirmAsync(orderId, "token", Arg.Any<CancellationToken>());
+        // Los puntos nuevos se ganan sobre lo que de verdad se cobró ($35), no sobre el subtotal.
+        await _eventPublisher.Received(1).PublishAsync(
+            Arg.Is<Ecommerce.Contracts.Events.OrderPaidEvent>(e => e.TotalAmount == 35m), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_ConCapturaFallidaYPuntos_DevuelveLosPuntos()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrderWithPoints(orderId));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(false, "DECLINED"));
+
+        await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        await _loyaltyClient.Received(1).ReleaseAsync(orderId, "token", Arg.Any<CancellationToken>());
+        await _loyaltyClient.DidNotReceiveWithAnyArgs().ConfirmAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_SinPuntos_NoLlamaALealtad()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrder(orderId, Guid.NewGuid()));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(true, "COMPLETED"));
+
+        await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        await _loyaltyClient.DidNotReceiveWithAnyArgs().ConfirmAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_SiLosPuntosYaNoAlcanzan_NoCobraYDejaLaOrdenFallidaDevolviendoTodo()
+    {
+        var orderId = Guid.NewGuid();
+        var order = BuildPendingOrderWithPoints(orderId);
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
+        _loyaltyClient.ReserveAsync(orderId, Arg.Any<decimal>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ConflictAppException("Tus puntos ya no alcanzan para esta compra."));
+
+        var result = await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        result.Status.Should().Be("Failed");
+        await _paymentClient.DidNotReceiveWithAnyArgs().CapturePaymentAsync(default, default!, default);
+        await _inventoryClient.Received(1).ReleaseReservationAsync(orderId, "token", Arg.Any<CancellationToken>());
+        await _loyaltyClient.Received(1).ReleaseAsync(orderId, "token", Arg.Any<CancellationToken>());
+        await _orderRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_ConOrdenDeOtroCliente_DeberiaLanzarNotFoundYNoCobrar()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrder(orderId, Guid.NewGuid()));
+
+        var act = () => CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token", RequesterId: Guid.NewGuid()), CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundAppException>();
+        await _paymentClient.DidNotReceiveWithAnyArgs().CapturePaymentAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_TomaElCandadoDeLaOrdenAntesDeCobrar()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrder(orderId, Guid.NewGuid()));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(true, "COMPLETED"));
+
+        await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        Received.InOrder(() =>
+        {
+            _orderLock.AcquireAsync(orderId, Arg.Any<CancellationToken>());
+            _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>());
+        });
     }
 }

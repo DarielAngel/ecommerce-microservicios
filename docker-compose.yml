@@ -210,6 +210,25 @@ services:
     networks:
       - ecommerce-net
 
+  postgres-loyalty:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-loyalty
+    environment:
+      POSTGRES_DB: loyalty_db
+      POSTGRES_USER: loyalty_svc
+      POSTGRES_PASSWORD: loyalty_pass_dev
+    ports:
+      - "5443:5432"
+    volumes:
+      - pg_loyalty_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loyalty_svc -d loyalty_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Microservicio: Users / Auth
   # ------------------------------------------------------------------
@@ -317,11 +336,20 @@ services:
       Jwt__Audience: "Ecommerce.Clients"
       ServiceUrls__CatalogBaseUrl: "http://catalog-service:8080/"
       ServiceUrls__InventoryBaseUrl: "http://inventory-service:8080/"
+      # Fase 6: recordatorio de carrito abandonado (formato hh:mm:ss; ver .env.example).
+      AbandonedCart__After: "${CART_ABANDONED_AFTER:-01:00:00}"
+      AbandonedCart__CheckEvery: "${CART_ABANDONED_CHECK_EVERY:-00:05:00}"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
       - "5004:8080"
     depends_on:
       postgres-cart:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       catalog-service:
         condition: service_started
@@ -376,6 +404,7 @@ services:
       ServiceUrls__InventoryBaseUrl: "http://inventory-service:8080/"
       ServiceUrls__PaymentsBaseUrl: "http://payments-service:8080/"
       ServiceUrls__PromotionsBaseUrl: "http://promotions-service:8080/"
+      ServiceUrls__LoyaltyBaseUrl: "http://loyalty-service:8080/"
       RabbitMq__Host: "rabbitmq"
       RabbitMq__VirtualHost: "/"
       RabbitMq__Username: "guest"
@@ -395,6 +424,8 @@ services:
       payments-service:
         condition: service_started
       promotions-service:
+        condition: service_started
+      loyalty-service:
         condition: service_started
     networks:
       - ecommerce-net
@@ -418,6 +449,8 @@ services:
       RabbitMq__Password: "guest"
       Resend__ApiKey: "${RESEND_API_KEY:-}"
       Resend__FromAddress: "${RESEND_FROM_ADDRESS:-onboarding@resend.dev}"
+      # Para el botón "Volver a mi carrito" del recordatorio de carrito abandonado.
+      Store__BaseUrl: "${STORE_BASE_URL:-http://localhost:5173}"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
       - "5007:8080"
@@ -496,6 +529,34 @@ services:
       - ecommerce-net
 
   # ------------------------------------------------------------------
+  # Microservicio: Lealtad (puntos por compra y canje en el checkout — Fase 6)
+  # ------------------------------------------------------------------
+  loyalty-service:
+    build:
+      context: .
+      dockerfile: src/Services/Loyalty/Loyalty.Api/Dockerfile
+    container_name: ecommerce-loyalty-service
+    environment:
+      ConnectionStrings__LoyaltyDb: "Host=postgres-loyalty;Port=5432;Database=loyalty_db;Username=loyalty_svc;Password=loyalty_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5011:8080"
+    depends_on:
+      postgres-loyalty:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ------------------------------------------------------------------
   # Gateway — único punto de entrada para el frontend
   # ------------------------------------------------------------------
   gateway:
@@ -517,6 +578,7 @@ services:
       - reviews-service
       - wishlist-service
       - promotions-service
+      - loyalty-service
     networks:
       - ecommerce-net
 
@@ -572,4 +634,5 @@ volumes:
   pg_reviews_data:
   pg_wishlist_data:
   pg_promotions_data:
+  pg_loyalty_data:
   catalog_images:

@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../api/useApi'
 import { useCartStore } from '../stores/cart'
 import { useAuthStore } from '../stores/auth'
 import { addressesApi } from '../api/addresses'
+import { loyaltyApi } from '../api/loyalty'
 import { emptyAddress, formatAddress, isComplete, errorText } from '../utils/addresses'
 import CouponField from '../components/CouponField.vue'
 import AddressForm from '../components/AddressForm.vue'
@@ -32,7 +33,28 @@ const selectedItems = computed(() =>
 )
 const subtotal = computed(() => selectedItems.value.reduce((sum, i) => sum + i.lineTotal, 0))
 const coupon = ref(null) // { code, description, discountAmount, total } o null
-const total = computed(() => subtotal.value - (coupon.value?.discountAmount ?? 0))
+const afterCoupon = computed(() => subtotal.value - (coupon.value?.discountAmount ?? 0))
+
+// Puntos (Fase 6): el servidor dice cuántos se pueden usar sobre lo que queda después del cupón.
+const pointsQuote = ref(null) // { balance, points, discount } o null si no se pudo consultar
+const usePoints = ref(false)
+const pointsDiscount = computed(() => (usePoints.value && pointsQuote.value?.points ? pointsQuote.value.discount : 0))
+const total = computed(() => afterCoupon.value - pointsDiscount.value)
+
+let quoteRequest = 0
+async function refreshPointsQuote() {
+  const id = ++quoteRequest
+  if (afterCoupon.value <= 0) return
+  try {
+    const quote = await loyaltyApi.quote(apiClient, afterCoupon.value)
+    if (id !== quoteRequest) return // llegó tarde: ya cambió el cupón
+    pointsQuote.value = quote
+    if (!quote.points) usePoints.value = false
+  } catch {
+    if (id === quoteRequest) { pointsQuote.value = null; usePoints.value = false } // sin Lealtad se paga igual, sin puntos
+  }
+}
+watch(afterCoupon, refreshPointsQuote)
 
 onMounted(() => {
   try {
@@ -46,6 +68,7 @@ onMounted(() => {
     return
   }
   loadAddresses()
+  refreshPointsQuote()
 })
 
 async function loadAddresses() {
@@ -98,7 +121,8 @@ async function submit() {
     const result = await apiClient.post('/api/orders/checkout', {
       variantIds: variantIds.value,
       shippingAddress,
-      couponCode: coupon.value?.code ?? null
+      couponCode: coupon.value?.code ?? null,
+      usePoints: usePoints.value && Boolean(pointsQuote.value?.points)
     })
     sessionStorage.removeItem('checkout-variant-ids')
 
@@ -120,6 +144,8 @@ async function submit() {
     // Si lo que falló fue el cupón (se agotó o venció mientras tanto), lo quitamos para que el
     // cliente pueda pagar sin él o probar otro.
     if (coupon.value && /cup[oó]n/i.test(err.message || '')) coupon.value = null
+    // Si lo que falló fueron los puntos (se usaron en otra compra a la vez), se vuelve a cotizar.
+    if (usePoints.value && /punto/i.test(err.message || '')) { usePoints.value = false; refreshPointsQuote() }
   } finally {
     submitting.value = false
   }
@@ -145,6 +171,10 @@ async function submit() {
           <span>Cupón {{ coupon.code }}</span>
           <span data-testid="checkout-discount">−${{ coupon.discountAmount.toFixed(2) }}</span>
         </div>
+        <div v-if="pointsDiscount > 0" class="flex justify-between text-sm text-emerald-700 dark:text-emerald-400">
+          <span>{{ pointsQuote.points }} puntos</span>
+          <span data-testid="checkout-points-discount">−${{ pointsDiscount.toFixed(2) }}</span>
+        </div>
         <div class="flex justify-between text-base font-semibold">
           <span>Total</span>
           <span data-testid="checkout-total">${{ total.toFixed(2) }}</span>
@@ -152,6 +182,19 @@ async function submit() {
       </div>
       <div class="mt-4">
         <CouponField v-model="coupon" :subtotal="subtotal" />
+      </div>
+      <div v-if="pointsQuote" class="mt-3 rounded-lg border border-line p-3 text-sm" data-testid="checkout-points">
+        <label v-if="pointsQuote.points > 0" class="flex cursor-pointer items-center gap-2">
+          <input v-model="usePoints" type="checkbox" class="h-4 w-4" data-testid="checkout-use-points" />
+          <span class="text-ink">
+            Usar <b>{{ pointsQuote.points }}</b> de tus {{ pointsQuote.balance }} puntos
+            <span class="text-emerald-700 dark:text-emerald-400">(−${{ pointsQuote.discount.toFixed(2) }})</span>
+          </span>
+        </label>
+        <p v-else class="text-ink-muted">
+          Tienes {{ pointsQuote.balance }} puntos. <span v-if="pointsQuote.balance < 100">Desde 100 puedes usarlos como descuento.</span>
+          <span v-else>Esta compra es muy chica para usarlos.</span>
+        </p>
       </div>
     </div>
 

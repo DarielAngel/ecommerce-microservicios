@@ -17,9 +17,13 @@ import { useAuthStore } from '../stores/auth'
 const casa = { id: 'a1', label: 'Casa', isDefault: false, formatted: 'Ana Martínez, Calle 1, Lima, Perú' }
 const oficina = { id: 'a2', label: 'Oficina', isDefault: true, formatted: 'Ana Martínez, Av. 2, Lima, Perú' }
 
-function givenAddresses(list) {
-  client.get.mockImplementation(async (path) => {
+function givenAddresses(list, quote = null) {
+  client.get.mockImplementation(async (path, opts) => {
     if (path === '/api/addresses') return list
+    if (path === '/api/loyalty/me/quote') {
+      if (!quote) throw new Error('Lealtad caído')
+      return typeof quote === 'function' ? quote(Number(opts.params.amount)) : quote
+    }
     throw new Error(`GET inesperado: ${path}`)
   })
 }
@@ -128,5 +132,59 @@ describe('CheckoutView — dirección de envío', () => {
     const wrapper = await mountView()
 
     expect(wrapper.find('[data-testid="checkout-new-address"]').exists()).toBe(true)
+  })
+})
+
+describe('CheckoutView — puntos', () => {
+  beforeEach(() => {
+    for (const fn of [client.get, client.post, push, replace]) fn.mockReset()
+    sessionStorage.setItem('checkout-variant-ids', JSON.stringify(['v1']))
+    vi.spyOn(window, 'open').mockReturnValue(null)
+    client.post.mockResolvedValue({ orderId: 'o1', approveUrl: null })
+  })
+
+  it('ofrece usar los puntos que cotiza el servidor y los descuenta del total', async () => {
+    givenAddresses([oficina], { balance: 900, points: 800, discount: 8 })
+    const wrapper = await mountView()
+
+    expect(client.get).toHaveBeenCalledWith('/api/loyalty/me/quote', { params: { amount: '16.00' } })
+    expect(wrapper.get('[data-testid="checkout-points"]').text()).toContain('Usar 800 de tus 900 puntos')
+    expect(wrapper.get('[data-testid="checkout-total"]').text()).toBe('$16.00')
+
+    await wrapper.get('[data-testid="checkout-use-points"]').setValue(true)
+    expect(wrapper.get('[data-testid="checkout-points-discount"]').text()).toBe('−$8.00')
+    expect(wrapper.get('[data-testid="checkout-total"]').text()).toBe('$8.00')
+
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(checkoutBody()).toMatchObject({ usePoints: true })
+  })
+
+  it('sin marcar la casilla no usa puntos', async () => {
+    givenAddresses([oficina], { balance: 900, points: 800, discount: 8 })
+    const wrapper = await mountView()
+
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(checkoutBody()).toMatchObject({ usePoints: false })
+  })
+
+  it('con pocos puntos explica cuántos tiene y no ofrece la casilla', async () => {
+    givenAddresses([oficina], { balance: 40, points: 0, discount: 0 })
+    const wrapper = await mountView()
+
+    expect(wrapper.find('[data-testid="checkout-use-points"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="checkout-points"]').text()).toContain('Tienes 40 puntos. Desde 100 puedes usarlos')
+  })
+
+  it('si Lealtad no responde, el checkout sigue sin la sección de puntos', async () => {
+    givenAddresses([oficina], null)
+    const wrapper = await mountView()
+
+    expect(wrapper.find('[data-testid="checkout-points"]').exists()).toBe(false)
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(checkoutBody()).toMatchObject({ usePoints: false })
   })
 })

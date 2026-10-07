@@ -5,7 +5,9 @@ using MediatR;
 
 namespace Ecommerce.Cart.Application.Features;
 
-public record AddItemCommand(Guid UserId, Guid VariantId, int Quantity, string AccessToken) : IRequest<CartResult>;
+public record AddItemCommand(
+    Guid UserId, Guid VariantId, int Quantity, string AccessToken,
+    string? UserEmail = null, string? UserFullName = null) : IRequest<CartResult>;
 
 public record CartItemResult(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal);
 public record CartResult(Guid UserId, IReadOnlyList<CartItemResult> Items, decimal Subtotal, int TotalItemCount);
@@ -63,6 +65,7 @@ public class AddItemCommandHandler : IRequestHandler<AddItemCommand, CartResult>
         }
 
         var newItem = cart.AddItem(variant.VariantId, variant.ProductId, variant.ProductName, variant.Sku, variant.Price, request.Quantity);
+        cart.SetContact(request.UserEmail, request.UserFullName);
 
         if (isNewCart)
         {

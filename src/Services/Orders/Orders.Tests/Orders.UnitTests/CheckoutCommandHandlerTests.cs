@@ -16,9 +16,11 @@ public class CheckoutCommandHandlerTests
     private readonly IInventoryServiceClient _inventoryClient = Substitute.For<IInventoryServiceClient>();
     private readonly IPaymentServiceClient _paymentClient = Substitute.For<IPaymentServiceClient>();
     private readonly ICouponServiceClient _couponClient = Substitute.For<ICouponServiceClient>();
+    private readonly ILoyaltyServiceClient _loyaltyClient = Substitute.For<ILoyaltyServiceClient>();
 
     private CheckoutCommandHandler CreateHandler() =>
-        new(_orderRepository, _cartClient, _inventoryClient, _paymentClient, _couponClient, NullLogger<CheckoutCommandHandler>.Instance);
+        new(_orderRepository, _cartClient, _inventoryClient, _paymentClient, _couponClient, _loyaltyClient,
+            NullLogger<CheckoutCommandHandler>.Instance);
 
     private static CartItemInfo BuildCartItem(Guid variantId, int quantity = 2) =>
         new(variantId, Guid.NewGuid(), "Camiseta", "SKU-1", 20m, quantity);
@@ -201,6 +203,82 @@ public class CheckoutCommandHandlerTests
         var act = () => CreateHandler().Handle(CommandWithCoupon(variantId, "VERANO10"), CancellationToken.None);
 
         await act.Should().ThrowAsync<HttpRequestException>().WithMessage("Pagos no respondió");
+        await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
+    }
+
+    // ---- Puntos (Fase 6) ----
+
+    private static CheckoutCommand CommandWithPoints(Guid variantId, string? coupon = null) =>
+        new(Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", new List<Guid> { variantId }, "Calle Falsa 123", "token", coupon,
+            UsePoints: true);
+
+    [Fact]
+    public async Task Handle_ConPuntos_SeAplicanSobreLoQueQuedaDespuesDelCupon()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId); // $40
+        _couponClient.ReserveAsync(Arg.Any<Guid>(), "VERANO10", 40m, "token", Arg.Any<CancellationToken>())
+            .Returns(new CouponReservation("VERANO10", 4m));
+        _loyaltyClient.ReserveAsync(Arg.Any<Guid>(), 36m, "token", Arg.Any<CancellationToken>())
+            .Returns(new LoyaltyReservation(500, 5m));
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), "USD", "token", Arg.Any<CancellationToken>())
+            .Returns(new CreatePaymentResult("PendingApproval", "https://paypal.test/approve/X"));
+
+        var result = await CreateHandler().Handle(CommandWithPoints(variantId, "VERANO10"), CancellationToken.None);
+
+        result.LoyaltyPoints.Should().Be(500);
+        result.LoyaltyDiscount.Should().Be(5m);
+        result.TotalAmount.Should().Be(31m);
+        await _paymentClient.Received(1).CreatePaymentAsync(result.OrderId, 31m, "USD", "token", Arg.Any<CancellationToken>());
+        await _loyaltyClient.Received(1).ReserveAsync(result.OrderId, 36m, "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_SinPedirPuntos_NoLlamaALealtad()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), 40m, "USD", "token", Arg.Any<CancellationToken>())
+            .Returns(new CreatePaymentResult("PendingApproval", "https://paypal.test/approve/X"));
+
+        var result = await CreateHandler().Handle(CommandWithCoupon(variantId, null), CancellationToken.None);
+
+        result.LoyaltyPoints.Should().Be(0);
+        await _loyaltyClient.DidNotReceiveWithAnyArgs().ReserveAsync(default, default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_PuntosRechazados_LiberaElCuponYElStock()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _couponClient.ReserveAsync(Arg.Any<Guid>(), "VERANO10", Arg.Any<decimal>(), "token", Arg.Any<CancellationToken>())
+            .Returns(new CouponReservation("VERANO10", 4m));
+        _loyaltyClient.ReserveAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ConflictAppException("Necesitas al menos 100 puntos para usarlos (tienes 40)."));
+
+        var act = () => CreateHandler().Handle(CommandWithPoints(variantId, "VERANO10"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictAppException>().WithMessage("Necesitas al menos 100 puntos*");
+        await _couponClient.Received(1).ReleaseAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
+        await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
+        await _loyaltyClient.DidNotReceiveWithAnyArgs().ReleaseAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_PuntosReservadosPeroPagosFalla_DevuelveLosPuntos()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _loyaltyClient.ReserveAsync(Arg.Any<Guid>(), 40m, "token", Arg.Any<CancellationToken>())
+            .Returns(new LoyaltyReservation(300, 3m));
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), Arg.Any<string>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Pagos no respondió"));
+
+        var act = () => CreateHandler().Handle(CommandWithPoints(variantId), CancellationToken.None);
+
+        await act.Should().ThrowAsync<HttpRequestException>();
+        await _loyaltyClient.Received(1).ReleaseAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
         await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
     }
 }

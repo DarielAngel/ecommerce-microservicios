@@ -31,10 +31,16 @@ public class Order
     /// <summary>Descuento del cupón, "congelado" al momento del checkout (lo calculó Promociones).</summary>
     public decimal DiscountAmount { get; private set; }
 
+    /// <summary>Puntos de lealtad usados en esta compra (Fase 6); 0 si no se usaron.</summary>
+    public int LoyaltyPoints { get; private set; }
+
+    /// <summary>Lo que descontaron esos puntos (lo calculó Lealtad, "congelado" en el checkout).</summary>
+    public decimal LoyaltyDiscount { get; private set; }
+
     public decimal Subtotal => _lines.Sum(l => l.LineTotal);
 
-    /// <summary>Lo que se cobra en PayPal: subtotal menos el descuento del cupón.</summary>
-    public decimal TotalAmount => Subtotal - DiscountAmount;
+    /// <summary>Lo que se cobra en PayPal: subtotal menos el cupón y menos los puntos.</summary>
+    public decimal TotalAmount => Subtotal - DiscountAmount - LoyaltyDiscount;
 
     private Order() { }
 
@@ -72,7 +78,8 @@ public class Order
         string userFullName,
         string shippingAddress,
         IEnumerable<(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal UnitPrice, int Quantity)> items,
-        (string Code, decimal DiscountAmount)? coupon = null)
+        (string Code, decimal DiscountAmount)? coupon = null,
+        (int Points, decimal DiscountAmount)? loyalty = null)
     {
         if (string.IsNullOrWhiteSpace(shippingAddress))
         {
@@ -110,6 +117,18 @@ public class Order
 
             order.CouponCode = c.Code.Trim().ToUpperInvariant();
             order.DiscountAmount = c.DiscountAmount;
+        }
+
+        if (loyalty is { } l)
+        {
+            if (l.Points <= 0 || l.DiscountAmount <= 0)
+                throw new DomainException("Los puntos usados y su descuento deben ser mayores que 0.");
+            // Igual que con el cupón: nunca una orden en $0 o negativa.
+            if (l.DiscountAmount >= order.Subtotal - order.DiscountAmount)
+                throw new DomainException("El descuento por puntos debe ser menor que lo que queda por pagar.");
+
+            order.LoyaltyPoints = l.Points;
+            order.LoyaltyDiscount = l.DiscountAmount;
         }
 
         return order;

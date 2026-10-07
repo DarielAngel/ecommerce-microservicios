@@ -10,7 +10,8 @@ const error = ref('')
 const typeLabels = {
   UserRegistered: 'Bienvenida',
   OrderPaid: 'Confirmación de pedido',
-  OrderShipped: 'Pedido enviado'
+  OrderShipped: 'Pedido enviado',
+  CartAbandoned: 'Carrito abandonado'
 }
 
 async function load() {

@@ -10,7 +10,7 @@ del repo; en WSL/Linux cambia `\` por `/` y `copy` por `cp`.
 
 | Herramienta | Para qué | Cómo comprobarlo |
 |---|---|---|
-| **Docker Desktop** (con al menos 8 GB de RAM asignados) | Levantar los 24 contenedores | `docker --version` |
+| **Docker Desktop** (con al menos 8 GB de RAM asignados) | Levantar los 26 contenedores | `docker --version` |
 | **Node.js 20+** y **pnpm** | Datos de demostración, pruebas de frontend y E2E | `node --version` · `corepack enable` y luego `pnpm --version` |
 | **.NET 8 SDK** | Solo para correr las pruebas del backend | `dotnet --version` |
 
@@ -31,6 +31,14 @@ PAYPAL_PROVIDER=Fake
 Lo demás puede quedar como está. `RESEND_API_KEY` es opcional: sin ella todo funciona, solo que
 los correos fallan con un error claro en los logs de Notificaciones.
 
+Para probar el **recordatorio de carrito abandonado** sin esperar una hora, agrega también (y quítalas
+después):
+
+```
+CART_ABANDONED_AFTER=00:02:00
+CART_ABANDONED_CHECK_EVERY=00:00:30
+```
+
 ---
 
 ## 2. Levantar todo
@@ -40,8 +48,8 @@ docker compose up -d --build
 docker compose ps
 ```
 
-- La **primera vez** tarda entre 5 y 15 minutos (descarga imágenes y compila 10 servicios .NET y 2 frontends).
-- `docker compose ps` debe mostrar **24 contenedores** en estado `running` (los Postgres y RabbitMQ en `healthy`).
+- La **primera vez** tarda entre 5 y 15 minutos (descarga imágenes y compila 11 servicios .NET y 2 frontends).
+- `docker compose ps` debe mostrar **26 contenedores** en estado `running` (los Postgres y RabbitMQ en `healthy`).
 - Si alguno está en `restarting` o `exited`, mira sus logs: `docker compose logs --tail=50 nombre-del-servicio`.
 
 **Comprobación rápida** (debe responder sin error):
@@ -141,6 +149,24 @@ Marca cada punto a medida que lo pruebas.
   dejas una variante en 1 unidad, agrega solo 1 y lo avisa; si desactivas el producto, dice que ya no
   está disponible.
 
+### 4.6 Puntos de lealtad (Fase 6)
+- [ ] Con un cliente nuevo, abre **Mis puntos** (pestaña junto a *Mis pedidos*): saldo 0 y las reglas.
+- [ ] Compra algo por más de $100 y paga. En unos segundos *Mis puntos* muestra los puntos ganados
+  (1 por cada $1 cobrado) y *Mis pedidos* dice *"+N puntos"* en ese pedido.
+- [ ] En el siguiente checkout aparece **"Usar mis puntos"**: al marcarla, el total baja (100 puntos = $1,
+  hasta la mitad de la compra). Paga: *Mis pedidos* muestra *"· N puntos (−$X)"* y el saldo baja.
+- [ ] Con menos de 100 puntos no hay casilla: dice *"Tienes N puntos. Desde 100 puedes usarlos como descuento."*
+- [ ] Pago rechazado o checkout abandonado: los puntos vuelven al saldo (un checkout sin pagar deja de
+  apartarlos a las 2 horas).
+
+### 4.7 Recordatorio de carrito abandonado (Fase 6)
+- [ ] Con `CART_ABANDONED_AFTER=00:02:00` (ver sección 1), inicia sesión, agrega productos al carrito y no
+  hagas nada por unos 3 minutos.
+- [ ] En el panel de Admin → **Notificaciones** aparece un *"Carrito abandonado"* para ese cliente (con
+  `RESEND_API_KEY`, el correo llega con los productos y un botón "Volver a mi carrito").
+- [ ] Espera otros minutos sin tocar el carrito: **no** llega un segundo correo. Cambia una cantidad, espera
+  de nuevo y sí llega otro.
+
 ---
 
 ## 5. Recorrido como Admin (panel — http://localhost:8081)
@@ -151,7 +177,7 @@ Marca cada punto a medida que lo pruebas.
 - [ ] **Inventario**: busca un producto, elige la variante y ajusta su stock (ej. a 3) → en la tienda aparece "¡Quedan solo 3!".
 - [ ] **Cupones**: verás los 10 con su estado (*Activo, Programado, Vencido, Pausado*). Crea uno, edítalo, páusalo y comprueba en la tienda que deja de funcionar. La columna *Usos* sube con cada compra pagada.
 - [ ] **Órdenes**: la orden que pagaste aparece con el cupón y el descuento; márcala como **enviada**.
-- [ ] **Notificaciones**: registro de los correos de "pago confirmado" y "pedido enviado" (con `RESEND_API_KEY` llegan de verdad a tu correo).
+- [ ] **Notificaciones**: registro de los correos de "pago confirmado", "pedido enviado" y "carrito abandonado" (con `RESEND_API_KEY` llegan de verdad a tu correo).
 
 ---
 
@@ -161,11 +187,11 @@ Marca cada punto a medida que lo pruebas.
 |---|---|
 | Logs de un servicio en vivo | `docker compose logs -f orders-service` (o `promotions-service`, `catalog-service`…) |
 | Mensajes entre servicios | http://localhost:15672 → *Queues*: verás las colas de `order-paid`, `variant-created`, etc. |
-| Probar una API a mano (Swagger) | Cada servicio en su puerto: http://localhost:5002/swagger (Catálogo), 5003 (Inventario), 5006 (Órdenes), 5010 (Cupones)… |
+| Probar una API a mano (Swagger) | Cada servicio en su puerto: http://localhost:5002/swagger (Catálogo), 5003 (Inventario), 5006 (Órdenes), 5010 (Cupones), 5011 (Lealtad)… |
 | Consultar una base de datos | `docker exec -it ecommerce-postgres-orders psql -U orders_svc -d orders_db` y luego `SELECT id, status, coupon_code, discount_amount FROM orders;` (`\q` para salir) |
 
 Puertos de cada servicio: Users 5001 · Catálogo 5002 · Inventario 5003 · Carrito 5004 · Pagos 5005 ·
-Órdenes 5006 · Notificaciones 5007 · Reseñas 5008 · Favoritos 5009 · Cupones 5010.
+Órdenes 5006 · Notificaciones 5007 · Reseñas 5008 · Favoritos 5009 · Cupones 5010 · Lealtad 5011.
 
 ---
 

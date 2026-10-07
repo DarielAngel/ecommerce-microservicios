@@ -11,6 +11,15 @@ public interface IOrderRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
+/// <summary>
+/// Bloqueo de UNA orden mientras se confirma su pago: dos "confirmar" a la vez (doble clic, dos
+/// pestañas) se atienden de a uno, y el segundo ya ve la orden pagada. Se libera al hacer DisposeAsync.
+/// </summary>
+public interface IOrderLock
+{
+    Task<IAsyncDisposable> AcquireAsync(Guid orderId, CancellationToken ct);
+}
+
 // ---- Carrito ----
 
 public record CartItemInfo(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal UnitPrice, int Quantity);
@@ -56,6 +65,22 @@ public record CouponReservation(string Code, decimal DiscountAmount);
 public interface ICouponServiceClient
 {
     Task<CouponReservation> ReserveAsync(Guid orderId, string code, decimal subtotal, string accessToken, CancellationToken ct);
+    Task ConfirmAsync(Guid orderId, string accessToken, CancellationToken ct);
+    Task ReleaseAsync(Guid orderId, string accessToken, CancellationToken ct);
+}
+
+// ---- Puntos (Lealtad, Fase 6) ----
+
+public record LoyaltyReservation(int Points, decimal DiscountAmount);
+
+/// <summary>
+/// Mismo ciclo que el cupón. Lealtad decide cuántos puntos usar (todos los que entren sin pasar la mitad
+/// de <c>amount</c>) y el descuento; si el cliente no tiene suficientes, ReserveAsync lanza
+/// ConflictAppException con el motivo, listo para mostrárselo.
+/// </summary>
+public interface ILoyaltyServiceClient
+{
+    Task<LoyaltyReservation> ReserveAsync(Guid orderId, decimal amount, string accessToken, CancellationToken ct);
     Task ConfirmAsync(Guid orderId, string accessToken, CancellationToken ct);
     Task ReleaseAsync(Guid orderId, string accessToken, CancellationToken ct);
 }

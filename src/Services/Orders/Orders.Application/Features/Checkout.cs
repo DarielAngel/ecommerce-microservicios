@@ -9,7 +9,7 @@ namespace Ecommerce.Orders.Application.Features;
 public record CheckoutCommand(
     Guid UserId, string UserEmail, string UserFullName,
     List<Guid> VariantIdsToCheckout, string ShippingAddress, string AccessToken,
-    string? CouponCode = null) : IRequest<CheckoutResult>;
+    string? CouponCode = null, bool UsePoints = false) : IRequest<CheckoutResult>;
 
 public record OrderLineResult(Guid VariantId, string ProductName, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal,
     Guid ProductId = default)
@@ -27,14 +27,16 @@ public record CheckoutResult(
     Guid OrderId, string Status, decimal TotalAmount, IReadOnlyList<OrderLineResult> Lines, string? ApproveUrl,
     decimal Subtotal, decimal DiscountAmount, string? CouponCode,
     string ShippingAddress = "", DateTime CreatedAtUtc = default, DateTime? PaidAtUtc = null, DateTime? ShippedAtUtc = null,
-    DateOnly? EstimatedDeliveryFrom = null, DateOnly? EstimatedDeliveryTo = null)
+    DateOnly? EstimatedDeliveryFrom = null, DateOnly? EstimatedDeliveryTo = null,
+    int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0)
 {
     public static CheckoutResult From(Order order, string? approveUrl = null) => new(
         order.Id, order.Status.ToString(), order.TotalAmount,
         order.Lines.Select(OrderLineResult.From).ToList(),
         approveUrl, order.Subtotal, order.DiscountAmount, order.CouponCode,
         order.ShippingAddress, order.CreatedAtUtc, order.PaidAtUtc, order.ShippedAtUtc,
-        order.EstimatedDelivery?.From, order.EstimatedDelivery?.To);
+        order.EstimatedDelivery?.From, order.EstimatedDelivery?.To,
+        order.LoyaltyPoints, order.LoyaltyDiscount);
 }
 
 public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>
@@ -51,7 +53,8 @@ public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>
 }
 
 /// <summary>
-/// Orquesta el primer tramo de la saga: Carrito → Inventario → Promociones (si hay cupón) → Pagos. Si CUALQUIER paso falla,
+/// Orquesta el primer tramo de la saga: Carrito → Inventario → Promociones (si hay cupón) → Lealtad (si
+/// usa puntos) → Pagos. Si CUALQUIER paso falla,
 /// se deshacen los pasos anteriores (compensación) para no dejar stock reservado húerfano ni
 /// una orden a medias. El segundo tramo (capturar el pago y confirmar/liberar) vive en
 /// ConfirmPaymentCommandHandler, porque requiere que el comprador apruebe en PayPal primero
@@ -64,6 +67,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
     private readonly IInventoryServiceClient _inventoryClient;
     private readonly IPaymentServiceClient _paymentClient;
     private readonly ICouponServiceClient _couponClient;
+    private readonly ILoyaltyServiceClient _loyaltyClient;
     private readonly ILogger<CheckoutCommandHandler> _logger;
 
     public CheckoutCommandHandler(
@@ -72,6 +76,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
         IInventoryServiceClient inventoryClient,
         IPaymentServiceClient paymentClient,
         ICouponServiceClient couponClient,
+        ILoyaltyServiceClient loyaltyClient,
         ILogger<CheckoutCommandHandler> logger)
     {
         _orderRepository = orderRepository;
@@ -79,6 +84,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
         _inventoryClient = inventoryClient;
         _paymentClient = paymentClient;
         _couponClient = couponClient;
+        _loyaltyClient = loyaltyClient;
         _logger = logger;
     }
 
@@ -115,18 +121,46 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
 
         var couponCode = string.IsNullOrWhiteSpace(request.CouponCode) ? null : request.CouponCode.Trim();
         var couponReserved = false;
+        var pointsReserved = false;
 
         try
         {
             // Paso 3 (opcional): apartar un uso del cupón para ESTA orden. Promociones recalcula el
             // descuento con el subtotal real (no confiamos en el que mostró el navegador) y bloquea el
             // cupón mientras cuenta usos, así un cupón limitado nunca se usa de más.
+            var subtotal = selectedItems.Sum(i => i.UnitPrice * i.Quantity);
             CouponReservation? coupon = null;
             if (couponCode is not null)
             {
-                var subtotal = selectedItems.Sum(i => i.UnitPrice * i.Quantity);
-                coupon = await _couponClient.ReserveAsync(orderId, couponCode, subtotal, request.AccessToken, ct);
+                // Se marca ANTES de llamar: si la llamada se corta (timeout) después de que Promociones
+                // ya apartó el uso, la compensación igual lo libera (liberar algo que no existe no hace nada).
                 couponReserved = true;
+                try
+                {
+                    coupon = await _couponClient.ReserveAsync(orderId, couponCode, subtotal, request.AccessToken, ct);
+                }
+                catch (ConflictAppException)
+                {
+                    couponReserved = false; // rechazo claro (409): Promociones no apartó nada
+                    throw;
+                }
+            }
+
+            // Paso 3b (opcional): apartar puntos. Lealtad decide cuántos usar sobre lo que queda después
+            // del cupón y bloquea la cuenta del cliente: dos checkouts a la vez no gastan los mismos puntos.
+            LoyaltyReservation? points = null;
+            if (request.UsePoints)
+            {
+                pointsReserved = true; // antes de llamar, por lo mismo que el cupón
+                try
+                {
+                    points = await _loyaltyClient.ReserveAsync(orderId, subtotal - (coupon?.DiscountAmount ?? 0), request.AccessToken, ct);
+                }
+                catch (ConflictAppException)
+                {
+                    pointsReserved = false; // rechazo claro (409): Lealtad no apartó nada
+                    throw;
+                }
             }
 
             // Paso 4: crear la orden con el stock (y el cupón) asegurados, usando el MISMO orderId con
@@ -138,7 +172,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
                 request.UserFullName,
                 request.ShippingAddress,
                 selectedItems.Select(i => (i.VariantId, i.ProductId, i.ProductName, i.Sku, i.UnitPrice, i.Quantity)),
-                coupon is null ? null : (coupon.Code, coupon.DiscountAmount));
+                coupon is null ? null : (coupon.Code, coupon.DiscountAmount),
+                points is null ? null : (points.Points, points.DiscountAmount));
 
             // Paso 5: crear el pago en PayPal por el total de la orden (ya con el descuento).
             var paymentResult = await _paymentClient.CreatePaymentAsync(
@@ -156,6 +191,19 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutR
             // quedan "atrapados" para siempre. Se deshace en orden inverso.
             _logger.LogWarning(
                 "Falló el checkout de {OrderId} después de reservar stock — liberando lo reservado.", orderId);
+
+            if (pointsReserved)
+            {
+                try
+                {
+                    await _loyaltyClient.ReleaseAsync(orderId, request.AccessToken, ct);
+                }
+                catch (Exception releaseEx)
+                {
+                    // Igual que el cupón: la reserva de puntos vence sola en 2 horas.
+                    _logger.LogError(releaseEx, "No se pudieron devolver los puntos de {OrderId}.", orderId);
+                }
+            }
 
             if (couponReserved)
             {

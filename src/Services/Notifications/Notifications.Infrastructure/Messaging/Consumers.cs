@@ -2,6 +2,7 @@ using Ecommerce.Contracts.Events;
 using Ecommerce.Notifications.Application.Features;
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 
 namespace Ecommerce.Notifications.Infrastructure.Messaging;
 
@@ -45,4 +46,28 @@ public class OrderShippedConsumer : IConsumer<OrderShippedEvent>
         _mediator.Send(
             new SendOrderShippedEmailCommand(context.Message.OrderId, context.Message.Email, context.Message.FullName),
             context.CancellationToken);
+}
+
+public class CartAbandonedConsumer : IConsumer<CartAbandonedEvent>
+{
+    private readonly ISender _mediator;
+    private readonly string _storeUrl;
+
+    public CartAbandonedConsumer(ISender mediator, IConfiguration configuration)
+    {
+        _mediator = mediator;
+        // Dónde está la tienda, para el botón "Volver a mi carrito" (en producción, el dominio real).
+        _storeUrl = (configuration["Store:BaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
+    }
+
+    public Task Consume(ConsumeContext<CartAbandonedEvent> context)
+    {
+        var m = context.Message;
+        return _mediator.Send(
+            new SendCartAbandonedEmailCommand(
+                m.ReminderId, m.Email, m.FullName,
+                m.Items.Select(i => new Application.Common.EmailTemplates.CartLine(i.ProductName, i.Quantity, i.UnitPrice)).ToList(),
+                m.Subtotal, $"{_storeUrl}/cart"),
+            context.CancellationToken);
+    }
 }

@@ -73,6 +73,14 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(15);
         });
 
+        services.AddScoped<IOrderLock, OrderLock>();
+
+        services.AddHttpClient<ILoyaltyServiceClient, LoyaltyServiceClient>(client =>
+        {
+            client.BaseAddress = new Uri(serviceUrls.LoyaltyBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+
         return services;
     }
 }

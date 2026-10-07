@@ -133,4 +133,25 @@ public class NotificationsFlowTests : IClassFixture<NotificationsApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         list.Should().Contain(n => n.RecipientEmail == email && n.Type == "UserRegistered");
     }
+
+    [Fact]
+    public async Task EventoCartAbandoned_EnviaUnSoloRecordatorioAunqueLleguenDuplicados()
+    {
+        var email = $"{Guid.NewGuid():N}@test.com";
+        var reminder = new CartAbandonedEvent(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), email, "Ana",
+            new List<AbandonedCartItem> { new(Guid.NewGuid(), "Taza de cerámica", 2, 8.5m) },
+            17m, DateTime.UtcNow.AddHours(-2), DateTime.UtcNow);
+
+        await PublishAsync(reminder);
+        await PublishAsync(reminder);
+
+        (await WaitUntilAsync(() => SentTo(email) >= 1)).Should().BeTrue();
+        await Task.Delay(1500);
+        SentTo(email).Should().Be(1);
+        var sent = _factory.FakeEmail.Sent.First(e => e.To == email);
+        sent.Subject.Should().Be("Dejaste productos en tu carrito");
+        // (HtmlEncode escribe la "á" como entidad; el correo se ve igual.)
+        sent.Html.Should().Contain("2× Taza de cer").And.Contain("/cart");
+    }
 }

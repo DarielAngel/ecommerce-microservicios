@@ -95,4 +95,4 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 | 3 — Cupones | Hecha |
 | 4 — Descubrimiento | Hecha |
 | 5 — Checkout rápido y seguimiento | Hecha |
-| 6 | Pendiente |
+| 6 — Lealtad y recuperación | Hecha |

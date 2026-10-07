@@ -7,13 +7,15 @@ namespace Ecommerce.Cart.IntegrationTests;
 
 public static class TestJwtFactory
 {
-    public static string CreateToken(Guid userId, string role = "Cliente")
+    public static string CreateToken(Guid userId, string role = "Cliente", string? email = null, string? fullName = null)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(ClaimTypes.Role, role)
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(ClaimTypes.Role, role)
         };
+        if (email is not null) claims.Add(new Claim(JwtRegisteredClaimNames.Email, email));
+        if (fullName is not null) claims.Add(new Claim(ClaimTypes.Name, fullName));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(CartApiFactory.TestJwtSecret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

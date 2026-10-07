@@ -52,4 +52,30 @@ public static class EmailTemplates
             Wrap("¡Tu pedido va en camino!",
                 $"<p>Hola <b>{name}</b>, tu pedido <b>#{shortId}</b> ya fue enviado.</p>"));
     }
+
+    public record CartLine(string ProductName, int Quantity, decimal UnitPrice);
+
+    /// <summary>
+    /// Recordatorio de carrito abandonado: lista lo que dejó (hasta 5 productos) y un botón al carrito.
+    /// Tono amable, sin presión artificial (nada de "¡quedan pocas unidades!" inventado).
+    /// </summary>
+    public static (string Subject, string Html) CartAbandoned(
+        string fullName, IReadOnlyList<CartLine> items, decimal subtotal, string cartUrl)
+    {
+        var name = WebUtility.HtmlEncode(fullName);
+        var rows = string.Concat(items.Take(5).Select(i =>
+            $"<tr><td style=\"padding: 4px 0;\">{i.Quantity}× {WebUtility.HtmlEncode(i.ProductName)}</td>" +
+            $"<td style=\"padding: 4px 0; text-align: right;\">{(i.UnitPrice * i.Quantity).ToString("F2", CultureInfo.InvariantCulture)} USD</td></tr>"));
+        var more = items.Count > 5 ? $"<p style=\"color: #6b7280;\">…y {items.Count - 5} producto(s) más.</p>" : "";
+        var url = WebUtility.HtmlEncode(cartUrl);
+        return (
+            "Dejaste productos en tu carrito",
+            Wrap("¿Te olvidaste de algo?",
+                $"<p>Hola <b>{name}</b>, guardamos tu carrito por si quieres terminar la compra:</p>" +
+                $"<table style=\"width: 100%; border-collapse: collapse;\">{rows}</table>{more}" +
+                $"<p><b>Subtotal:</b> {subtotal.ToString("F2", CultureInfo.InvariantCulture)} USD</p>" +
+                $"<p><a href=\"{url}\" style=\"display: inline-block; background: #059669; color: #ffffff; padding: 10px 18px; " +
+                "border-radius: 9999px; text-decoration: none;\">Volver a mi carrito</a></p>" +
+                "<p style=\"font-size: 12px; color: #6b7280;\">Los precios y el stock pueden cambiar hasta que completes la compra.</p>"));
+    }
 }

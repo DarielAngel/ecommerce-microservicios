@@ -6,6 +6,8 @@ import { useCartStore } from '../stores/cart'
 import { useToastStore } from '../stores/toast'
 import { formatMoney } from '../utils/format'
 import { timelineSteps, deliveryText, formatMoment, canBuyAgain, buyAgain, buyAgainMessage } from '../utils/orders'
+import { pointsFor } from '../utils/loyalty'
+import AccountNav from '../components/AccountNav.vue'
 
 const apiClient = useApi()
 const cartStore = useCartStore()
@@ -83,10 +85,8 @@ onMounted(load)
 
 <template>
   <div class="max-w-2xl mx-auto">
-    <div class="mb-6 flex items-center justify-between gap-3">
-      <h1 class="text-xl font-semibold text-ink">Mis pedidos</h1>
-      <router-link :to="{ name: 'addresses' }" class="text-sm text-brand-ink hover:underline">Mis direcciones</router-link>
-    </div>
+    <AccountNav />
+    <h1 class="sr-only">Mis pedidos</h1>
 
     <div v-if="loading" class="text-center text-ink-muted py-16">Cargando...</div>
     <div v-else-if="error" class="text-center text-red-600 dark:text-red-400 py-16">{{ error }}</div>
@@ -106,6 +106,8 @@ onMounted(load)
             <p class="text-xs text-ink-muted">
               {{ formatMoney(o.totalAmount) }}
               <span v-if="o.couponCode" class="text-emerald-700 dark:text-emerald-400">· cupón {{ o.couponCode }} (−{{ formatMoney(o.discountAmount) }})</span>
+              <span v-if="o.loyaltyPoints" class="text-emerald-700 dark:text-emerald-400" data-testid="order-points-used">· {{ o.loyaltyPoints }} puntos (−{{ formatMoney(o.loyaltyDiscount) }})</span>
+              <span v-if="o.status === 'Paid' || o.status === 'Shipped'" data-testid="order-points-earned">· +{{ pointsFor(o.totalAmount) }} puntos</span>
             </p>
             <p v-if="deliveryText(o)" class="mt-1 text-xs font-medium text-brand-ink" data-testid="order-delivery">{{ deliveryText(o) }}</p>
           </div>

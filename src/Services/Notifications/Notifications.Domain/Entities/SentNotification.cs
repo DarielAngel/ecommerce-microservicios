@@ -12,7 +12,7 @@ public class SentNotification
     public Guid Id { get; private set; }
     public NotificationType Type { get; private set; }
 
-    /// <summary>UserId (para UserRegistered) u OrderId (para OrderPaid/OrderShipped).</summary>
+    /// <summary>UserId (UserRegistered), OrderId (OrderPaid/OrderShipped) o el id del recordatorio (CartAbandoned).</summary>
     public Guid ReferenceId { get; private set; }
 
     public string RecipientEmail { get; private set; } = null!;

@@ -26,3 +26,14 @@ public class FakeInventoryServiceClient : IInventoryServiceClient
     public Task<int> GetAvailableQuantityAsync(Guid variantId, string accessToken, CancellationToken ct) =>
         Task.FromResult(AvailableQuantities.TryGetValue(variantId, out var quantity) ? quantity : 0);
 }
+
+public class CapturingEventPublisher : IEventPublisher
+{
+    public System.Collections.Concurrent.ConcurrentQueue<object> Events { get; } = new();
+
+    public Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : class
+    {
+        Events.Enqueue(integrationEvent);
+        return Task.CompletedTask;
+    }
+}

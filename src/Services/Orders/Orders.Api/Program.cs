@@ -56,6 +56,11 @@ using (var scope = app.Services.CreateScope())
     // Fase 5 (seguimiento del pedido): cuándo se envió.
     await dbContext.Database.ExecuteSqlRawAsync(
         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipped_at_utc timestamp with time zone NULL;");
+    // Fase 6 (puntos de lealtad usados en la compra).
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_points integer NOT NULL DEFAULT 0;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_discount numeric(12,2) NOT NULL DEFAULT 0;");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

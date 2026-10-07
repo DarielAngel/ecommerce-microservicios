@@ -73,6 +73,46 @@
     <Project Path="src/Services/Users/Users.Tests/Users.IntegrationTests/Users.IntegrationTests.csproj" />
     <Project Path="src/Services/Users/Users.Tests/Users.UnitTests/Users.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/src/Services/Loyalty/">
+    <Project Path="src/Services/Loyalty/Loyalty.Api/Loyalty.Api.csproj" />
+    <Project Path="src/Services/Loyalty/Loyalty.Application/Loyalty.Application.csproj" />
+    <Project Path="src/Services/Loyalty/Loyalty.Domain/Loyalty.Domain.csproj" />
+    <Project Path="src/Services/Loyalty/Loyalty.Infrastructure/Loyalty.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Loyalty/Loyalty.Tests/">
+    <Project Path="src/Services/Loyalty/Loyalty.Tests/Loyalty.IntegrationTests/Loyalty.IntegrationTests.csproj" />
+    <Project Path="src/Services/Loyalty/Loyalty.Tests/Loyalty.UnitTests/Loyalty.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Promotions/">
+    <Project Path="src/Services/Promotions/Promotions.Api/Promotions.Api.csproj" />
+    <Project Path="src/Services/Promotions/Promotions.Application/Promotions.Application.csproj" />
+    <Project Path="src/Services/Promotions/Promotions.Domain/Promotions.Domain.csproj" />
+    <Project Path="src/Services/Promotions/Promotions.Infrastructure/Promotions.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Promotions/Promotions.Tests/">
+    <Project Path="src/Services/Promotions/Promotions.Tests/Promotions.IntegrationTests/Promotions.IntegrationTests.csproj" />
+    <Project Path="src/Services/Promotions/Promotions.Tests/Promotions.UnitTests/Promotions.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Reviews/">
+    <Project Path="src/Services/Reviews/Reviews.Api/Reviews.Api.csproj" />
+    <Project Path="src/Services/Reviews/Reviews.Application/Reviews.Application.csproj" />
+    <Project Path="src/Services/Reviews/Reviews.Domain/Reviews.Domain.csproj" />
+    <Project Path="src/Services/Reviews/Reviews.Infrastructure/Reviews.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Reviews/Reviews.Tests/">
+    <Project Path="src/Services/Reviews/Reviews.Tests/Reviews.IntegrationTests/Reviews.IntegrationTests.csproj" />
+    <Project Path="src/Services/Reviews/Reviews.Tests/Reviews.UnitTests/Reviews.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Wishlist/">
+    <Project Path="src/Services/Wishlist/Wishlist.Api/Wishlist.Api.csproj" />
+    <Project Path="src/Services/Wishlist/Wishlist.Application/Wishlist.Application.csproj" />
+    <Project Path="src/Services/Wishlist/Wishlist.Domain/Wishlist.Domain.csproj" />
+    <Project Path="src/Services/Wishlist/Wishlist.Infrastructure/Wishlist.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Wishlist/Wishlist.Tests/">
+    <Project Path="src/Services/Wishlist/Wishlist.Tests/Wishlist.IntegrationTests/Wishlist.IntegrationTests.csproj" />
+    <Project Path="src/Services/Wishlist/Wishlist.Tests/Wishlist.UnitTests/Wishlist.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Shared/Contracts/Contracts.csproj" />
   </Folder>

@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import { useToastStore } from '../stores/toast'
 import { emptyAddress, toForm, isComplete, errorText } from '../utils/addresses'
 import AddressForm from '../components/AddressForm.vue'
+import AccountNav from '../components/AccountNav.vue'
 
 const MAX_ADDRESSES = 10
 
@@ -112,6 +113,7 @@ onMounted(load)
 
 <template>
   <div class="mx-auto max-w-2xl">
+    <AccountNav />
     <div class="mb-6 flex items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-ink">Mis direcciones</h1>

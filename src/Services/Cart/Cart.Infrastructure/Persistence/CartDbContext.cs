@@ -22,6 +22,9 @@ public class CartDbContext : DbContext
 
             cart.Property(c => c.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
             cart.Property(c => c.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
+            cart.Property(c => c.ContactEmail).HasColumnName("contact_email").HasMaxLength(256);
+            cart.Property(c => c.ContactName).HasColumnName("contact_name").HasMaxLength(200);
+            cart.Property(c => c.AbandonedReminderForActivityAtUtc).HasColumnName("abandoned_reminder_for_activity_at_utc");
 
             cart.OwnsMany(c => c.Items, item =>
             {
