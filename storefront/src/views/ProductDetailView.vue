@@ -9,6 +9,7 @@ import { imageUrl } from '../utils/images'
 import { formatMoney } from '../utils/format'
 import StarRating from '../components/StarRating.vue'
 import ReviewsSection from '../components/ReviewsSection.vue'
+import FavoriteButton from '../components/FavoriteButton.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 
@@ -117,7 +118,10 @@ async function addToCart() {
     </div>
 
     <div>
-      <h1 class="text-3xl font-bold tracking-tight text-ink mb-2">{{ product.name }}</h1>
+      <div class="mb-2 flex items-start justify-between gap-3">
+        <h1 class="text-3xl font-bold tracking-tight text-ink">{{ product.name }}</h1>
+        <FavoriteButton :product-id="product.id" size="lg" class="flex-shrink-0" />
+      </div>
       <a href="#resenas" class="mb-3 inline-flex items-center gap-2 text-sm text-ink-muted hover:text-brand-ink" data-testid="rating-link">
         <template v-if="rating && rating.count > 0">
           <StarRating :value="rating.average" size="sm" />

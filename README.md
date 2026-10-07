@@ -1376,3 +1376,51 @@ insignia **Compra verificada**.
 
 > **Contenedores**: ahora son **20** (se suman `postgres-reviews` y `reviews-service`).
 
+## Fase 2 — Favoritos (servicio `Wishlist`, puerto 5009)
+
+- **Corazón** en cada tarjeta del catálogo y en el detalle del producto. Se actualiza al instante
+  (optimista) y, si el servidor falla, vuelve a su estado anterior y muestra el motivo. Un invitado
+  que lo toca va a iniciar sesión y vuelve a la misma página.
+- **Mis favoritos** (`/favorites`, enlace con contador en el encabezado): del más reciente al más
+  antiguo, con imagen y precio actuales del catálogo. Si un producto se eliminó, aparece como
+  *"ya no disponible"* y se puede quitar.
+- **Mover al carrito**: con un clic si el producto tiene una sola variante activa; si tiene varias
+  (talla, color...), el botón es *"Elegir opción"* y lleva al detalle. El carrito valida el stock: si
+  no alcanza, el favorito se queda donde estaba y se muestra el motivo.
+- **Idempotente de verdad**: la clave primaria es `(usuario, producto)` y el alta usa
+  `INSERT ... ON CONFLICT DO NOTHING`, así que un doble clic (o 8 requests a la vez, hay una prueba)
+  deja un solo favorito y nunca responde error. Quitar algo que no está también responde 204.
+- **Privado**: ningún endpoint recibe un id de usuario; siempre se toma del token.
+- **Tope de 100 favoritos** por cliente (409 al pasarse). Repetir uno que ya está nunca choca con el tope.
+- Guarda **solo el id del producto**, no una copia de su nombre o precio: así nunca muestra datos
+  viejos. No usa RabbitMQ (no publica ni consume eventos).
+- Endpoints (todos requieren sesión):
+
+  | Método | Ruta | Respuesta |
+  |---|---|---|
+  | GET | `/api/wishlist` | `[{ productId, addedAtUtc }]`, del más reciente al más antiguo |
+  | PUT | `/api/wishlist/{productId}` | 204 (idempotente); 409 si la lista está llena |
+  | DELETE | `/api/wishlist/{productId}` | 204 (aunque no estuviera) |
+
+### Cómo probarlo
+
+```cmd
+:: Servicios nuevos (Postgres + Favoritos) y el Gateway con su nueva ruta:
+docker compose up -d --build wishlist-service postgres-wishlist gateway storefront
+
+:: Pruebas del servicio (Docker requerido: levantan un Postgres real)
+dotnet test src\Services\Wishlist\Wishlist.Tests\Wishlist.UnitTests
+dotnet test src\Services\Wishlist\Wishlist.Tests\Wishlist.IntegrationTests
+
+:: Frontend y end-to-end
+cd storefront && pnpm install && pnpm run test:unit
+cd ..\e2e && pnpm test
+```
+
+Checklist manual: con sesión iniciada, toca el corazón de una tarjeta (se rellena y aparece un
+aviso); el contador del encabezado sube. Recarga: sigue marcado. Abre **Mis favoritos** y usa
+**Mover al carrito**: desaparece de la lista y el contador del carrito sube. Cierra sesión: los
+corazones quedan vacíos.
+
+> **Contenedores**: ahora son **22** (se suman `postgres-wishlist` y `wishlist-service`).
+

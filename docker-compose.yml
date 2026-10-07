@@ -174,6 +174,25 @@ services:
     networks:
       - ecommerce-net
 
+  postgres-wishlist:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-wishlist
+    environment:
+      POSTGRES_DB: wishlist_db
+      POSTGRES_USER: wishlist_svc
+      POSTGRES_PASSWORD: wishlist_pass_dev
+    ports:
+      - "5441:5432"
+    volumes:
+      - pg_wishlist_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wishlist_svc -d wishlist_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Microservicio: Users / Auth
   # ------------------------------------------------------------------
@@ -418,6 +437,25 @@ services:
     networks:
       - ecommerce-net
 
+  wishlist-service:
+    build:
+      context: .
+      dockerfile: src/Services/Wishlist/Wishlist.Api/Dockerfile
+    container_name: ecommerce-wishlist-service
+    environment:
+      ConnectionStrings__WishlistDb: "Host=postgres-wishlist;Port=5432;Database=wishlist_db;Username=wishlist_svc;Password=wishlist_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5009:8080"
+    depends_on:
+      postgres-wishlist:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Gateway — único punto de entrada para el frontend
   # ------------------------------------------------------------------
@@ -438,6 +476,7 @@ services:
       - orders-service
       - notifications-service
       - reviews-service
+      - wishlist-service
     networks:
       - ecommerce-net
 
@@ -491,4 +530,5 @@ volumes:
   pg_payments_data:
   pg_notifications_data:
   pg_reviews_data:
+  pg_wishlist_data:
   catalog_images:

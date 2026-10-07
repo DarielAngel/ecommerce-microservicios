@@ -13,6 +13,7 @@ const routes = [
       { path: 'cart', name: 'cart', component: () => import('../views/CartView.vue'), meta: { requiresAuth: true } },
       { path: 'checkout', name: 'checkout', component: () => import('../views/CheckoutView.vue'), meta: { requiresAuth: true } },
       { path: 'orders/:id/pending', name: 'order-pending', component: () => import('../views/OrderPendingView.vue'), props: true, meta: { requiresAuth: true } },
+      { path: 'favorites', name: 'wishlist', component: () => import('../views/WishlistView.vue'), meta: { requiresAuth: true } },
       { path: 'orders', name: 'orders', component: () => import('../views/OrdersHistoryView.vue'), meta: { requiresAuth: true } }
     ]
   }

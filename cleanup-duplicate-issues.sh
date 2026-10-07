@@ -17,12 +17,24 @@ set -u
 OFFSET=34
 FIRST=58
 LAST=91
-closed=0; skipped=0; mismatch=0
+closed=0; skipped=0; mismatch=0; errors=0
+
+# Lee un campo de un issue. Reintenta 3 veces (fallos transitorios de red/API) y, si sigue
+# fallando, MUESTRA el error real de gh en vez de ocultarlo.
+get () {
+  local out try
+  for try in 1 2 3; do
+    if out=$(gh issue view "$1" --json "$2" --jq ".$2" 2>&1); then printf '%s' "$out"; return 0; fi
+    sleep $((try * 2))
+  done
+  echo "   error de gh al leer #$1: $out" >&2
+  return 1
+}
 
 for n in $(seq "$FIRST" "$LAST"); do
   orig=$((n - OFFSET))
-  t_dup=$(gh issue view "$n"    --json title --jq .title 2>/dev/null)   || { echo "!! #$n no existe";   continue; }
-  t_org=$(gh issue view "$orig" --json title --jq .title 2>/dev/null)   || { echo "!! #$orig no existe"; continue; }
+  if ! t_dup=$(get "$n" title);    then echo "!! #$n no se pudo leer, se omite";    errors=$((errors + 1)); continue; fi
+  if ! t_org=$(get "$orig" title); then echo "!! #$orig no se pudo leer, se omite #$n"; errors=$((errors + 1)); continue; fi
 
   if [ "$t_dup" != "$t_org" ]; then
     echo "!! #$n NO se toca: su título no coincide con #$orig"
@@ -31,7 +43,7 @@ for n in $(seq "$FIRST" "$LAST"); do
     mismatch=$((mismatch + 1)); continue
   fi
 
-  state=$(gh issue view "$n" --json state --jq .state)
+  if ! state=$(get "$n" state); then echo "!! #$n no se pudo leer su estado, se omite"; errors=$((errors + 1)); continue; fi
   if [ "$state" != "OPEN" ]; then
     echo "-- #$n ya está cerrado (duplicado de #$orig), se omite"
     skipped=$((skipped + 1)); continue
@@ -44,4 +56,8 @@ for n in $(seq "$FIRST" "$LAST"); do
 done
 
 echo ""
-echo "Resumen: cerrados=$closed  ya-cerrados=$skipped  sin-coincidencia=$mismatch"
+echo "Resumen: cerrados=$closed  ya-cerrados=$skipped  sin-coincidencia=$mismatch  errores=$errors"
+if [ "$errors" -gt 0 ]; then
+  echo "Hubo errores: vuelve a correr el script (es seguro repetirlo, salta lo ya cerrado)."
+  exit 1
+fi

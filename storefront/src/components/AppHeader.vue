@@ -3,11 +3,13 @@ import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
 import { STORE } from '../config'
 import ThemeToggle from './ThemeToggle.vue'
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const wishlist = useWishlistStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -23,6 +25,7 @@ function submitSearch() {
 function logout() {
   auth.logout()
   cart.clear()
+  wishlist.clear()
   router.push({ name: 'home' })
 }
 </script>
@@ -51,6 +54,20 @@ function logout() {
         <router-link v-if="auth.isAuthenticated" :to="{ name: 'orders' }"
           class="hidden rounded-full px-3 py-2 text-ink-soft transition-colors hover:bg-surface-muted sm:inline-block">
           Mis pedidos
+        </router-link>
+
+        <router-link v-if="auth.isAuthenticated" :to="{ name: 'wishlist' }" data-testid="wishlist-link"
+          class="relative rounded-full px-3 py-2 text-ink-soft transition-colors hover:bg-surface-muted" aria-label="Mis favoritos">
+          <span class="inline-flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="h-5 w-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+            </svg>
+            <span class="hidden lg:inline">Favoritos</span>
+          </span>
+          <span v-if="wishlist.count > 0" data-testid="wishlist-badge"
+            class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white">
+            {{ wishlist.count }}
+          </span>
         </router-link>
 
         <router-link :to="{ name: 'cart' }" class="relative rounded-full px-3 py-2 text-ink-soft transition-colors hover:bg-surface-muted"

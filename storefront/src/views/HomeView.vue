@@ -5,6 +5,7 @@ import { api } from '../api/client'
 import { STORE } from '../config'
 import { fetchRatingSummaries } from '../api/reviews'
 import ProductCard from '../components/ProductCard.vue'
+import FavoriteButton from '../components/FavoriteButton.vue'
 import SkeletonCard from '../components/SkeletonCard.vue'
 import { splitCategories } from '../utils/categories'
 
@@ -187,7 +188,11 @@ onMounted(async () => {
       </div>
 
       <div v-else class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <ProductCard v-for="p in items" :key="p.id" :product="p" :rating="ratings[p.id]" />
+        <ProductCard v-for="p in items" :key="p.id" :product="p" :rating="ratings[p.id]">
+          <template #corner>
+            <FavoriteButton :product-id="p.id" />
+          </template>
+        </ProductCard>
       </div>
 
       <div v-if="totalPages > 1" class="flex items-center justify-center gap-3 pt-4 text-sm">

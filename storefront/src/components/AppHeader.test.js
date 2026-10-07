@@ -5,6 +5,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import AppHeader from './AppHeader.vue'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
 
 const stub = { template: '<div />' }
 
@@ -16,7 +17,8 @@ async function mountHeader() {
       { path: '/cart', name: 'cart', component: stub },
       { path: '/login', name: 'login', component: stub },
       { path: '/register', name: 'register', component: stub },
-      { path: '/orders', name: 'orders', component: stub }
+      { path: '/orders', name: 'orders', component: stub },
+      { path: '/favorites', name: 'wishlist', component: stub }
     ]
   })
   router.push('/')
@@ -106,5 +108,29 @@ describe('AppHeader', () => {
 
     expect(auth.accessToken).toBeNull()
     expect(router.currentRoute.value.name).toBe('home')
+  })
+
+  it('el enlace a Mis favoritos solo aparece con sesión, con el contador de favoritos', async () => {
+    const { wrapper: guest } = await mountHeader()
+    expect(guest.find('[data-testid="wishlist-link"]').exists()).toBe(false)
+
+    const { wrapper } = await mountHeader()
+    useAuthStore().accessToken = 'token'
+    useWishlistStore().productIds = ['a', 'b', 'c']
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="wishlist-link"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="wishlist-badge"]').text()).toBe('3')
+  })
+
+  it('al salir, se vacían los favoritos', async () => {
+    const { wrapper } = await mountHeader()
+    useAuthStore().accessToken = 'token'
+    useWishlistStore().productIds = ['a']
+    await flushPromises()
+
+    await wrapper.get('[data-testid="logout"]').trigger('click')
+
+    expect(useWishlistStore().count).toBe(0)
   })
 })

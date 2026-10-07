@@ -50,6 +50,8 @@ Inspiración: Amazon, Etsy, Zalando.
 - T2.1 Agregar / quitar favoritos (idempotente) y listar
 - T2.2 Corazón en tarjetas y detalle; página "Mis favoritos"
 - T2.3 Mover un favorito al carrito
+- **Aceptación**: agregar dos veces no duplica; quitar algo que no está no falla; solo el dueño ve
+  sus favoritos; mover al carrito respeta el stock (si no alcanza, el favorito se queda).
 
 ### Fase 3 — Cupones y promociones (servicio `Promotions`)
 Inspiración: Temu, Shein, Walmart, Shopify.
@@ -85,4 +87,5 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 |---|---|
 | 0 — Identidad visual | Hecha |
 | 1 — Reseñas | Hecha (pendiente: pantalla de moderación en el panel de Admin; el endpoint ya existe) |
-| 2 a 6 | Pendiente |
+| 2 — Favoritos | Hecha |
+| 3 a 6 | Pendiente |
