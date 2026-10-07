@@ -132,8 +132,10 @@ async function ensureAdmin() {
     await http('POST', '/api/admins', { json: ADMIN, headers: { 'X-Admin-Provisioning-Key': PROVISIONING_KEY } })
     console.log(`Admin creado: ${ADMIN.email}`)
   } catch (err) {
-    // 400 = ya existe (corrida anterior). Cualquier otro error es real (ej. clave de aprovisionamiento).
-    if (err.status !== 400) throw new Error(`No se pudo crear el Admin: ${err.message}. Revisa ADMIN_PROVISIONING_KEY en .env.`)
+    // 409 = ya existe (corrida anterior; versiones viejas de Users devolvían 400). Cualquier otro
+    // error es real (ej. clave de aprovisionamiento incorrecta → 401).
+    if (err.status !== 409 && err.status !== 400) throw new Error(`No se pudo crear el Admin: ${err.message}. Revisa ADMIN_PROVISIONING_KEY en .env.`)
+    console.log(`Admin: ${ADMIN.email} (ya existía)`)
   }
   try {
     await adminLogin()
