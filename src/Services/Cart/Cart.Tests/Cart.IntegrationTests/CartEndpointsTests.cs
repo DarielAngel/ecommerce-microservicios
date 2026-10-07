@@ -8,7 +8,8 @@ using Xunit;
 
 namespace Ecommerce.Cart.IntegrationTests;
 
-public class CartEndpointsTests : IClassFixture<CartApiFactory>
+[Collection(CartApiCollection.Name)]
+public class CartEndpointsTests
 {
     private readonly CartApiFactory _factory;
     private readonly HttpClient _client;

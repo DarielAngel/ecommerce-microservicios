@@ -7,7 +7,8 @@ using Xunit;
 
 namespace Ecommerce.Users.IntegrationTests;
 
-public class AuthEndpointsTests : IClassFixture<UsersApiFactory>
+[Collection(UsersApiCollection.Name)]
+public class AuthEndpointsTests
 {
     private readonly HttpClient _client;
 

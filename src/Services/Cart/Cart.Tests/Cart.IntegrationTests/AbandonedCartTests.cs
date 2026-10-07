@@ -14,7 +14,8 @@ namespace Ecommerce.Cart.IntegrationTests;
 /// Recordatorio de carrito abandonado contra la base real. En vez de esperar una hora, se le pasa al
 /// comando un "ahora" en el futuro.
 /// </summary>
-public class AbandonedCartTests : IClassFixture<CartApiFactory>
+[Collection(CartApiCollection.Name)]
+public class AbandonedCartTests
 {
     private static readonly TimeSpan Hour = TimeSpan.FromHours(1);
     private static readonly TimeSpan Day = TimeSpan.FromHours(24);
@@ -115,7 +116,7 @@ public class AbandonedCartTests : IClassFixture<CartApiFactory>
         var (second, _) = await CustomerWithCartAsync();
 
         var now = DateTime.UtcNow.AddMinutes(61);
-        for (var i = 0; i < 20 && await DetectAsync(now, batchSize: 1) > 0; i++) { }
+        for (var i = 0; i < 500 && await DetectAsync(now, batchSize: 1) > 0; i++) { }
 
         EventsFor(second).Should().ContainSingle();
         EventsFor(first).Should().ContainSingle();

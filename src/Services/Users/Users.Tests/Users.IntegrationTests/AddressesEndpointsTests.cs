@@ -7,7 +7,8 @@ using Xunit;
 
 namespace Ecommerce.Users.IntegrationTests;
 
-public class AddressesEndpointsTests : IClassFixture<UsersApiFactory>
+[Collection(UsersApiCollection.Name)]
+public class AddressesEndpointsTests
 {
     private readonly UsersApiFactory _factory;
 
