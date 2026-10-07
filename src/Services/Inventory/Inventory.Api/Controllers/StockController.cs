@@ -21,6 +21,17 @@ public class StockController : ControllerBase
     public record ReservationLineRequest(Guid VariantId, int Quantity);
     public record ReserveStockRequest(Guid OrderId, List<ReservationLineRequest> Items);
 
+    /// <summary>
+    /// Disponibilidad PÚBLICA para la tienda (insignias "Quedan pocas unidades" / "Agotado"), de varias
+    /// variantes a la vez: ?variantIds=a&amp;variantIds=b. No requiere sesión y no expone el stock exacto
+    /// cuando hay de sobra. Se declara antes de "{variantId:guid}" solo por claridad (no chocan).
+    /// </summary>
+    [HttpGet("availability")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<VariantAvailability>>> Availability(
+        [FromQuery] Guid[] variantIds, CancellationToken ct) =>
+        Ok(await _mediator.Send(new GetAvailabilityQuery(variantIds), ct));
+
     /// <summary>Consulta de stock de una variante. Cualquier usuario autenticado puede verla.</summary>
     [HttpGet("{variantId:guid}")]
     public async Task<ActionResult<StockResult>> GetStock(Guid variantId, CancellationToken ct)

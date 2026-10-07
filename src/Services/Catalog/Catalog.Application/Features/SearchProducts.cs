@@ -11,7 +11,9 @@ public record SearchProductsQuery(
     decimal? MaxPrice,
     string? SortBy = null,
     int Page = 1,
-    int PageSize = 20) : IRequest<PagedResult<ProductSummary>>;
+    int PageSize = 20,
+    // Solo el panel de Admin ve los productos desactivados (el controlador lo exige con el rol).
+    bool IncludeInactive = false) : IRequest<PagedResult<ProductSummary>>;
 
 public class SearchProductsQueryValidator : AbstractValidator<SearchProductsQuery>
 {
@@ -52,7 +54,8 @@ public class SearchProductsQueryHandler : IRequestHandler<SearchProductsQuery, P
             request.MaxPrice,
             request.SortBy,
             request.Page,
-            request.PageSize);
+            request.PageSize,
+            request.IncludeInactive);
 
         return _productRepository.SearchAsync(filter, ct);
     }

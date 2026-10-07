@@ -15,7 +15,8 @@ async function load() {
   error.value = ''
   try {
     const result = await apiClient.get('/api/products', {
-      params: { searchTerm: searchTerm.value, page: page.value, pageSize: 20 }
+      // El Admin también ve los desactivados (para poder reactivarlos); la tienda no.
+      params: { searchTerm: searchTerm.value, page: page.value, pageSize: 20, includeInactive: true }
     })
     items.value = result.items
     totalPages.value = result.totalPages || 1

@@ -220,4 +220,59 @@ public class StockEndpointsTests : IClassFixture<InventoryApiFactory>
         stock.Should().NotBeNull("el consumidor de RabbitMQ debería haber creado el registro de stock");
         stock!.QuantityOnHand.Should().Be(0);
     }
+
+    // ---- Fase 4: disponibilidad pública para la tienda ----
+
+    private record AvailabilityDto(Guid VariantId, string Status, int? QuantityLeft);
+
+    private async Task<List<AvailabilityDto>> GetAvailabilityAnonymouslyAsync(params Guid[] variantIds)
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+        var query = string.Join("&", variantIds.Select(id => $"variantIds={id}"));
+        var response = await _client.GetAsync($"/api/stock/availability?{query}");
+        response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        return (await response.Content.ReadFromJsonAsync<List<AvailabilityDto>>())!;
+    }
+
+    [Fact]
+    public async Task Disponibilidad_EsPublica_YClasificaConElStockReal()
+    {
+        var plenty = await SeedStockItemAsync(50);
+        var few = await SeedStockItemAsync(4);
+        var none = await SeedStockItemAsync(0);
+        var unknown = Guid.NewGuid();
+
+        var result = await GetAvailabilityAnonymouslyAsync(plenty, few, none, unknown);
+
+        result.Should().BeEquivalentTo(new[]
+        {
+            new AvailabilityDto(plenty, "InStock", null),
+            new AvailabilityDto(few, "LowStock", 4),
+            new AvailabilityDto(none, "OutOfStock", 0),
+            new AvailabilityDto(unknown, "OutOfStock", 0)
+        }, o => o.WithStrictOrdering());
+    }
+
+    [Fact]
+    public async Task Disponibilidad_DescuentaLoReservadoEnCheckoutsEnCurso()
+    {
+        var variantId = await SeedStockItemAsync(8);
+
+        // Un checkout aparta 5: en el depósito siguen 8, pero para la tienda quedan 3.
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TestJwtFactory.CreateToken("Cliente"));
+        var reserve = await _client.PostAsJsonAsync("/api/stock/reservations",
+            new { OrderId = Guid.NewGuid(), Items = new[] { new { VariantId = variantId, Quantity = 5 } } });
+        reserve.StatusCode.Should().Be(HttpStatusCode.OK, await reserve.Content.ReadAsStringAsync());
+
+        var result = await GetAvailabilityAnonymouslyAsync(variantId);
+
+        result.Should().ContainSingle().Which.Should().Be(new AvailabilityDto(variantId, "LowStock", 3));
+    }
+
+    [Fact]
+    public async Task Disponibilidad_SinVariantes_Responde400()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+        (await _client.GetAsync("/api/stock/availability")).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

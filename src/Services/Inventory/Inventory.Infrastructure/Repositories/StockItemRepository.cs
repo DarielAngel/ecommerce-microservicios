@@ -26,6 +26,12 @@ public class StockItemRepository : IStockItemRepository
             .OrderBy(s => s.QuantityOnHand - s.QuantityReserved)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<StockItem>> GetByVariantIdsAsync(IReadOnlyCollection<Guid> variantIds, CancellationToken ct)
+    {
+        var ids = variantIds.ToList();
+        return await _context.StockItems.AsNoTracking().Where(s => ids.Contains(s.VariantId)).ToListAsync(ct);
+    }
+
     public async Task AddAsync(StockItem stockItem, CancellationToken ct) =>
         await _context.StockItems.AddAsync(stockItem, ct);
 

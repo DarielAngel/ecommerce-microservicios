@@ -60,7 +60,8 @@ watch(productSearch, () => {
   searchTimeout = setTimeout(async () => {
     searchingProducts.value = true
     try {
-      const result = await api.get('/api/products', { params: { searchTerm: productSearch.value, pageSize: 8 } })
+      // Con la sesión del Admin, para encontrar también productos desactivados.
+      const result = await apiClient.get('/api/products', { params: { searchTerm: productSearch.value, pageSize: 8, includeInactive: true } })
       productResults.value = result.items
     } catch {
       productResults.value = []

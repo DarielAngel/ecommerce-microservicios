@@ -226,11 +226,12 @@ public class ReviewsApiTests : IClassFixture<ReviewsApiFactory>
         var sinReseñas = Guid.NewGuid();
         await CreateAsync(conReseñas, Guid.NewGuid(), 4, "Cuatro");
 
-        var summaries = await _client.GetFromJsonAsync<List<SummaryDto>>(
-            $"/api/reviews/summaries?productIds={conReseñas}&productIds={sinReseñas}");
+        // El "!" va en la asignación: así el compilador sabe que la lista no es null en las líneas de abajo.
+        var summaries = (await _client.GetFromJsonAsync<List<SummaryDto>>(
+            $"/api/reviews/summaries?productIds={conReseñas}&productIds={sinReseñas}"))!;
 
         summaries.Should().HaveCount(2);
-        summaries!.Single(s => s.ProductId == conReseñas).Count.Should().Be(1);
+        summaries.Single(s => s.ProductId == conReseñas).Count.Should().Be(1);
         summaries.Single(s => s.ProductId == sinReseñas).Count.Should().Be(0);
     }
 

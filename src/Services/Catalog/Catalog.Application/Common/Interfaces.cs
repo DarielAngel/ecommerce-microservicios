@@ -14,7 +14,8 @@ public record ProductSearchFilter(
     decimal? MaxPrice,
     string? SortBy,
     int Page,
-    int PageSize);
+    int PageSize,
+    bool IncludeInactive = false);
 
 public record ProductSummary(
     Guid Id,
@@ -44,6 +45,18 @@ public interface IProductRepository
 
     Task<bool> ExistsBySkuAsync(string sku, CancellationToken ct);
     Task<PagedResult<ProductSummary>> SearchAsync(ProductSearchFilter filter, CancellationToken ct);
+
+    /// <summary>
+    /// Productos ACTIVOS cuyo nombre contiene el texto (sin distinguir mayúsculas ni tildes),
+    /// primero los que empiezan con él. Para el autocompletado del buscador.
+    /// </summary>
+    Task<IReadOnlyList<ProductSummary>> SuggestAsync(string term, int limit, CancellationToken ct);
+
+    /// <summary>
+    /// Productos ACTIVOS de la misma categoría (sin el propio producto). Si no alcanzan, completa
+    /// con productos de categorías hermanas (mismo padre). Vacío si el producto no existe.
+    /// </summary>
+    Task<IReadOnlyList<ProductSummary>> GetRelatedAsync(Guid productId, int limit, CancellationToken ct);
     Task AddAsync(Product product, CancellationToken ct);
 
     /// <summary>

@@ -36,12 +36,29 @@ public class ProductsController : ControllerBase
         [FromQuery] string? sortBy,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] bool includeInactive = false,
         CancellationToken ct = default)
     {
+        // includeInactive solo vale para un Admin: un visitante que lo mande igual ve solo los activos.
         var result = await _mediator.Send(
-            new SearchProductsQuery(searchTerm, categoryId, minPrice, maxPrice, sortBy, page, pageSize), ct);
+            new SearchProductsQuery(searchTerm, categoryId, minPrice, maxPrice, sortBy, page, pageSize,
+                includeInactive && User.IsInRole("Admin")), ct);
         return Ok(result);
     }
+
+    /// <summary>Autocompletado del buscador (T4.1). Con menos de 2 letras devuelve una lista vacía.</summary>
+    [HttpGet("suggestions")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<ProductSummary>>> Suggestions(
+        [FromQuery] string? q, [FromQuery] int limit = 6, CancellationToken ct = default) =>
+        Ok(await _mediator.Send(new SuggestProductsQuery(q, limit), ct));
+
+    /// <summary>"También te puede interesar" (T4.2): misma categoría primero, luego categorías hermanas.</summary>
+    [HttpGet("{id:guid}/related")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<ProductSummary>>> Related(
+        Guid id, [FromQuery] int limit = 8, CancellationToken ct = default) =>
+        Ok(await _mediator.Send(new GetRelatedProductsQuery(id, limit), ct));
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]

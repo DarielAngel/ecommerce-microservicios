@@ -1,26 +1,18 @@
 <script setup>
-import { ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import { useWishlistStore } from '../stores/wishlist'
 import { STORE } from '../config'
 import ThemeToggle from './ThemeToggle.vue'
+import SearchBox from './SearchBox.vue'
 
 const auth = useAuthStore()
 const cart = useCartStore()
 const wishlist = useWishlistStore()
 const router = useRouter()
-const route = useRoute()
 
-// El buscador del encabezado refleja la búsqueda activa (?q=) y la inicia desde cualquier pantalla.
-const query = ref(route.query.q ?? '')
-watch(() => route.query.q, (value) => { query.value = value ?? '' })
-
-function submitSearch() {
-  const q = query.value.trim()
-  router.push({ name: 'home', query: q ? { q } : {} })
-}
+// El buscador (con sugerencias mientras se escribe) vive en SearchBox.
 
 function logout() {
   auth.logout()
@@ -38,17 +30,7 @@ function logout() {
         <span>{{ STORE.name }}</span>
       </router-link>
 
-      <form role="search" @submit.prevent="submitSearch" class="order-3 w-full sm:order-none sm:mx-2 sm:w-auto sm:flex-1">
-        <label for="global-search" class="sr-only">Buscar productos</label>
-        <div class="relative">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"
-            class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-muted" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-          </svg>
-          <input id="global-search" v-model="query" type="search" placeholder="Buscar productos..." autocomplete="off"
-            class="w-full rounded-full border border-line bg-surface-muted py-2 pl-10 pr-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40" />
-        </div>
-      </form>
+      <SearchBox class="order-3 w-full sm:order-none sm:mx-2 sm:w-auto sm:flex-1" />
 
       <nav class="ml-auto flex items-center gap-1 text-sm sm:ml-0" aria-label="Principal">
         <router-link v-if="auth.isAuthenticated" :to="{ name: 'orders' }"

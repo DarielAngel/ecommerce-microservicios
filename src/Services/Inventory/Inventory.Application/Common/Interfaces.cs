@@ -9,6 +9,9 @@ public interface IStockItemRepository
     Task AddAsync(StockItem stockItem, CancellationToken ct);
     Task<IReadOnlyList<StockItem>> ListLowStockAsync(CancellationToken ct);
 
+    /// <summary>Los registros de stock de varias variantes en una sola consulta (las que no existen se omiten).</summary>
+    Task<IReadOnlyList<StockItem>> GetByVariantIdsAsync(IReadOnlyCollection<Guid> variantIds, CancellationToken ct);
+
     /// <summary>
     /// Reserva stock de forma ATÓMICA a nivel de base de datos (UPDATE ... WHERE disponible >= cantidad),
     /// para evitar condiciones de carrera entre checkouts concurrentes. Devuelve true si había

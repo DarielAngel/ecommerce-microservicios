@@ -178,7 +178,8 @@ function displayName(product, parentName) {
 async function listAllProductNames() {
   const byName = new Map()
   for (let page = 1; ; page++) {
-    const result = await http('GET', `/api/products?pageSize=100&page=${page}`)
+    // Como Admin y con includeInactive: un producto que desactivaste no se vuelve a crear.
+    const result = await asAdmin('GET', `/api/products?pageSize=100&page=${page}&includeInactive=true`)
     for (const p of result.items) byName.set(p.name.toLowerCase(), p.id)
     if (page >= (result.totalPages || 1)) break
   }

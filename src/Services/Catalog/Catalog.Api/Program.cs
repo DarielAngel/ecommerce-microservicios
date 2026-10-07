@@ -53,6 +53,10 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // EnsureCreated no toca una base que ya existía: si viene de antes de la Fase 4, le falta la
+    // extensión de búsqueda sin tildes. La creamos si no está (el usuario del contenedor es dueño de la base).
+    await dbContext.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS unaccent;");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

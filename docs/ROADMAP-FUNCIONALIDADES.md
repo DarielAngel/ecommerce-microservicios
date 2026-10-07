@@ -67,6 +67,8 @@ Inspiración: Amazon, Adobe Commerce (recomendaciones), Walmart.
 - T4.2 "También te puede interesar" (misma categoría)
 - T4.3 "Vistos recientemente" (cliente)
 - T4.4 Insignia "Quedan pocas unidades" calculada con stock real
+- **Aceptación**: las sugerencias no distinguen tildes ni mayúsculas; los relacionados nunca incluyen el
+  propio producto ni productos desactivados; la insignia solo aparece con stock real ≤ 5.
 
 ### Fase 5 — Checkout rápido y seguimiento
 Inspiración: Shopify (Shop Pay), Coupang, JD.com, Mercado Libre.
@@ -91,4 +93,5 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 | 1 — Reseñas | Hecha (pendiente: pantalla de moderación en el panel de Admin; el endpoint ya existe) |
 | 2 — Favoritos | Hecha |
 | 3 — Cupones | Hecha |
-| 4 a 6 | Pendiente |
+| 4 — Descubrimiento | Hecha |
+| 5 y 6 | Pendiente |

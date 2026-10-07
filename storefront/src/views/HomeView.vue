@@ -6,6 +6,8 @@ import { STORE } from '../config'
 import { fetchRatingSummaries } from '../api/reviews'
 import ProductCard from '../components/ProductCard.vue'
 import FavoriteButton from '../components/FavoriteButton.vue'
+import ProductRail from '../components/ProductRail.vue'
+import { loadRecentlyViewed, clearRecentlyViewed } from '../utils/recentlyViewed'
 import SkeletonCard from '../components/SkeletonCard.vue'
 import { splitCategories } from '../utils/categories'
 
@@ -25,6 +27,12 @@ const totalPages = ref(1)
 const totalCount = ref(null)
 const loading = ref(true)
 const error = ref('')
+const recentlyViewed = ref(loadRecentlyViewed())
+
+function clearHistory() {
+  clearRecentlyViewed()
+  recentlyViewed.value = []
+}
 
 const sortOptions = [
   { value: 'name', label: 'Nombre' },
@@ -119,6 +127,13 @@ onMounted(async () => {
       <div class="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full bg-white/10 blur-2xl"></div>
       <div class="pointer-events-none absolute -bottom-16 right-24 h-48 w-48 rounded-full bg-accent-400/20 blur-2xl"></div>
     </section>
+
+    <ProductRail v-if="!searchTerm" title="Vistos recientemente" :products="recentlyViewed" testid="recently-viewed">
+      <template #action>
+        <button type="button" data-testid="clear-recently-viewed" @click="clearHistory"
+          class="text-sm font-medium text-ink-muted hover:text-ink">Borrar historial</button>
+      </template>
+    </ProductRail>
 
     <section id="catalogo" class="space-y-4">
       <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Categorías">

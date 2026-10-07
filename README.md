@@ -1303,6 +1303,9 @@ Después de los 10 módulos originales se analizaron 25 plataformas de comercio 
 construye con **las pruebas escritas primero** y respetando la arquitectura: un bounded context
 por microservicio, su propia base de datos, eventos por RabbitMQ y todo detrás del Gateway.
 
+> **¿Primera vez probando la app?** Sigue la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md):
+> levantar todo, cargar datos de demostración y recorrer cada funcionalidad como cliente y como Admin.
+
 ## Fase 0 — Identidad visual (storefront)
 
 - **Tokens de diseño semánticos** (`bg-surface`, `text-ink`, `border-line`, `text-brand-ink`...):
@@ -1478,6 +1481,31 @@ al carrito, ve al checkout y aplica `prueba10`: verás el descuento y el total n
 simulado) y revisa *Mis pedidos*. En el panel, el cupón pasa a "1" uso.
 
 > **Contenedores**: ahora son **24** (se suman `postgres-promotions` y `promotions-service`).
+
+## Fase 4 — Descubrimiento (Catálogo e Inventario)
+
+- **Sugerencias mientras se escribe** en el buscador del encabezado (desde 2 letras): imagen, categoría
+  y precio. Accesible con teclado (↓ ↑ para moverse, Enter para abrir, Esc para cerrar) y para lectores
+  de pantalla (patrón *combobox*). Enter sin elegir una sugerencia busca lo escrito, como antes.
+- **Búsqueda sin tildes**: "audifonos" encuentra "Audífonos" y "cafe" encuentra "Café" (extensión
+  `unaccent` de PostgreSQL, que Catálogo instala sola al arrancar). Aplica también a la búsqueda normal.
+- **"También te puede interesar"** en el detalle: productos de la misma categoría y, si no alcanzan, de
+  las categorías hermanas (mismo padre).
+- **"Vistos recientemente"** en la portada y en el detalle. Se guarda solo en el navegador (sin backend),
+  hasta 12 productos, con un botón para borrar el historial.
+- **Insignia "¡Quedan solo N!" / "Agotado"** calculada con el stock **disponible real** (físico menos lo
+  reservado en checkouts en curso), visible también sin iniciar sesión. Con stock de sobra no se muestra
+  nada ni se expone la cantidad exacta. Agotado deshabilita "Agregar al carrito".
+- **Corrección**: la tienda mostraba productos **desactivados** en la búsqueda. Ahora solo los ve el panel
+  de Admin (con `includeInactive=true`, que se ignora si quien lo pide no es Admin).
+
+  | Método | Ruta | Acceso |
+  |---|---|---|
+  | GET | `/api/products/suggestions?q=&limit=` | público (hasta 10) |
+  | GET | `/api/products/{id}/related?limit=` | público (hasta 20) |
+  | GET | `/api/stock/availability?variantIds=a&variantIds=b` | público (hasta 100) |
+
+Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (sección 4.1 y 4.2).
 
 ## Datos de demostración
 

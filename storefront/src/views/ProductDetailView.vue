@@ -10,6 +10,10 @@ import { formatMoney } from '../utils/format'
 import StarRating from '../components/StarRating.vue'
 import ReviewsSection from '../components/ReviewsSection.vue'
 import FavoriteButton from '../components/FavoriteButton.vue'
+import ProductRail from '../components/ProductRail.vue'
+import { fetchRelated, fetchAvailability } from '../api/catalog'
+import { availabilityBadge } from '../utils/availability'
+import { addRecentlyViewed, loadRecentlyViewed, summaryFromDetail } from '../utils/recentlyViewed'
 
 const props = defineProps({ id: { type: String, required: true } })
 
@@ -30,6 +34,12 @@ const addError = ref('')
 const addSuccess = ref(false)
 const availableStock = ref(null) // null = no cargado (o no logueado todavía)
 const selectedImageId = ref(null)
+const related = ref([])
+const recentlyViewed = ref([])
+const availability = ref({}) // variantId -> { status, quantityLeft }, del stock real (público)
+
+const badge = computed(() => availabilityBadge(availability.value[selectedVariantId.value]))
+const soldOut = computed(() => availability.value[selectedVariantId.value]?.status === 'OutOfStock')
 
 const selectedVariant = computed(() =>
   product.value?.variants.find(v => v.id === selectedVariantId.value) ?? null
@@ -60,18 +70,53 @@ async function loadStock(variantId) {
 
 watch(selectedVariantId, (id) => loadStock(id))
 
-onMounted(async () => {
+async function load(id) {
+  loading.value = true
+  error.value = ''
+  product.value = null
+  related.value = []
+  availability.value = {}
+  selectedImageId.value = null
+  addSuccess.value = false
+  addError.value = ''
+  quantity.value = 1
   try {
-    product.value = await api.get(`/api/products/${props.id}`)
+    product.value = await api.get(`/api/products/${id}`)
     if (product.value.variants.length > 0) {
       selectedVariantId.value = product.value.variants[0].id
       await loadStock(selectedVariantId.value)
     }
   } catch (err) {
     error.value = err.message
+    return
   } finally {
     loading.value = false
   }
+
+  // Lo de abajo es un extra: se carga después de pintar el producto y nunca rompe la página.
+  const categories = await api.get('/api/categories').catch(() => [])
+  const categoryName = categories.find((c) => c.id === product.value.categoryId)?.name ?? ''
+  // "Vistos recientemente" sin el producto actual (que pasa a ser el primero de la lista).
+  recentlyViewed.value = addRecentlyViewed(summaryFromDetail(product.value, categoryName)).filter((p) => p.id !== id)
+
+  const [relatedList, stock] = await Promise.all([
+    fetchRelated(id),
+    fetchAvailability(product.value.variants.map((v) => v.id))
+  ])
+  related.value = relatedList
+  availability.value = stock
+}
+
+onMounted(() => {
+  recentlyViewed.value = loadRecentlyViewed().filter((p) => p.id !== props.id)
+  load(props.id)
+})
+
+// Ir de un producto a otro (desde "También te puede interesar") reutiliza esta misma pantalla:
+// sin esto se quedaría mostrando el producto anterior.
+watch(() => props.id, (id) => {
+  load(id)
+  window.scrollTo?.({ top: 0, behavior: 'smooth' })
 })
 
 async function addToCart() {
@@ -131,8 +176,14 @@ async function addToCart() {
       </a>
       <p class="text-ink-soft mb-5">{{ product.description }}</p>
 
-      <div v-if="selectedVariant" class="text-3xl font-bold text-brand-ink mb-5" data-testid="product-price">
-        {{ formatMoney(selectedVariant.price) }}
+      <div v-if="selectedVariant" class="mb-5 flex flex-wrap items-center gap-3">
+        <span class="text-3xl font-bold text-brand-ink" data-testid="product-price">{{ formatMoney(selectedVariant.price) }}</span>
+        <span v-if="badge" data-testid="availability-badge" class="rounded-full px-3 py-1 text-xs font-semibold"
+          :class="badge.tone === 'out'
+            ? 'bg-surface-muted text-ink-muted'
+            : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'">
+          {{ badge.text }}
+        </span>
       </div>
 
       <div v-if="product.variants.length > 1" class="mb-4">
@@ -151,9 +202,9 @@ async function addToCart() {
           <input id="quantity-input" v-model="quantity" type="number" min="1" :max="availableStock ?? undefined"
             class="w-24 rounded-lg border border-line px-3 py-2 text-sm" />
         </div>
-        <button @click="addToCart" :disabled="adding || !selectedVariantId"
+        <button @click="addToCart" :disabled="adding || !selectedVariantId || soldOut"
           class="rounded-full bg-brand-600 px-7 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-brand-700 disabled:opacity-60">
-          {{ adding ? 'Agregando...' : 'Agregar al carrito' }}
+          {{ soldOut ? 'Sin stock' : adding ? 'Agregando...' : 'Agregar al carrito' }}
         </button>
       </div>
 
@@ -170,6 +221,10 @@ async function addToCart() {
     </div>
   </div>
 
+  <ProductRail title="También te puede interesar" :products="related" testid="related-products" class="mt-14" />
+
   <ReviewsSection :product-id="id" class="mt-14" @summary="rating = $event" />
+
+  <ProductRail title="Vistos recientemente" :products="recentlyViewed" testid="recently-viewed" class="mt-14" />
   </div>
 </template>

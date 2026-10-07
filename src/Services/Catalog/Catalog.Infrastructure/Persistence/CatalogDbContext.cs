@@ -14,6 +14,10 @@ public class CatalogDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Búsqueda sin distinguir tildes (ver ProductRepository). EnsureCreated la instala en bases nuevas;
+        // para bases que ya existían, Program.cs la crea al arrancar.
+        modelBuilder.HasPostgresExtension("unaccent");
+
         modelBuilder.Entity<Category>(entity =>
         {
             entity.ToTable("categories");
