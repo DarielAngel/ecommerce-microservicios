@@ -29,6 +29,8 @@ public class OrdersDbContext : DbContext
             order.Property(o => o.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
             order.Property(o => o.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
             order.Property(o => o.PaidAtUtc).HasColumnName("paid_at_utc");
+            order.Property(o => o.CouponCode).HasColumnName("coupon_code").HasMaxLength(30);
+            order.Property(o => o.DiscountAmount).HasColumnName("discount_amount").HasColumnType("numeric(12,2)").IsRequired();
 
             order.OwnsMany(o => o.Lines, line =>
             {

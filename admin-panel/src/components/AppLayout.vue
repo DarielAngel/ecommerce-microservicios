@@ -11,6 +11,7 @@ const links = [
   { to: { name: 'products' }, label: 'Productos', icon: '📦' },
   { to: { name: 'categories' }, label: 'Categorías', icon: '🏷️' },
   { to: { name: 'inventory' }, label: 'Inventario', icon: '📊' },
+  { to: { name: 'coupons' }, label: 'Cupones', icon: '🎟️' },
   { to: { name: 'orders' }, label: 'Órdenes', icon: '🧾' },
   { to: { name: 'admins' }, label: 'Administradores', icon: '👤' },
   { to: { name: 'notifications' }, label: 'Notificaciones', icon: '✉️' }

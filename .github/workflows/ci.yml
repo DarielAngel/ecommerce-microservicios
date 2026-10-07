@@ -30,9 +30,9 @@ jobs:
           count=$(echo "$projects" | grep -c . || true)
 
           # Candado: si por un cambio de nombres dejamos de encontrar proyectos, el job FALLA
-          # en vez de pasar en silencio. 18 = 9 servicios x (unitarios + integración).
-          if [ "$count" -lt 18 ]; then
-            echo "::error::Se esperaban al menos 18 proyectos de test y se encontraron $count"
+          # en vez de pasar en silencio. 20 = 10 servicios x (unitarios + integración).
+          if [ "$count" -lt 20 ]; then
+            echo "::error::Se esperaban al menos 20 proyectos de test y se encontraron $count"
             echo "$projects"
             exit 1
           fi
@@ -105,7 +105,7 @@ jobs:
           RESEND_FROM_ADDRESS=onboarding@resend.dev
           EOF
 
-      - name: Levantar los 22 servicios
+      - name: Levantar los 24 servicios
         run: docker compose up -d --build
 
       - name: Esperar a que el Gateway responda
@@ -147,6 +147,21 @@ jobs:
             sleep 5
           done
           echo "::error::El servicio de Favoritos nunca respondió a tiempo."
+          exit 1
+
+      - name: Esperar a que Cupones responda a través del Gateway
+        run: |
+          # Igual que Favoritos: sin token, el servicio sano responde 401.
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:5000/api/coupons/validate?code=X&subtotal=1" || true)
+            if [ "$code" = "401" ]; then
+              echo "Cupones listo."
+              exit 0
+            fi
+            echo "Esperando a Cupones... ($i/60, HTTP $code)"
+            sleep 5
+          done
+          echo "::error::El servicio de Cupones nunca respondió a tiempo."
           exit 1
 
       - uses: pnpm/action-setup@v4

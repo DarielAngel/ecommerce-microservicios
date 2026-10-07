@@ -45,6 +45,14 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // EnsureCreated no modifica una base que ya existía. Estas dos columnas llegaron con los cupones
+    // (Fase 3): se agregan si faltan, así una base local anterior sigue funcionando sin borrarla.
+    // (El pendiente de pasar a migraciones de EF Core sigue abierto: ver el README.)
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code character varying(30) NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount numeric(12,2) NOT NULL DEFAULT 0;");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

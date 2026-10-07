@@ -67,6 +67,12 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(20); // Pagos habla con PayPal, puede tardar un poco más
         });
 
+        services.AddHttpClient<ICouponServiceClient, CouponServiceClient>(client =>
+        {
+            client.BaseAddress = new Uri(serviceUrls.PromotionsBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+
         return services;
     }
 }

@@ -92,4 +92,42 @@ public class OrderTests
 
         act.Should().Throw<DomainException>();
     }
+
+    // ---- Cupón ----
+
+    private static Order CreateWithCoupon((string Code, decimal DiscountAmount)? coupon) => Order.Create(
+        Guid.NewGuid(), Guid.NewGuid(), "cliente@test.com", "Cliente", "Calle Falsa 123",
+        new[] { (Guid.NewGuid(), Guid.NewGuid(), "Camiseta", "SKU-1", 25m, 2) }, coupon);
+
+    [Fact]
+    public void Create_ConCupon_DeberiaRestarElDescuentoDelTotal()
+    {
+        var order = CreateWithCoupon(("verano10", 5m));
+
+        order.Subtotal.Should().Be(50m);
+        order.DiscountAmount.Should().Be(5m);
+        order.TotalAmount.Should().Be(45m);
+        order.CouponCode.Should().Be("VERANO10");
+    }
+
+    [Fact]
+    public void Create_SinCupon_ElTotalEsElSubtotal()
+    {
+        var order = CreateWithCoupon(null);
+
+        order.TotalAmount.Should().Be(order.Subtotal);
+        order.DiscountAmount.Should().Be(0);
+        order.CouponCode.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(50)]
+    [InlineData(60)]
+    public void Create_ConDescuentoQueNoDejaAlgoPorCobrar_DeberiaRechazarse(decimal discount)
+    {
+        var act = () => CreateWithCoupon(("X10", discount));
+        act.Should().Throw<DomainException>().WithMessage("*descuento*");
+    }
 }

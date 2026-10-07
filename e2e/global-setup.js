@@ -16,13 +16,28 @@ async function waitForUrl(url, label, maxAttempts = 30, delayMs = 2000) {
   throw new Error(`${label} (${url}) no respondió después de ${maxAttempts} intentos. ¿Corriste 'docker compose up -d'?`)
 }
 
-// El Gateway (con Catálogo detrás) y el servicio de Reseñas arrancan por separado.
+async function waitForStatus(url, label, expectedStatus, maxAttempts = 30, delayMs = 2000) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url)
+      if (response.status === expectedStatus) return
+    } catch {
+      // el servicio todavía no responde — reintentar
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs))
+  }
+  throw new Error(`${label} (${url}) no respondió después de ${maxAttempts} intentos.`)
+}
+
+// El Gateway (con Catálogo detrás) y los servicios de Reseñas y Cupones arrancan por separado.
 async function waitForGateway() {
   await waitForUrl(`${GATEWAY_URL}/api/categories`, 'El Gateway')
   await waitForUrl(
     `${GATEWAY_URL}/api/reviews/products/00000000-0000-0000-0000-000000000001/summary`,
     'El servicio de Reseñas'
   )
+  // Cupones exige sesión: un 401 significa que el servicio ya responde detrás del Gateway.
+  await waitForStatus(`${GATEWAY_URL}/api/coupons/validate?code=X&subtotal=1`, 'El servicio de Cupones', 401)
 }
 
 async function ensureAdmin(email, password, fullName) {

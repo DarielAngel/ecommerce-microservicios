@@ -68,7 +68,12 @@ async function confirmPayment() {
     <div v-else-if="result.status === 'Paid'">
       <div class="text-5xl mb-3">🎉</div>
       <h1 class="text-xl font-semibold text-ink mb-2">¡Pago confirmado!</h1>
-      <p class="text-sm text-ink-soft mb-6">Total pagado: ${{ result.totalAmount.toFixed(2) }}</p>
+      <p class="text-sm text-ink-soft mb-6">
+        Total pagado: ${{ result.totalAmount.toFixed(2) }}
+        <span v-if="result.couponCode" class="block text-xs text-emerald-700 dark:text-emerald-400">
+          Ahorraste ${{ result.discountAmount.toFixed(2) }} con el cupón {{ result.couponCode }}
+        </span>
+      </p>
       <router-link :to="{ name: 'orders' }" class="text-brand-ink font-medium text-sm underline">
         Ver mis pedidos
       </router-link>

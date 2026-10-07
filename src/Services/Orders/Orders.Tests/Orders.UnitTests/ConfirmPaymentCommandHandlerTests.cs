@@ -4,6 +4,7 @@ using Ecommerce.Orders.Domain.Entities;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Ecommerce.Orders.UnitTests;
@@ -15,9 +16,11 @@ public class ConfirmPaymentCommandHandlerTests
     private readonly IPaymentServiceClient _paymentClient = Substitute.For<IPaymentServiceClient>();
     private readonly ICartServiceClient _cartClient = Substitute.For<ICartServiceClient>();
     private readonly IEventPublisher _eventPublisher = Substitute.For<IEventPublisher>();
+    private readonly ICouponServiceClient _couponClient = Substitute.For<ICouponServiceClient>();
 
     private ConfirmPaymentCommandHandler CreateHandler() =>
-        new(_orderRepository, _inventoryClient, _paymentClient, _cartClient, _eventPublisher, NullLogger<ConfirmPaymentCommandHandler>.Instance);
+        new(_orderRepository, _inventoryClient, _paymentClient, _cartClient, _couponClient, _eventPublisher,
+            NullLogger<ConfirmPaymentCommandHandler>.Instance);
 
     private static Order BuildPendingOrder(Guid orderId, Guid variantId) => Order.Create(
         orderId, Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123",
@@ -119,5 +122,66 @@ public class ConfirmPaymentCommandHandlerTests
         var act = async () => await handler.Handle(new ConfirmPaymentCommand(Guid.NewGuid(), "token"), CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundAppException>();
+    }
+
+    // ---- Cupones ----
+
+    private static Order BuildPendingOrderWithCoupon(Guid orderId) => Order.Create(
+        orderId, Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", "Calle Falsa 123",
+        new[] { (Guid.NewGuid(), Guid.NewGuid(), "Camiseta", "SKU-1", 20m, 2) },
+        ("VERANO10", 4m));
+
+    [Fact]
+    public async Task Handle_ConCapturaExitosaYCupon_DeberiaConfirmarElUsoDelCupon()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrderWithCoupon(orderId));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(true, "COMPLETED"));
+
+        var result = await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        result.Status.Should().Be("Paid");
+        result.TotalAmount.Should().Be(36m);
+        await _couponClient.Received(1).ConfirmAsync(orderId, "token", Arg.Any<CancellationToken>());
+        await _couponClient.DidNotReceiveWithAnyArgs().ReleaseAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_ConCapturaFallidaYCupon_DeberiaLiberarElUsoDelCupon()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrderWithCoupon(orderId));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(false, "DECLINED"));
+
+        var result = await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        result.Status.Should().Be("Failed");
+        await _couponClient.Received(1).ReleaseAsync(orderId, "token", Arg.Any<CancellationToken>());
+        await _couponClient.DidNotReceiveWithAnyArgs().ConfirmAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_ConCapturaExitosa_SiPromocionesFallaAlConfirmar_LaOrdenIgualQuedaPagada()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrderWithCoupon(orderId));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(true, "COMPLETED"));
+        _couponClient.ConfirmAsync(orderId, "token", Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("caído"));
+
+        var result = await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        result.Status.Should().Be("Paid", "el pago ya se capturó: un fallo de Promociones no puede revertirlo");
+    }
+
+    [Fact]
+    public async Task Handle_SinCupon_NoDeberiaLlamarAPromociones()
+    {
+        var orderId = Guid.NewGuid();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(BuildPendingOrder(orderId, Guid.NewGuid()));
+        _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>()).Returns(new CapturePaymentResult(true, "COMPLETED"));
+
+        await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        await _couponClient.DidNotReceiveWithAnyArgs().ConfirmAsync(default, default!, default);
     }
 }

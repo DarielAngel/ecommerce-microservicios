@@ -295,4 +295,76 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
         orders!.Select(o => o.UserId).Distinct().Count().Should().BeGreaterThanOrEqualTo(2);
         orders.Should().OnlyContain(o => !string.IsNullOrEmpty(o.UserEmail));
     }
+
+    // ---- Cupones (Fase 3) ----
+
+    private async Task<HttpResponseMessage> CheckoutAsync(string token, Guid variantId, string? couponCode)
+    {
+        var request = WithAuth(HttpMethod.Post, "/api/orders/checkout", token);
+        request.Content = JsonContent.Create(new
+        {
+            VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123", CouponCode = couponCode
+        });
+        return await _client.SendAsync(request);
+    }
+
+    [Fact]
+    public async Task Checkout_ConCupon_GuardaElDescuentoYLoMuestraAlConsultarLaOrden()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) }; // 2 × $20
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        _factory.FakeCoupons.ValidCoupons["INTEG5"] = 5m;
+
+        var response = await CheckoutAsync(token, variantId, "integ5");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var checkout = (await response.Content.ReadFromJsonAsync<CheckoutResult>())!;
+        checkout.Subtotal.Should().Be(40m);
+        checkout.DiscountAmount.Should().Be(5m);
+        checkout.TotalAmount.Should().Be(35m);
+        checkout.CouponCode.Should().Be("INTEG5");
+        _factory.FakeCoupons.ReservedSubtotals[checkout.OrderId].Should().Be(40m);
+
+        // Persistido: al volver a leer la orden de la base, el descuento sigue ahí.
+        var stored = await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{checkout.OrderId}", token));
+        var order = (await stored.Content.ReadFromJsonAsync<CheckoutResult>())!;
+        order.TotalAmount.Should().Be(35m);
+        order.CouponCode.Should().Be("INTEG5");
+    }
+
+    [Fact]
+    public async Task Checkout_ConCuponInvalido_Devuelve409ConElMotivoYLiberaElStock()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        var releasedBefore = _factory.FakeInventory.ReleasedOrders.Count;
+
+        var response = await CheckoutAsync(token, variantId, "NOEXISTE");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await response.Content.ReadAsStringAsync()).Should().Contain("no existe");
+        _factory.FakeInventory.ReleasedOrders.Count.Should().Be(releasedBefore + 1);
+    }
+
+    [Fact]
+    public async Task ConfirmarPago_DeUnaOrdenConCupon_ConfirmaElUsoDelCupon()
+    {
+        var token = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        _factory.FakePayments.ShouldCaptureSucceed = true;
+        _factory.FakeCoupons.ValidCoupons["PAGADO10"] = 10m;
+
+        var checkout = (await (await CheckoutAsync(token, variantId, "PAGADO10")).Content.ReadFromJsonAsync<CheckoutResult>())!;
+        var confirm = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{checkout.OrderId}/confirm-payment", token));
+
+        confirm.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await confirm.Content.ReadFromJsonAsync<CheckoutResult>())!.Status.Should().Be("Paid");
+        _factory.FakeCoupons.ConfirmedOrders.Should().ContainKey(checkout.OrderId);
+    }
 }

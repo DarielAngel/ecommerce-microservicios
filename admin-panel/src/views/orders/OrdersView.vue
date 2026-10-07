@@ -76,7 +76,10 @@ onMounted(load)
                 <p class="text-gray-900">{{ o.userFullName }}</p>
                 <p class="text-xs text-gray-500">{{ o.userEmail }}</p>
               </td>
-              <td class="px-4 py-2.5 text-gray-900">${{ o.totalAmount.toFixed(2) }}</td>
+              <td class="px-4 py-2.5 text-gray-900">
+                ${{ o.totalAmount.toFixed(2) }}
+                <span v-if="o.couponCode" class="block text-xs text-green-700">{{ o.couponCode }} (−${{ o.discountAmount.toFixed(2) }})</span>
+              </td>
               <td class="px-4 py-2.5">
                 <span class="text-xs px-2 py-0.5 rounded-full" :class="statusStyles[o.status] || 'bg-gray-100 text-gray-600'">
                   {{ o.status }}

@@ -50,3 +50,33 @@ public class FakePaymentServiceClient : IPaymentServiceClient
     public Task<CapturePaymentResult> CapturePaymentAsync(Guid orderId, string accessToken, CancellationToken ct) =>
         Task.FromResult(new CapturePaymentResult(ShouldCaptureSucceed, ShouldCaptureSucceed ? "Captured" : "Failed"));
 }
+
+public class FakeCouponServiceClient : ICouponServiceClient
+{
+    /// <summary>Código aceptado → descuento. Cualquier otro código se rechaza como lo haría Promociones.</summary>
+    public ConcurrentDictionary<string, decimal> ValidCoupons { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public ConcurrentDictionary<Guid, decimal> ReservedSubtotals { get; } = new();
+    public ConcurrentDictionary<Guid, bool> ConfirmedOrders { get; } = new();
+    public ConcurrentDictionary<Guid, bool> ReleasedOrders { get; } = new();
+
+    public Task<CouponReservation> ReserveAsync(Guid orderId, string code, decimal subtotal, string accessToken, CancellationToken ct)
+    {
+        if (!ValidCoupons.TryGetValue(code.Trim(), out var discount))
+            throw new ConflictAppException($"El cupón \"{code.Trim().ToUpperInvariant()}\" no existe.");
+
+        ReservedSubtotals[orderId] = subtotal;
+        return Task.FromResult(new CouponReservation(code.Trim().ToUpperInvariant(), discount));
+    }
+
+    public Task ConfirmAsync(Guid orderId, string accessToken, CancellationToken ct)
+    {
+        ConfirmedOrders[orderId] = true;
+        return Task.CompletedTask;
+    }
+
+    public Task ReleaseAsync(Guid orderId, string accessToken, CancellationToken ct)
+    {
+        ReleasedOrders[orderId] = true;
+        return Task.CompletedTask;
+    }
+}

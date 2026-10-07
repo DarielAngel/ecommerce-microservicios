@@ -193,6 +193,25 @@ services:
     networks:
       - ecommerce-net
 
+  postgres-promotions:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres-promotions
+    environment:
+      POSTGRES_DB: promotions_db
+      POSTGRES_USER: promotions_svc
+      POSTGRES_PASSWORD: promotions_pass_dev
+    ports:
+      - "5442:5432"
+    volumes:
+      - pg_promotions_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promotions_svc -d promotions_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Microservicio: Users / Auth
   # ------------------------------------------------------------------
@@ -358,6 +377,7 @@ services:
       ServiceUrls__CartBaseUrl: "http://cart-service:8080/"
       ServiceUrls__InventoryBaseUrl: "http://inventory-service:8080/"
       ServiceUrls__PaymentsBaseUrl: "http://payments-service:8080/"
+      ServiceUrls__PromotionsBaseUrl: "http://promotions-service:8080/"
       RabbitMq__Host: "rabbitmq"
       RabbitMq__VirtualHost: "/"
       RabbitMq__Username: "guest"
@@ -375,6 +395,8 @@ services:
       inventory-service:
         condition: service_started
       payments-service:
+        condition: service_started
+      promotions-service:
         condition: service_started
     networks:
       - ecommerce-net
@@ -456,6 +478,25 @@ services:
     networks:
       - ecommerce-net
 
+  promotions-service:
+    build:
+      context: .
+      dockerfile: src/Services/Promotions/Promotions.Api/Dockerfile
+    container_name: ecommerce-promotions-service
+    environment:
+      ConnectionStrings__PromotionsDb: "Host=postgres-promotions;Port=5432;Database=promotions_db;Username=promotions_svc;Password=promotions_pass_dev"
+      Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
+      Jwt__Issuer: "Ecommerce.Users"
+      Jwt__Audience: "Ecommerce.Clients"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    ports:
+      - "5010:8080"
+    depends_on:
+      postgres-promotions:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
   # ------------------------------------------------------------------
   # Gateway — único punto de entrada para el frontend
   # ------------------------------------------------------------------
@@ -477,6 +518,7 @@ services:
       - notifications-service
       - reviews-service
       - wishlist-service
+      - promotions-service
     networks:
       - ecommerce-net
 
@@ -531,4 +573,5 @@ volumes:
   pg_notifications_data:
   pg_reviews_data:
   pg_wishlist_data:
+  pg_promotions_data:
   catalog_images:

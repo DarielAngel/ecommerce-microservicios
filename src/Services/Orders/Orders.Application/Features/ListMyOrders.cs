@@ -18,9 +18,6 @@ public class ListMyOrdersQueryHandler : IRequestHandler<ListMyOrdersQuery, IRead
     {
         var orders = await _orderRepository.ListByUserIdAsync(request.UserId, ct);
 
-        return orders.Select(order => new CheckoutResult(
-            order.Id, order.Status.ToString(), order.TotalAmount,
-            order.Lines.Select(l => new OrderLineResult(l.VariantId, l.ProductName, l.Sku, l.UnitPrice, l.Quantity, l.LineTotal)).ToList(),
-            ApproveUrl: null)).ToList();
+        return orders.Select(order => CheckoutResult.From(order)).ToList();
     }
 }

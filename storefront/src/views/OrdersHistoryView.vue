@@ -57,7 +57,10 @@ onMounted(load)
         <button @click="toggle(o.orderId)" class="w-full flex items-center justify-between p-4 text-left">
           <div>
             <p class="text-sm font-medium text-ink">Pedido #{{ o.orderId.slice(0, 8) }}</p>
-            <p class="text-xs text-ink-muted">${{ o.totalAmount.toFixed(2) }}</p>
+            <p class="text-xs text-ink-muted">
+              ${{ o.totalAmount.toFixed(2) }}
+              <span v-if="o.couponCode" class="text-emerald-700 dark:text-emerald-400">· cupón {{ o.couponCode }} (−${{ o.discountAmount.toFixed(2) }})</span>
+            </p>
           </div>
           <span class="text-xs px-2 py-0.5 rounded-full" :class="statusStyles[o.status] || 'bg-surface-muted text-ink-soft'">
             {{ statusLabels[o.status] || o.status }}

@@ -44,6 +44,22 @@ public interface IPaymentServiceClient
     Task<CapturePaymentResult> CapturePaymentAsync(Guid orderId, string accessToken, CancellationToken ct);
 }
 
+// ---- Promociones (cupones) ----
+
+public record CouponReservation(string Code, decimal DiscountAmount);
+
+/// <summary>
+/// Mismo ciclo que el stock: reservar durante el checkout, confirmar si el pago se captura, liberar si
+/// falla. Si Promociones rechaza el cupón (vencido, agotado, compra mínima...), ReserveAsync lanza
+/// ConflictAppException con el mensaje de Promociones, listo para mostrárselo al cliente.
+/// </summary>
+public interface ICouponServiceClient
+{
+    Task<CouponReservation> ReserveAsync(Guid orderId, string code, decimal subtotal, string accessToken, CancellationToken ct);
+    Task ConfirmAsync(Guid orderId, string accessToken, CancellationToken ct);
+    Task ReleaseAsync(Guid orderId, string accessToken, CancellationToken ct);
+}
+
 // ---- Eventos ----
 
 public interface IEventPublisher

@@ -15,9 +15,10 @@ public class CheckoutCommandHandlerTests
     private readonly ICartServiceClient _cartClient = Substitute.For<ICartServiceClient>();
     private readonly IInventoryServiceClient _inventoryClient = Substitute.For<IInventoryServiceClient>();
     private readonly IPaymentServiceClient _paymentClient = Substitute.For<IPaymentServiceClient>();
+    private readonly ICouponServiceClient _couponClient = Substitute.For<ICouponServiceClient>();
 
     private CheckoutCommandHandler CreateHandler() =>
-        new(_orderRepository, _cartClient, _inventoryClient, _paymentClient, NullLogger<CheckoutCommandHandler>.Instance);
+        new(_orderRepository, _cartClient, _inventoryClient, _paymentClient, _couponClient, NullLogger<CheckoutCommandHandler>.Instance);
 
     private static CartItemInfo BuildCartItem(Guid variantId, int quantity = 2) =>
         new(variantId, Guid.NewGuid(), "Camiseta", "SKU-1", 20m, quantity);
@@ -100,5 +101,106 @@ public class CheckoutCommandHandlerTests
         // stock, esa reserva NO puede quedar huérfana — tiene que liberarse.
         await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
         await _orderRepository.DidNotReceive().AddAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+    }
+
+    // ---- Cupones ----
+
+    private void GivenCartWithStock(Guid variantId)
+    {
+        _cartClient.GetCartItemsAsync("token", Arg.Any<CancellationToken>()).Returns(new List<CartItemInfo> { BuildCartItem(variantId) });
+        _inventoryClient.ReserveStockAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ReservationLineInput>>(), "token", Arg.Any<CancellationToken>())
+            .Returns(true);
+    }
+
+    private static CheckoutCommand CommandWithCoupon(Guid variantId, string? coupon) =>
+        new(Guid.NewGuid(), "cliente@test.com", "Cliente Prueba", new List<Guid> { variantId }, "Calle Falsa 123", "token", coupon);
+
+    [Fact]
+    public async Task Handle_ConCupon_DeberiaReservarloConElSubtotalRealYCobrarElTotalConDescuento()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId); // 2 × $20 = $40
+        _couponClient.ReserveAsync(Arg.Any<Guid>(), "verano10", 40m, "token", Arg.Any<CancellationToken>())
+            .Returns(new CouponReservation("VERANO10", 4m));
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), "USD", "token", Arg.Any<CancellationToken>())
+            .Returns(new CreatePaymentResult("PendingApproval", "https://paypal.test/approve/X"));
+
+        var result = await CreateHandler().Handle(CommandWithCoupon(variantId, " verano10 "), CancellationToken.None);
+
+        result.Subtotal.Should().Be(40m);
+        result.DiscountAmount.Should().Be(4m);
+        result.TotalAmount.Should().Be(36m);
+        result.CouponCode.Should().Be("VERANO10");
+        // PayPal cobra el total CON descuento, y el cupón se reservó con el MISMO id de la orden.
+        await _paymentClient.Received(1).CreatePaymentAsync(result.OrderId, 36m, "USD", "token", Arg.Any<CancellationToken>());
+        await _couponClient.Received(1).ReserveAsync(result.OrderId, "verano10", 40m, "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_SinCupon_NoDeberiaLlamarAPromociones()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), 40m, "USD", "token", Arg.Any<CancellationToken>())
+            .Returns(new CreatePaymentResult("PendingApproval", "https://paypal.test/approve/X"));
+
+        var result = await CreateHandler().Handle(CommandWithCoupon(variantId, "  "), CancellationToken.None);
+
+        result.DiscountAmount.Should().Be(0);
+        result.CouponCode.Should().BeNull();
+        await _couponClient.DidNotReceiveWithAnyArgs().ReserveAsync(default, default!, default, default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_CuponRechazado_DeberiaLiberarElStockYNoCrearNiPagoNiOrden()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _couponClient.ReserveAsync(Arg.Any<Guid>(), "AGOTADO", Arg.Any<decimal>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ConflictAppException("Este cupón ya alcanzó su límite de usos."));
+
+        var act = () => CreateHandler().Handle(CommandWithCoupon(variantId, "AGOTADO"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictAppException>().WithMessage("*límite de usos*");
+        await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
+        // El cupón nunca se reservó: no hay nada que liberar.
+        await _couponClient.DidNotReceiveWithAnyArgs().ReleaseAsync(default, default!, default);
+        await _paymentClient.DidNotReceiveWithAnyArgs().CreatePaymentAsync(default, default, default!, default!, default);
+        await _orderRepository.DidNotReceive().AddAsync(Arg.Any<Order>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_ConCuponReservadoPeroPagosFalla_DeberiaLiberarElCuponYElStock()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _couponClient.ReserveAsync(Arg.Any<Guid>(), "VERANO10", Arg.Any<decimal>(), "token", Arg.Any<CancellationToken>())
+            .Returns(new CouponReservation("VERANO10", 4m));
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), Arg.Any<string>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Pagos no respondió"));
+
+        var act = () => CreateHandler().Handle(CommandWithCoupon(variantId, "VERANO10"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<HttpRequestException>();
+        await _couponClient.Received(1).ReleaseAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
+        await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_SiLiberarElCuponTambienFalla_DeberiaLiberarElStockYPropagarElErrorOriginal()
+    {
+        var variantId = Guid.NewGuid();
+        GivenCartWithStock(variantId);
+        _couponClient.ReserveAsync(Arg.Any<Guid>(), "VERANO10", Arg.Any<decimal>(), "token", Arg.Any<CancellationToken>())
+            .Returns(new CouponReservation("VERANO10", 4m));
+        _paymentClient.CreatePaymentAsync(Arg.Any<Guid>(), Arg.Any<decimal>(), Arg.Any<string>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Pagos no respondió"));
+        _couponClient.ReleaseAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Promociones tampoco"));
+
+        var act = () => CreateHandler().Handle(CommandWithCoupon(variantId, "VERANO10"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<HttpRequestException>().WithMessage("Pagos no respondió");
+        await _inventoryClient.Received(1).ReleaseReservationAsync(Arg.Any<Guid>(), "token", Arg.Any<CancellationToken>());
     }
 }

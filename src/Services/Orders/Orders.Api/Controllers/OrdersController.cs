@@ -19,7 +19,7 @@ public class OrdersController : ControllerBase
         _mediator = mediator;
     }
 
-    public record CheckoutRequest(List<Guid> VariantIds, string ShippingAddress);
+    public record CheckoutRequest(List<Guid> VariantIds, string ShippingAddress, string? CouponCode = null);
 
     private Guid GetUserId()
     {
@@ -63,7 +63,8 @@ public class OrdersController : ControllerBase
     {
         var (email, fullName) = GetUserEmailAndName();
         var result = await _mediator.Send(
-            new CheckoutCommand(GetUserId(), email, fullName, request.VariantIds, request.ShippingAddress, GetRawAccessToken()), ct);
+            new CheckoutCommand(GetUserId(), email, fullName, request.VariantIds, request.ShippingAddress, GetRawAccessToken(),
+                request.CouponCode), ct);
         return Ok(result);
     }
 

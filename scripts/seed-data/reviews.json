@@ -1,0 +1,2455 @@
+{
+ "password": "Demo12345!",
+ "customers": [
+  {
+   "fullName": "Ana Martínez",
+   "email": "ana.martinez@demo-tienda.test"
+  },
+  {
+   "fullName": "Carlos Rodríguez",
+   "email": "carlos.rodriguez@demo-tienda.test"
+  },
+  {
+   "fullName": "Lucía Fernández",
+   "email": "lucia.fernandez@demo-tienda.test"
+  },
+  {
+   "fullName": "Javier Gómez",
+   "email": "javier.gomez@demo-tienda.test"
+  },
+  {
+   "fullName": "Sofía López",
+   "email": "sofia.lopez@demo-tienda.test"
+  },
+  {
+   "fullName": "Mateo Díaz",
+   "email": "mateo.diaz@demo-tienda.test"
+  },
+  {
+   "fullName": "Valentina Pérez",
+   "email": "valentina.perez@demo-tienda.test"
+  },
+  {
+   "fullName": "Diego Sánchez",
+   "email": "diego.sanchez@demo-tienda.test"
+  },
+  {
+   "fullName": "Camila Torres",
+   "email": "camila.torres@demo-tienda.test"
+  },
+  {
+   "fullName": "Andrés Ramírez",
+   "email": "andres.ramirez@demo-tienda.test"
+  }
+ ],
+ "reviews": [
+  {
+   "product": "iPhone 15 128 GB",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "iPhone 15 128 GB",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La batería dura todo el día sin problema."
+  },
+  {
+   "product": "Galaxy A15 5G",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "Galaxy A15 5G",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "Galaxy A15 5G",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "Pixel 8a",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "Pixel 8a",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno, solo le falta un poco más de batería."
+  },
+  {
+   "product": "Pixel 8a",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Se configura en minutos y funciona impecable. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Moto G84 5G",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Excelente rendimiento; el precio es algo alto."
+  },
+  {
+   "product": "Moto G84 5G",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Excelente rendimiento; el precio es algo alto. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Moto G84 5G",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "Moto G84 5G",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior."
+  },
+  {
+   "product": "Redmi Note 13 Pro",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior. Lo volvería a comprar."
+  },
+  {
+   "product": "Redmi Note 13 Pro",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "La batería dura todo el día sin problema."
+  },
+  {
+   "product": "Redmi Note 13 Pro",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Excelente rendimiento; el precio es algo alto. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Redmi Note 13 Pro",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy bueno, solo le falta un poco más de batería."
+  },
+  {
+   "product": "Redmi Note 13 Pro",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "La batería dura todo el día sin problema. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "MacBook Air 13\" con chip M3",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy bueno, solo le falta un poco más de batería."
+  },
+  {
+   "product": "MacBook Air 13\" con chip M3",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La calidad de construcción es excelente."
+  },
+  {
+   "product": "MacBook Air 13\" con chip M3",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La calidad de construcción es excelente. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "MacBook Air 13\" con chip M3",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Excelente rendimiento; el precio es algo alto. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "XPS 13",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "La calidad de construcción es excelente. Buena atención de la tienda."
+  },
+  {
+   "product": "XPS 13",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "XPS 13",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Funciona bien pero se calienta un poco con uso intenso."
+  },
+  {
+   "product": "XPS 13",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 1,
+   "title": "No lo recomiendo",
+   "comment": "La batería dura bastante menos de lo anunciado. Lo volvería a comprar."
+  },
+  {
+   "product": "XPS 13",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Se configura en minutos y funciona impecable. Lo volvería a comprar."
+  },
+  {
+   "product": "IdeaPad Slim 3 15\"",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "La batería dura todo el día sin problema. Lo volvería a comprar."
+  },
+  {
+   "product": "IdeaPad Slim 3 15\"",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno, solo le falta un poco más de batería."
+  },
+  {
+   "product": "Pavilion 15",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La calidad de construcción es excelente. Buena atención de la tienda."
+  },
+  {
+   "product": "Pavilion 15",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Excelente rendimiento; el precio es algo alto. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Pavilion 15",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Se configura en minutos y funciona impecable. Buena atención de la tienda."
+  },
+  {
+   "product": "Pavilion 15",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La batería dura todo el día sin problema. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Pavilion 15",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno, solo le falta un poco más de batería. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Pavilion 15",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "ROG Strix G16",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "La batería dura todo el día sin problema. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "ROG Strix G16",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 1,
+   "title": "Mala experiencia",
+   "comment": "La batería dura bastante menos de lo anunciado. Buena atención de la tienda."
+  },
+  {
+   "product": "ROG Strix G16",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Se configura en minutos y funciona impecable. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "ROG Strix G16",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior. Buena atención de la tienda."
+  },
+  {
+   "product": "Chromebook 314",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior. Lo volvería a comprar."
+  },
+  {
+   "product": "Audífonos WH-1000XM5",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Funciona bien pero se calienta un poco con uso intenso."
+  },
+  {
+   "product": "Audífonos WH-1000XM5",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "La batería dura bastante menos de lo anunciado."
+  },
+  {
+   "product": "Audífonos WH-1000XM5",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno, solo le falta un poco más de batería. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Audífonos WH-1000XM5",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "AirPods Pro (2.ª generación)",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La batería dura todo el día sin problema."
+  },
+  {
+   "product": "AirPods Pro (2.ª generación)",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "AirPods Pro (2.ª generación)",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 2,
+   "title": "Decepcionante",
+   "comment": "La batería dura bastante menos de lo anunciado."
+  },
+  {
+   "product": "AirPods Pro (2.ª generación)",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 1,
+   "title": "No lo recomiendo",
+   "comment": "La batería dura bastante menos de lo anunciado. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "AirPods Pro (2.ª generación)",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La calidad de construcción es excelente. Lo volvería a comprar."
+  },
+  {
+   "product": "Parlante Flip 6",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno, solo le falta un poco más de batería. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Parlante Flip 6",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 3,
+   "title": "Está bien",
+   "comment": "Cumple, pero esperaba más por lo que cuesta. Buena atención de la tienda."
+  },
+  {
+   "product": "QuietComfort Earbuds II",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "La calidad de construcción es excelente. Buena atención de la tienda."
+  },
+  {
+   "product": "QuietComfort Earbuds II",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "QuietComfort Earbuds II",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Se configura en minutos y funciona impecable. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Soundcore Life Q30",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 2,
+   "title": "Decepcionante",
+   "comment": "Tuve problemas de conexión desde el primer día."
+  },
+  {
+   "product": "Soundcore Life Q30",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "La batería dura todo el día sin problema."
+  },
+  {
+   "product": "Soundcore Life Q30",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno, solo le falta un poco más de batería."
+  },
+  {
+   "product": "Soundcore Life Q30",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "Smart TV Crystal UHD 4K",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Excelente rendimiento; el precio es algo alto. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Smart TV Crystal UHD 4K",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Se configura en minutos y funciona impecable. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "OLED evo C3",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Está bien",
+   "comment": "Cumple, pero esperaba más por lo que cuesta."
+  },
+  {
+   "product": "OLED evo C3",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "OLED evo C3",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno, solo le falta un poco más de batería. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Google TV QLED 4K 50\"",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "Fire TV Stick 4K",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte."
+  },
+  {
+   "product": "Fire TV Stick 4K",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Mouse inalámbrico MX Master 3S",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "Mouse inalámbrico MX Master 3S",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La calidad de construcción es excelente."
+  },
+  {
+   "product": "Mouse inalámbrico MX Master 3S",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Excelente rendimiento; el precio es algo alto."
+  },
+  {
+   "product": "Teclado MX Keys S",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Se configura en minutos y funciona impecable. Buena atención de la tienda."
+  },
+  {
+   "product": "Teclado MX Keys S",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior."
+  },
+  {
+   "product": "Teclado MX Keys S",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Cumple, pero esperaba más por lo que cuesta."
+  },
+  {
+   "product": "Teclado MX Keys S",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Se configura en minutos y funciona impecable. Buena atención de la tienda."
+  },
+  {
+   "product": "Teclado MX Keys S",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Funciona muy bien, aunque el cargador se vende aparte. Buena atención de la tienda."
+  },
+  {
+   "product": "Cargador USB-C 65 W Nano II",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "La calidad de construcción es excelente."
+  },
+  {
+   "product": "SSD portátil Extreme",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Muy rápido, se nota la diferencia con mi equipo anterior. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "SSD portátil Extreme",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Excelente rendimiento; el precio es algo alto."
+  },
+  {
+   "product": "iPad 10.ª generación 64 GB",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Se configura en minutos y funciona impecable. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "iPad 10.ª generación 64 GB",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La batería dura todo el día sin problema."
+  },
+  {
+   "product": "iPad 10.ª generación 64 GB",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Se configura en minutos y funciona impecable."
+  },
+  {
+   "product": "Galaxy Watch6 44 mm",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno, solo le falta un poco más de batería. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Galaxy Watch6 44 mm",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Se configura en minutos y funciona impecable. Buena atención de la tienda."
+  },
+  {
+   "product": "Galaxy Watch6 44 mm",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La batería dura todo el día sin problema."
+  },
+  {
+   "product": "Galaxy Watch6 44 mm",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 3,
+   "title": "Está bien",
+   "comment": "Cumple, pero esperaba más por lo que cuesta."
+  },
+  {
+   "product": "Galaxy Watch6 44 mm",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La batería dura todo el día sin problema. Buena atención de la tienda."
+  },
+  {
+   "product": "Kindle Paperwhite",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "La batería dura bastante menos de lo anunciado."
+  },
+  {
+   "product": "Kindle Paperwhite",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Se configura en minutos y funciona impecable. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Freidora de aire AF101",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "Dejó de funcionar bien a las pocas semanas."
+  },
+  {
+   "product": "Freidora de aire AF101",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Fácil de limpiar y muy práctica. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Licuadora Pro 1200",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba."
+  },
+  {
+   "product": "Licuadora Pro 1200",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Se ve muy linda en casa y es de buena calidad. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Licuadora Pro 1200",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Funciona, pero las instrucciones no son claras."
+  },
+  {
+   "product": "Licuadora Pro 1200",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Hace bien su trabajo; es un poco ruidosa."
+  },
+  {
+   "product": "Licuadora Pro 1200",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Batidora de pie Artisan",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo. Buena atención de la tienda."
+  },
+  {
+   "product": "Batidora de pie Artisan",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Se ve muy linda en casa y es de buena calidad."
+  },
+  {
+   "product": "Batidora de pie Artisan",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Hace bien su trabajo; es un poco ruidosa."
+  },
+  {
+   "product": "Batidora de pie Artisan",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba. Buena atención de la tienda."
+  },
+  {
+   "product": "Batidora de pie Artisan",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Se ve muy linda en casa y es de buena calidad. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Olla a presión Duo 7 en 1",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo. Lo volvería a comprar."
+  },
+  {
+   "product": "Olla a presión Duo 7 en 1",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo. Buena atención de la tienda."
+  },
+  {
+   "product": "Olla a presión Duo 7 en 1",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba. Lo volvería a comprar."
+  },
+  {
+   "product": "Tostadora de 2 rebanadas",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Hace bien su trabajo; es un poco ruidosa. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Tostadora de 2 rebanadas",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Fácil de limpiar y muy práctica. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Tostadora de 2 rebanadas",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 2,
+   "title": "Decepcionante",
+   "comment": "Llegó con un golpe en la caja y una pieza floja."
+  },
+  {
+   "product": "Tostadora de 2 rebanadas",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Funciona, pero las instrucciones no son claras."
+  },
+  {
+   "product": "Tostadora de 2 rebanadas",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Hace bien su trabajo; es un poco ruidosa. Lo volvería a comprar."
+  },
+  {
+   "product": "Microondas digital 20 L",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba."
+  },
+  {
+   "product": "Microondas digital 20 L",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba."
+  },
+  {
+   "product": "Microondas digital 20 L",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Está bien para el precio, nada extraordinario. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Microondas digital 20 L",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cafetera Vertuo Next",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Hace bien su trabajo; es un poco ruidosa. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Cafetera Vertuo Next",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "La uso todos los días y quedó como nueva."
+  },
+  {
+   "product": "Cafetera Vertuo Next",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Está bien para el precio, nada extraordinario."
+  },
+  {
+   "product": "Cafetera Vertuo Next",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Hace bien su trabajo; es un poco ruidosa. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Cafetera Vertuo Next",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 3,
+   "title": "Está bien",
+   "comment": "Está bien para el precio, nada extraordinario."
+  },
+  {
+   "product": "Cafetera espresso Dedica",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Está bien para el precio, nada extraordinario. Buena atención de la tienda."
+  },
+  {
+   "product": "Cafetera espresso Dedica",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cafetera moka Express",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Hace bien su trabajo; es un poco ruidosa."
+  },
+  {
+   "product": "Café en grano Qualità Oro 1 kg",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo."
+  },
+  {
+   "product": "Hervidor eléctrico Stagg EKG",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba."
+  },
+  {
+   "product": "Hervidor eléctrico Stagg EKG",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La uso todos los días y quedó como nueva. Buena atención de la tienda."
+  },
+  {
+   "product": "Hervidor eléctrico Stagg EKG",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "La uso todos los días y quedó como nueva."
+  },
+  {
+   "product": "Hervidor eléctrico Stagg EKG",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 2,
+   "title": "No me convenció",
+   "comment": "Dejó de funcionar bien a las pocas semanas. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Estantería KALLAX 4x2",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy buena, aunque ocupa más espacio del que pensaba."
+  },
+  {
+   "product": "Estantería KALLAX 4x2",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo. Lo volvería a comprar."
+  },
+  {
+   "product": "Kit de focos inteligentes Hue",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Se ve muy linda en casa y es de buena calidad. Buena atención de la tienda."
+  },
+  {
+   "product": "Kit de focos inteligentes Hue",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Se ve muy linda en casa y es de buena calidad."
+  },
+  {
+   "product": "Kit de focos inteligentes Hue",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Fácil de limpiar y muy práctica. Buena atención de la tienda."
+  },
+  {
+   "product": "Kit de focos inteligentes Hue",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La uso todos los días y quedó como nueva."
+  },
+  {
+   "product": "Kit de focos inteligentes Hue",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Cambió mi rutina en la cocina, la recomiendo."
+  },
+  {
+   "product": "Almohada Original",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Hace bien su trabajo; es un poco ruidosa. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Vela grande Clean Cotton",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "Dejó de funcionar bien a las pocas semanas."
+  },
+  {
+   "product": "Vela grande Clean Cotton",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "La uso todos los días y quedó como nueva."
+  },
+  {
+   "product": "Vela grande Clean Cotton",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Fácil de limpiar y muy práctica. Lo volvería a comprar."
+  },
+  {
+   "product": "Jeans 501 Original",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Está bien, pero la tela es más delgada de lo que esperaba. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Jeans 501 Original",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "Se descosió una costura al segundo uso."
+  },
+  {
+   "product": "Jeans 501 Original",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Buena atención de la tienda."
+  },
+  {
+   "product": "Chaqueta impermeable Watertight II",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Chaqueta impermeable Watertight II",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Queda igual que en la foto, me encantó. Buena atención de la tienda."
+  },
+  {
+   "product": "Chaqueta impermeable Watertight II",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color."
+  },
+  {
+   "product": "Chaqueta impermeable Watertight II",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Súper cómodo, ya lo usé varias veces."
+  },
+  {
+   "product": "Chaqueta impermeable Watertight II",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color."
+  },
+  {
+   "product": "Polo Custom Slim Fit",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Súper cómodo, ya lo usé varias veces. Lo volvería a comprar."
+  },
+  {
+   "product": "Polo Custom Slim Fit",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Polo Custom Slim Fit",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Súper cómodo, ya lo usé varias veces. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Pack de 6 camisetas de algodón",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. Buena atención de la tienda."
+  },
+  {
+   "product": "Pack de 6 camisetas de algodón",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro. Lo volvería a comprar."
+  },
+  {
+   "product": "Pack de 6 camisetas de algodón",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy lindo; pedí una talla más por las dudas y fue buena idea. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Pack de 6 camisetas de algodón",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Está bien, pero la tela es más delgada de lo que esperaba. Buena atención de la tienda."
+  },
+  {
+   "product": "Pack de 6 camisetas de algodón",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Queda igual que en la foto, me encantó."
+  },
+  {
+   "product": "Buzo con capucha Half Dome",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro."
+  },
+  {
+   "product": "Leggings Align 25\"",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. Lo volvería a comprar."
+  },
+  {
+   "product": "Leggings Align 25\"",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "La talla es exacta y la tela es de muy buena calidad."
+  },
+  {
+   "product": "Leggings Align 25\"",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Vestido midi de lino",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro. Lo volvería a comprar."
+  },
+  {
+   "product": "Vestido midi de lino",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro."
+  },
+  {
+   "product": "Vestido midi de lino",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Queda igual que en la foto, me encantó."
+  },
+  {
+   "product": "Vestido midi de lino",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Queda igual que en la foto, me encantó. Lo volvería a comprar."
+  },
+  {
+   "product": "Vestido midi de lino",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Queda igual que en la foto, me encantó. Buena atención de la tienda."
+  },
+  {
+   "product": "Blazer oversize",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "La talla no corresponde a la tabla. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Blazer oversize",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Blazer oversize",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Blazer oversize",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro."
+  },
+  {
+   "product": "Blazer oversize",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Lo volvería a comprar."
+  },
+  {
+   "product": "Blazer oversize",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Talla algo chica; tuve que cambiarlo. Lo volvería a comprar."
+  },
+  {
+   "product": "Chaqueta polar Retro Pile",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Chaqueta polar Retro Pile",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy lindo; pedí una talla más por las dudas y fue buena idea. Lo volvería a comprar."
+  },
+  {
+   "product": "Chaqueta polar Retro Pile",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La talla es exacta y la tela es de muy buena calidad."
+  },
+  {
+   "product": "Chaqueta polar Retro Pile",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "Se descosió una costura al segundo uso. Lo volvería a comprar."
+  },
+  {
+   "product": "Chaqueta polar Retro Pile",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 1,
+   "title": "No lo recomiendo",
+   "comment": "Se descosió una costura al segundo uso. Buena atención de la tienda."
+  },
+  {
+   "product": "Chaqueta polar Retro Pile",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy lindo; pedí una talla más por las dudas y fue buena idea. Buena atención de la tienda."
+  },
+  {
+   "product": "Air Force 1 '07",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Air Force 1 '07",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro."
+  },
+  {
+   "product": "Air Force 1 '07",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 1,
+   "title": "No lo recomiendo",
+   "comment": "La talla no corresponde a la tabla. Lo volvería a comprar."
+  },
+  {
+   "product": "Air Force 1 '07",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Queda igual que en la foto, me encantó. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Air Force 1 '07",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La talla es exacta y la tela es de muy buena calidad."
+  },
+  {
+   "product": "Air Force 1 '07",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Queda igual que en la foto, me encantó."
+  },
+  {
+   "product": "Ultraboost Light",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Lo volvería a comprar."
+  },
+  {
+   "product": "Chuck Taylor All Star High",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Chuck Taylor All Star High",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La talla es exacta y la tela es de muy buena calidad."
+  },
+  {
+   "product": "Chuck Taylor All Star High",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La talla es exacta y la tela es de muy buena calidad."
+  },
+  {
+   "product": "Old Skool",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Old Skool",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Old Skool",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color."
+  },
+  {
+   "product": "Clog Classic",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Queda igual que en la foto, me encantó."
+  },
+  {
+   "product": "Clog Classic",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy lindo; pedí una talla más por las dudas y fue buena idea. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Clog Classic",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy lindo; pedí una talla más por las dudas y fue buena idea."
+  },
+  {
+   "product": "Clog Classic",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Súper cómodo, ya lo usé varias veces. Lo volvería a comprar."
+  },
+  {
+   "product": "Clog Classic",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. Buena atención de la tienda."
+  },
+  {
+   "product": "Botas 6-Inch Premium",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. Lo volvería a comprar."
+  },
+  {
+   "product": "Botas 6-Inch Premium",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. Lo volvería a comprar."
+  },
+  {
+   "product": "Botas 6-Inch Premium",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color."
+  },
+  {
+   "product": "Botas 6-Inch Premium",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "La talla es exacta y la tela es de muy buena calidad."
+  },
+  {
+   "product": "Reloj G-Shock GA-2100",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Queda igual que en la foto, me encantó. Lo volvería a comprar."
+  },
+  {
+   "product": "Reloj G-Shock GA-2100",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Súper cómodo, ya lo usé varias veces. Lo volvería a comprar."
+  },
+  {
+   "product": "Reloj Vintage A168",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Lo lavé varias veces y no perdió la forma ni el color. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Reloj Vintage A168",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy lindo; pedí una talla más por las dudas y fue buena idea."
+  },
+  {
+   "product": "Lentes de sol Wayfarer Classic",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Talla algo chica; tuve que cambiarlo."
+  },
+  {
+   "product": "Lentes de sol Wayfarer Classic",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "Se descosió una costura al segundo uso. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Lentes de sol Wayfarer Classic",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Súper cómodo, ya lo usé varias veces."
+  },
+  {
+   "product": "Lentes de sol Wayfarer Classic",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "La talla es exacta y la tela es de muy buena calidad. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Lentes de sol Aviator",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Buena calidad, aunque el color es un poco más oscuro. Lo volvería a comprar."
+  },
+  {
+   "product": "Lentes de sol Aviator",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Súper cómodo, ya lo usé varias veces. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Lentes de sol Aviator",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 1,
+   "title": "No lo recomiendo",
+   "comment": "Se descosió una costura al segundo uso."
+  },
+  {
+   "product": "Lentes de sol Aviator",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Está bien, pero la tela es más delgada de lo que esperaba. Buena atención de la tienda."
+  },
+  {
+   "product": "Lentes de sol Aviator",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Queda igual que en la foto, me encantó. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Mancuernas ajustables SelectTech 552",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Excelente calidad, se nota que está hecho para durar."
+  },
+  {
+   "product": "Mancuernas ajustables SelectTech 552",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Liviano y práctico, justo lo que buscaba. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Mancuernas ajustables SelectTech 552",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Liviano y práctico, justo lo que buscaba. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Mat de yoga PRO 6 mm",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Bien, pero hay opciones más baratas parecidas. Buena atención de la tienda."
+  },
+  {
+   "product": "Mat de yoga PRO 6 mm",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 3,
+   "title": "Está bien",
+   "comment": "Bien, pero hay opciones más baratas parecidas."
+  },
+  {
+   "product": "Mat de yoga PRO 6 mm",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Excelente calidad, se nota que está hecho para durar. Lo volvería a comprar."
+  },
+  {
+   "product": "Mat de yoga PRO 6 mm",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. Buena atención de la tienda."
+  },
+  {
+   "product": "Mat de yoga PRO 6 mm",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Bien, pero hay opciones más baratas parecidas."
+  },
+  {
+   "product": "Mat de yoga PRO 6 mm",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado. Lo volvería a comprar."
+  },
+  {
+   "product": "Masajeador Theragun Mini",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Liviano y práctico, justo lo que buscaba. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Botella térmica 32 oz",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Botella térmica 32 oz",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Botella térmica 32 oz",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Correcto para uso ocasional. Buena atención de la tienda."
+  },
+  {
+   "product": "Hielera Roadie 24",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió."
+  },
+  {
+   "product": "Hielera Roadie 24",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Hielera Roadie 24",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 2,
+   "title": "No me convenció",
+   "comment": "No resistió tan bien como esperaba. Buena atención de la tienda."
+  },
+  {
+   "product": "Hielera Roadie 24",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió."
+  },
+  {
+   "product": "Hielera Roadie 24",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Liviano y práctico, justo lo que buscaba."
+  },
+  {
+   "product": "Hielera Roadie 24",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Excelente calidad, se nota que está hecho para durar. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Linterna frontal Spot 400",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Cumple perfecto, aunque es algo pesado. Buena atención de la tienda."
+  },
+  {
+   "product": "Linterna frontal Spot 400",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Excelente calidad, se nota que está hecho para durar. Lo volvería a comprar."
+  },
+  {
+   "product": "Linterna frontal Spot 400",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Excelente calidad, se nota que está hecho para durar. Buena atención de la tienda."
+  },
+  {
+   "product": "Linterna frontal Spot 400",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Liviano y práctico, justo lo que buscaba."
+  },
+  {
+   "product": "Mochila Atmos AG 65",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Excelente calidad, se nota que está hecho para durar. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Mochila Atmos AG 65",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Mochila Atmos AG 65",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Liviano y práctico, justo lo que buscaba. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Mochila Atmos AG 65",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado."
+  },
+  {
+   "product": "Mochila Atmos AG 65",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Correcto para uso ocasional. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Saco de dormir Brazos",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Saco de dormir Brazos",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Cumple perfecto, aunque es algo pesado. Lo volvería a comprar."
+  },
+  {
+   "product": "Saco de dormir Brazos",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Bien, pero hay opciones más baratas parecidas."
+  },
+  {
+   "product": "Saco de dormir Brazos",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Liviano y práctico, justo lo que buscaba. Buena atención de la tienda."
+  },
+  {
+   "product": "Saco de dormir Brazos",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Saco de dormir Brazos",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. Buena atención de la tienda."
+  },
+  {
+   "product": "Casco Register MIPS",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Bien, pero hay opciones más baratas parecidas. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Casco Register MIPS",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Cumple perfecto, aunque es algo pesado."
+  },
+  {
+   "product": "Casco Register MIPS",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Casco Register MIPS",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Cumple perfecto, aunque es algo pesado."
+  },
+  {
+   "product": "Kit de luces LED recargables",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. Buena atención de la tienda."
+  },
+  {
+   "product": "Kit de luces LED recargables",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Liviano y práctico, justo lo que buscaba. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Candado en U Evolution",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno; el armado tomó un poco más de lo esperado. Lo volvería a comprar."
+  },
+  {
+   "product": "Candado en U Evolution",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Cumple perfecto, aunque es algo pesado. Buena atención de la tienda."
+  },
+  {
+   "product": "Candado en U Evolution",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Resistente y muy bien pensado. Lo llevé a mi última salida y cumplió. Lo volvería a comprar."
+  },
+  {
+   "product": "Candado en U Evolution",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Liviano y práctico, justo lo que buscaba. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Candado en U Evolution",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Liviano y práctico, justo lo que buscaba. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Inflador de pie JoeBlow Sport III",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Cumple perfecto, aunque es algo pesado."
+  },
+  {
+   "product": "Crema hidratante 454 g",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Noté la diferencia en la piel en pocos días."
+  },
+  {
+   "product": "Crema hidratante 454 g",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Noté la diferencia en la piel en pocos días."
+  },
+  {
+   "product": "Crema hidratante 454 g",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Cumple sin destacar. Buena atención de la tienda."
+  },
+  {
+   "product": "Crema hidratante 454 g",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 2,
+   "title": "Decepcionante",
+   "comment": "Me causó un poco de irritación."
+  },
+  {
+   "product": "Protector solar Anthelios SPF 50",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Lo uso a diario y ya voy por el segundo. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Protector solar Anthelios SPF 50",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Noté la diferencia en la piel en pocos días. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Protector solar Anthelios SPF 50",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Lo uso a diario y ya voy por el segundo."
+  },
+  {
+   "product": "Protector solar Anthelios SPF 50",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Noté la diferencia en la piel en pocos días."
+  },
+  {
+   "product": "Protector solar Anthelios SPF 50",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Funciona bien; el envase podría ser mejor."
+  },
+  {
+   "product": "Protector solar Anthelios SPF 50",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "No irrita y rinde muchísimo. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Sérum Niacinamida 10 % + Zinc 1 %",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Cumple sin destacar. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Sérum Niacinamida 10 % + Zinc 1 %",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Noté la diferencia en la piel en pocos días. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Sérum Niacinamida 10 % + Zinc 1 %",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno, aunque el aroma no me encanta. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Sérum Niacinamida 10 % + Zinc 1 %",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Funciona bien; el envase podría ser mejor."
+  },
+  {
+   "product": "Secador Supersonic",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 2,
+   "title": "Decepcionante",
+   "comment": "Me causó un poco de irritación. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Secador Supersonic",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "No irrita y rinde muchísimo. Lo volvería a comprar."
+  },
+  {
+   "product": "Secador Supersonic",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Noté la diferencia en la piel en pocos días."
+  },
+  {
+   "product": "Secador Supersonic",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "No irrita y rinde muchísimo. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Afeitadora OneBlade",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno, aunque el aroma no me encanta."
+  },
+  {
+   "product": "Afeitadora OneBlade",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Lo uso a diario y ya voy por el segundo. Lo volvería a comprar."
+  },
+  {
+   "product": "Cepillo eléctrico iO Series 5",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Noté la diferencia en la piel en pocos días. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cepillo eléctrico iO Series 5",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno, aunque el aroma no me encanta. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Cepillo eléctrico iO Series 5",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno, aunque el aroma no me encanta. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cepillo eléctrico iO Series 5",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno, aunque el aroma no me encanta."
+  },
+  {
+   "product": "Cepillo eléctrico iO Series 5",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy bueno, aunque el aroma no me encanta."
+  },
+  {
+   "product": "Cien años de soledad — Gabriel García Márquez",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "No me atrapó. Lo volvería a comprar."
+  },
+  {
+   "product": "Cien años de soledad — Gabriel García Márquez",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Lo leí de un tirón. Imperdible. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cien años de soledad — Gabriel García Márquez",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Lo regalé y fue un éxito."
+  },
+  {
+   "product": "Cien años de soledad — Gabriel García Márquez",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy bueno; la edición podría tener mejor papel. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cien años de soledad — Gabriel García Márquez",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Un clásico que vale la pena tener en papel. Buena atención de la tienda."
+  },
+  {
+   "product": "Harry Potter y la piedra filosofal — J. K. Rowling",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Me gustó mucho, aunque al principio cuesta engancharse. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Harry Potter y la piedra filosofal — J. K. Rowling",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Me gustó mucho, aunque al principio cuesta engancharse."
+  },
+  {
+   "product": "El principito — Antoine de Saint-Exupéry",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno; la edición podría tener mejor papel."
+  },
+  {
+   "product": "El principito — Antoine de Saint-Exupéry",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Me gustó mucho, aunque al principio cuesta engancharse. Lo volvería a comprar."
+  },
+  {
+   "product": "El principito — Antoine de Saint-Exupéry",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Lo leí de un tirón. Imperdible. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "El principito — Antoine de Saint-Exupéry",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Un clásico que vale la pena tener en papel. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "El principito — Antoine de Saint-Exupéry",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy bueno; la edición podría tener mejor papel. Buena atención de la tienda."
+  },
+  {
+   "product": "Sapiens — Yuval Noah Harari",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Lo leí de un tirón. Imperdible."
+  },
+  {
+   "product": "Sapiens — Yuval Noah Harari",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno; la edición podría tener mejor papel."
+  },
+  {
+   "product": "Sapiens — Yuval Noah Harari",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Muy bueno; la edición podría tener mejor papel."
+  },
+  {
+   "product": "Rayuela — Julio Cortázar",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Lo regalé y fue un éxito. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Rayuela — Julio Cortázar",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "¡Me encantó!",
+   "comment": "Un clásico que vale la pena tener en papel. Buena atención de la tienda."
+  },
+  {
+   "product": "Rayuela — Julio Cortázar",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Me gustó mucho, aunque al principio cuesta engancharse."
+  },
+  {
+   "product": "Consola Nintendo Switch OLED",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Excelente, solo que se agotan rápido las pilas."
+  },
+  {
+   "product": "Consola Nintendo Switch OLED",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy entretenido; las instrucciones podrían ser más claras. Buena atención de la tienda."
+  },
+  {
+   "product": "Consola Nintendo Switch OLED",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Excelente, solo que se agotan rápido las pilas."
+  },
+  {
+   "product": "Consola Nintendo Switch OLED",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Horas de diversión en familia."
+  },
+  {
+   "product": "Consola Nintendo Switch OLED",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Los chicos no lo sueltan. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Consola Nintendo Switch OLED",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy entretenido; las instrucciones podrían ser más claras."
+  },
+  {
+   "product": "Consola PlayStation 5 Slim",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 2,
+   "title": "Esperaba más",
+   "comment": "Más chico de lo que parece en las fotos."
+  },
+  {
+   "product": "Consola PlayStation 5 Slim",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "La mejor compra del año, sin dudas. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Consola PlayStation 5 Slim",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "Los chicos no lo sueltan."
+  },
+  {
+   "product": "Consola PlayStation 5 Slim",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Excelente, solo que se agotan rápido las pilas. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Consola PlayStation 5 Slim",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "Los chicos no lo sueltan. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Consola PlayStation 5 Slim",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Está bien para el precio. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "The Legend of Zelda: Tears of the Kingdom",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Muy entretenido; las instrucciones podrían ser más claras. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "The Legend of Zelda: Tears of the Kingdom",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Muy entretenido; las instrucciones podrían ser más claras."
+  },
+  {
+   "product": "The Legend of Zelda: Tears of the Kingdom",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 2,
+   "title": "Decepcionante",
+   "comment": "Más chico de lo que parece en las fotos."
+  },
+  {
+   "product": "LEGO Technic Ferrari Daytona SP3",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Los chicos no lo sueltan. Buena atención de la tienda."
+  },
+  {
+   "product": "LEGO Technic Ferrari Daytona SP3",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La mejor compra del año, sin dudas."
+  },
+  {
+   "product": "LEGO Technic Ferrari Daytona SP3",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Divertido, pero se termina rápido."
+  },
+  {
+   "product": "LEGO Technic Ferrari Daytona SP3",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy entretenido; las instrucciones podrían ser más claras. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "LEGO Classic Caja de ladrillos creativos",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 3,
+   "title": "Cumple",
+   "comment": "Está bien para el precio."
+  },
+  {
+   "product": "LEGO Classic Caja de ladrillos creativos",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "Horas de diversión en familia. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "LEGO Classic Caja de ladrillos creativos",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Los chicos no lo sueltan. Lo volvería a comprar."
+  },
+  {
+   "product": "Juego de mesa Monopoly Clásico",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Los chicos no lo sueltan."
+  },
+  {
+   "product": "Juego de mesa Monopoly Clásico",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Excelente, solo que se agotan rápido las pilas."
+  },
+  {
+   "product": "Juego de mesa Monopoly Clásico",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Horas de diversión en familia. Lo volvería a comprar."
+  },
+  {
+   "product": "Juego de mesa Monopoly Clásico",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Excelente compra",
+   "comment": "La mejor compra del año, sin dudas."
+  },
+  {
+   "product": "Juego de mesa Monopoly Clásico",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Excelente, solo que se agotan rápido las pilas."
+  },
+  {
+   "product": "Juego de cartas UNO",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "Los chicos no lo sueltan. Buena atención de la tienda."
+  },
+  {
+   "product": "Juego de cartas UNO",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 4,
+   "title": "Recomendable",
+   "comment": "Excelente, solo que se agotan rápido las pilas."
+  },
+  {
+   "product": "Alimento para perro adulto",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy bueno, aunque tardó en acostumbrarse."
+  },
+  {
+   "product": "Alimento para gato Indoor 3 kg",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 3,
+   "title": "Está bien",
+   "comment": "Está bien, nada especial. Buena atención de la tienda."
+  },
+  {
+   "product": "Alimento para gato Indoor 3 kg",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Está bien, nada especial. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Alimento para gato Indoor 3 kg",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena relación precio/calidad",
+   "comment": "Cumple bien; el precio es algo alto."
+  },
+  {
+   "product": "Juguete Classic para perro",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Cumple bien; el precio es algo alto. Buena atención de la tienda."
+  },
+  {
+   "product": "Juguete Classic para perro",
+   "email": "mateo.diaz@demo-tienda.test",
+   "rating": 4,
+   "title": "Buena compra",
+   "comment": "Cumple bien; el precio es algo alto. El envío tardó un poco, pero llegó perfecto."
+  },
+  {
+   "product": "Juguete Classic para perro",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Cumple bien; el precio es algo alto. Buena atención de la tienda."
+  },
+  {
+   "product": "Juguete Classic para perro",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 5,
+   "title": "Vale cada peso",
+   "comment": "Buena calidad y mi mascota está feliz. Llegó rápido y bien embalado."
+  },
+  {
+   "product": "Cama ortopédica para perro",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 2,
+   "title": "No me convenció",
+   "comment": "Lo rompió en dos días."
+  },
+  {
+   "product": "Cama ortopédica para perro",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno, aunque tardó en acostumbrarse."
+  },
+  {
+   "product": "Cama ortopédica para perro",
+   "email": "valentina.perez@demo-tienda.test",
+   "rating": 5,
+   "title": "Lo recomiendo totalmente",
+   "comment": "A mi perro le encantó desde el primer día."
+  },
+  {
+   "product": "Cama ortopédica para perro",
+   "email": "ana.martinez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "A mi perro le encantó desde el primer día."
+  },
+  {
+   "product": "Cama ortopédica para perro",
+   "email": "diego.sanchez@demo-tienda.test",
+   "rating": 3,
+   "title": "Ni bueno ni malo",
+   "comment": "Está bien, nada especial."
+  },
+  {
+   "product": "Cama ortopédica para perro",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 5,
+   "title": "Muy conforme",
+   "comment": "A mi perro le encantó desde el primer día. Lo volvería a comprar."
+  },
+  {
+   "product": "Fuente de agua Drinkwell 2 L",
+   "email": "lucia.fernandez@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy bueno, aunque tardó en acostumbrarse."
+  },
+  {
+   "product": "Fuente de agua Drinkwell 2 L",
+   "email": "carlos.rodriguez@demo-tienda.test",
+   "rating": 4,
+   "title": "Muy bueno",
+   "comment": "Muy bueno, aunque tardó en acostumbrarse."
+  },
+  {
+   "product": "Fuente de agua Drinkwell 2 L",
+   "email": "sofia.lopez@demo-tienda.test",
+   "rating": 5,
+   "title": "Superó mis expectativas",
+   "comment": "A mi perro le encantó desde el primer día."
+  },
+  {
+   "product": "Fuente de agua Drinkwell 2 L",
+   "email": "camila.torres@demo-tienda.test",
+   "rating": 4,
+   "title": "Casi perfecto",
+   "comment": "Muy bueno, aunque tardó en acostumbrarse. Buena atención de la tienda."
+  },
+  {
+   "product": "Fuente de agua Drinkwell 2 L",
+   "email": "javier.gomez@demo-tienda.test",
+   "rating": 2,
+   "title": "No me convenció",
+   "comment": "No le gustó para nada. Lo volvería a comprar."
+  },
+  {
+   "product": "Rascador para gato de 3 niveles",
+   "email": "andres.ramirez@demo-tienda.test",
+   "rating": 3,
+   "title": "Regular",
+   "comment": "Está bien, nada especial. Lo volvería a comprar."
+  }
+ ]
+}

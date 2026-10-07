@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../api/useApi'
 import { useCartStore } from '../stores/cart'
+import CouponField from '../components/CouponField.vue'
 
 const apiClient = useApi()
 const cartStore = useCartStore()
@@ -16,7 +17,9 @@ const error = ref('')
 const selectedItems = computed(() =>
   (cartStore.cart?.items ?? []).filter(i => variantIds.value.includes(i.variantId))
 )
-const total = computed(() => selectedItems.value.reduce((sum, i) => sum + i.lineTotal, 0))
+const subtotal = computed(() => selectedItems.value.reduce((sum, i) => sum + i.lineTotal, 0))
+const coupon = ref(null) // { code, description, discountAmount, total } o null
+const total = computed(() => subtotal.value - (coupon.value?.discountAmount ?? 0))
 
 onMounted(() => {
   try {
@@ -44,7 +47,8 @@ async function submit() {
   try {
     const result = await apiClient.post('/api/orders/checkout', {
       variantIds: variantIds.value,
-      shippingAddress: shippingAddress.value
+      shippingAddress: shippingAddress.value,
+      couponCode: coupon.value?.code ?? null
     })
     sessionStorage.removeItem('checkout-variant-ids')
 
@@ -63,6 +67,9 @@ async function submit() {
   } catch (err) {
     paypalWindow?.close()
     error.value = err.message
+    // Si lo que falló fue el cupón (se agotó o venció mientras tanto), lo quitamos para que el
+    // cliente pueda pagar sin él o probar otro.
+    if (coupon.value && /cup[oó]n/i.test(err.message || '')) coupon.value = null
   } finally {
     submitting.value = false
   }
@@ -79,9 +86,22 @@ async function submit() {
         <span class="text-ink-soft">{{ item.quantity }}× {{ item.productName }}</span>
         <span class="text-ink">${{ item.lineTotal.toFixed(2) }}</span>
       </div>
-      <div class="flex justify-between text-base font-semibold pt-3 mt-2 border-t border-line">
-        <span>Total</span>
-        <span>${{ total.toFixed(2) }}</span>
+      <div class="mt-2 border-t border-line pt-3 space-y-1.5">
+        <div class="flex justify-between text-sm">
+          <span class="text-ink-soft">Subtotal</span>
+          <span class="text-ink" data-testid="checkout-subtotal">${{ subtotal.toFixed(2) }}</span>
+        </div>
+        <div v-if="coupon" class="flex justify-between text-sm text-emerald-700 dark:text-emerald-400">
+          <span>Cupón {{ coupon.code }}</span>
+          <span data-testid="checkout-discount">−${{ coupon.discountAmount.toFixed(2) }}</span>
+        </div>
+        <div class="flex justify-between text-base font-semibold">
+          <span>Total</span>
+          <span data-testid="checkout-total">${{ total.toFixed(2) }}</span>
+        </div>
+      </div>
+      <div class="mt-4">
+        <CouponField v-model="coupon" :subtotal="subtotal" />
       </div>
     </div>
 

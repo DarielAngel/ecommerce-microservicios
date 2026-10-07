@@ -1424,3 +1424,86 @@ corazones quedan vacíos.
 
 > **Contenedores**: ahora son **22** (se suman `postgres-wishlist` y `wishlist-service`).
 
+## Fase 3 — Cupones y promociones (servicio `Promotions`, puerto 5010)
+
+- **Tipos**: porcentaje (1–90 %, con tope opcional en dinero, ej. "20 % hasta $50") o monto fijo.
+  Un monto fijo igual o mayor que la compra se rechaza: una orden de $0 no se puede cobrar en PayPal.
+- **Reglas**: vigencia (inicio/fin), compra mínima, límite de usos totales, un uso por cliente y
+  activo/pausado. Los mensajes de rechazo son para el cliente ("Este cupón requiere una compra
+  mínima de $80.00 (tu compra: $45.00)").
+- **Canje atómico dentro de la saga de Órdenes**, con el mismo ciclo que la reserva de stock:
+  1. *Checkout*: Inventario reserva el stock → **Promociones reserva un uso del cupón** (recalcula el
+     descuento con el subtotal real; no confía en el que mostró el navegador) → Pagos cobra el
+     **total con descuento**. Si algo falla, se liberan el cupón y el stock.
+  2. *Pago capturado*: se confirma el uso. *Pago rechazado*: se libera y vuelve a estar disponible.
+- **Límite de usos sin carreras**: al reservar, la fila del cupón se bloquea (`SELECT ... FOR UPDATE`)
+  mientras se cuentan los usos. Hay una prueba con **10 checkouts simultáneos sobre un cupón de 1 uso:
+  gana exactamente uno**.
+- Una reserva **abandonada** (el cliente no terminó de pagar) deja de contar a las 2 horas, para que
+  no bloquee un cupón limitado para siempre.
+- **Ruta interna**: el canje vive en `/internal/redemptions`, que el Gateway **no** publica. Un cliente
+  no puede apartar usos de un cupón limitado llamando directo; solo Órdenes lo hace, con el token del
+  cliente (cada uso queda ligado a ese usuario).
+- **Storefront**: campo "¿Tienes un cupón?" en el checkout con el desglose subtotal / descuento /
+  total. *Mis pedidos* y la confirmación de pago muestran el ahorro.
+- **Panel de Admin**: nueva sección **Cupones** para crear, editar, pausar y ver usos y estado
+  (Activo, Programado, Vencido, Agotado, Pausado).
+
+  | Método | Ruta | Acceso |
+  |---|---|---|
+  | GET | `/api/coupons/validate?code=&subtotal=` | cliente (solo consulta, no aparta nada) |
+  | GET | `/api/coupons` | Admin |
+  | POST | `/api/coupons` | Admin (409 si el código ya existe) |
+  | PUT | `/api/coupons/{id}` | Admin (el código no cambia) |
+  | POST | `/internal/redemptions` · `/{orderId}/confirm` · `/{orderId}/release` | solo Órdenes (no pasa por el Gateway) |
+
+- **Órdenes** guarda `coupon_code` y `discount_amount`. Si ya tenías una base de Órdenes de antes, el
+  servicio agrega esas dos columnas solo al arrancar (no hace falta borrar nada).
+
+### Cómo probarlo
+
+```cmd
+:: Servicios nuevos/cambiados: Promociones, Órdenes, Gateway y los dos frontends
+docker compose up -d --build promotions-service postgres-promotions orders-service gateway storefront admin-panel
+
+:: Pruebas (Docker requerido)
+dotnet test src\Services\Promotions\Promotions.Tests\Promotions.UnitTests
+dotnet test src\Services\Promotions\Promotions.Tests\Promotions.IntegrationTests
+dotnet test src\Services\Orders\Orders.Tests\Orders.UnitTests
+dotnet test src\Services\Orders\Orders.Tests\Orders.IntegrationTests
+```
+
+Checklist manual: en el panel de Admin → **Cupones**, crea `PRUEBA10` (10 %). En la tienda agrega algo
+al carrito, ve al checkout y aplica `prueba10`: verás el descuento y el total nuevo. Paga (PayPal
+simulado) y revisa *Mis pedidos*. En el panel, el cupón pasa a "1" uso.
+
+> **Contenedores**: ahora son **24** (se suman `postgres-promotions` y `promotions-service`).
+
+## Datos de demostración
+
+Para probar con una tienda "viva" en vez de productos con códigos raros:
+
+```cmd
+docker compose up -d
+node scripts\seed-demo-data.mjs
+```
+
+Carga, a través del Gateway (como lo haría un Admin):
+
+- **23 categorías** (Tecnología › Celulares, Moda › Calzado...) y **105 productos reales** de marcas
+  conocidas (iPhone 15, Galaxy S24, Air Force 1, Levi's 501, KitchenAid, LEGO, Cien años de soledad...),
+  con descripción en español, precio de referencia en USD, **181 variantes** (talla, color, capacidad),
+  stock (algunos con pocas unidades y unos pocos agotados) e imagen.
+- **10 cupones**: `BIENVENIDA10`, `AHORRA5`, `OTONO20`, `TECH50`, `FLASH30` (10 usos), `VIP15`,
+  `MASCOTAS12`, `BLACKFRIDAY` (programado para el próximo Black Friday), `VERANO15` (vencido) y
+  `NAVIDAD25` (pausado), para ver todos los estados en el panel.
+- **10 clientes** y **344 reseñas** en español con calificaciones realistas.
+
+Es **idempotente**: lo que ya existe se deja como está, así que se puede correr de nuevo sin duplicar.
+Al terminar imprime los accesos (Admin `admin@demo-tienda.test` / `Admin12345!`; clientes
+`ana.martinez@demo-tienda.test` y otros, todos con `Demo12345!`).
+
+> Las imágenes son ilustraciones generadas (marca, nombre y un ícono del tipo de producto), no fotos
+> oficiales de las marcas: se pueden reemplazar desde el panel de Admin. Los datos fuente están en
+> `scripts/seed-data/` (`catalog.json`, `reviews.json`, `images/`).
+

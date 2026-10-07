@@ -1,0 +1,2486 @@
+{
+ "categories": [
+  {
+   "name": "Tecnología",
+   "children": [
+    "Celulares",
+    "Laptops",
+    "Audio",
+    "Televisores",
+    "Accesorios tecnológicos"
+   ]
+  },
+  {
+   "name": "Hogar y cocina",
+   "children": [
+    "Electrodomésticos de cocina",
+    "Café y té",
+    "Muebles y decoración"
+   ]
+  },
+  {
+   "name": "Moda",
+   "children": [
+    "Ropa de hombre",
+    "Ropa de mujer",
+    "Calzado",
+    "Relojes y lentes"
+   ]
+  },
+  {
+   "name": "Deportes y aire libre",
+   "children": [
+    "Fitness",
+    "Camping",
+    "Ciclismo"
+   ]
+  },
+  {
+   "name": "Belleza y cuidado personal",
+   "children": []
+  },
+  {
+   "name": "Libros",
+   "children": []
+  },
+  {
+   "name": "Juguetes y videojuegos",
+   "children": []
+  },
+  {
+   "name": "Mascotas",
+   "children": []
+  }
+ ],
+ "products": [
+  {
+   "category": "Celulares",
+   "brand": "Apple",
+   "name": "iPhone 15 128 GB",
+   "description": "Pantalla Super Retina XDR de 6,1\", Dynamic Island, cámara principal de 48 MP y puerto USB-C.",
+   "variants": [
+    {
+     "sku": "DM-APPLE-001-1",
+     "price": 799,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 2
+    },
+    {
+     "sku": "DM-APPLE-001-2",
+     "price": 799,
+     "attributes": {
+      "Color": "Azul"
+     },
+     "stock": 65
+    },
+    {
+     "sku": "DM-APPLE-001-3",
+     "price": 799,
+     "attributes": {
+      "Color": "Rosa"
+     },
+     "stock": 74
+    }
+   ],
+   "image": "001-iphone-15-128-gb.jpg"
+  },
+  {
+   "category": "Celulares",
+   "brand": "Samsung",
+   "name": "Galaxy S24",
+   "description": "Pantalla Dynamic AMOLED 2X de 6,2\" a 120 Hz, procesador de última generación y funciones Galaxy AI.",
+   "variants": [
+    {
+     "sku": "DM-SAMSU-002-1",
+     "price": 799,
+     "attributes": {
+      "Almacenamiento": "128 GB",
+      "Color": "Negro Onyx"
+     },
+     "stock": 68
+    },
+    {
+     "sku": "DM-SAMSU-002-2",
+     "price": 859,
+     "attributes": {
+      "Almacenamiento": "256 GB",
+      "Color": "Negro Onyx"
+     },
+     "stock": 22
+    },
+    {
+     "sku": "DM-SAMSU-002-3",
+     "price": 859,
+     "attributes": {
+      "Almacenamiento": "256 GB",
+      "Color": "Violeta Cobalto"
+     },
+     "stock": 2
+    }
+   ],
+   "image": "002-galaxy-s24.jpg"
+  },
+  {
+   "category": "Celulares",
+   "brand": "Samsung",
+   "name": "Galaxy A15 5G",
+   "description": "Pantalla Super AMOLED de 6,5\", batería de 5000 mAh y conectividad 5G a un precio accesible.",
+   "variants": [
+    {
+     "sku": "DM-SAMSU-003-1",
+     "price": 199,
+     "attributes": {
+      "Color": "Azul oscuro"
+     },
+     "stock": 74
+    },
+    {
+     "sku": "DM-SAMSU-003-2",
+     "price": 199,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 38
+    }
+   ],
+   "image": "003-galaxy-a15-5g.jpg"
+  },
+  {
+   "category": "Celulares",
+   "brand": "Google",
+   "name": "Pixel 8a",
+   "description": "La cámara de Google en un teléfono compacto: fotos nítidas con poca luz y 7 años de actualizaciones.",
+   "variants": [
+    {
+     "sku": "DM-GOOGL-004-1",
+     "price": 499,
+     "attributes": {
+      "Color": "Obsidiana"
+     },
+     "stock": 56
+    },
+    {
+     "sku": "DM-GOOGL-004-2",
+     "price": 499,
+     "attributes": {
+      "Color": "Porcelana"
+     },
+     "stock": 57
+    }
+   ],
+   "image": "004-pixel-8a.jpg"
+  },
+  {
+   "category": "Celulares",
+   "brand": "Motorola",
+   "name": "Moto G84 5G",
+   "description": "Pantalla pOLED de 6,55\" a 120 Hz, 12 GB de RAM y 256 GB de almacenamiento.",
+   "variants": [
+    {
+     "sku": "DM-MOTOR-005-1",
+     "price": 249,
+     "attributes": {
+      "Color": "Azul Marino"
+     },
+     "stock": 77
+    },
+    {
+     "sku": "DM-MOTOR-005-2",
+     "price": 249,
+     "attributes": {
+      "Color": "Magenta Viva"
+     },
+     "stock": 55
+    }
+   ],
+   "image": "005-moto-g84-5g.jpg"
+  },
+  {
+   "category": "Celulares",
+   "brand": "Xiaomi",
+   "name": "Redmi Note 13 Pro",
+   "description": "Cámara de 200 MP, pantalla AMOLED de 6,67\" y carga rápida de 67 W.",
+   "variants": [
+    {
+     "sku": "DM-XIAOM-006-1",
+     "price": 329,
+     "attributes": {
+      "Almacenamiento": "256 GB",
+      "Color": "Negro Medianoche"
+     },
+     "stock": 4
+    },
+    {
+     "sku": "DM-XIAOM-006-2",
+     "price": 379,
+     "attributes": {
+      "Almacenamiento": "512 GB",
+      "Color": "Morado Lavanda"
+     },
+     "stock": 30
+    }
+   ],
+   "image": "006-redmi-note-13-pro.jpg"
+  },
+  {
+   "category": "Laptops",
+   "brand": "Apple",
+   "name": "MacBook Air 13\" con chip M3",
+   "description": "Liviana y silenciosa, sin ventilador, con hasta 18 horas de batería y pantalla Liquid Retina.",
+   "variants": [
+    {
+     "sku": "DM-APPLE-007-1",
+     "price": 1099,
+     "attributes": {
+      "Memoria": "8 GB",
+      "Almacenamiento": "256 GB"
+     },
+     "stock": 51
+    },
+    {
+     "sku": "DM-APPLE-007-2",
+     "price": 1499,
+     "attributes": {
+      "Memoria": "16 GB",
+      "Almacenamiento": "512 GB"
+     },
+     "stock": 0
+    }
+   ],
+   "image": "007-macbook-air-13-con-chip-m3.jpg"
+  },
+  {
+   "category": "Laptops",
+   "brand": "Dell",
+   "name": "XPS 13",
+   "description": "Ultrabook de aluminio con pantalla InfinityEdge de 13,4\" y procesador Intel Core Ultra.",
+   "variants": [
+    {
+     "sku": "DM-DELL-008-1",
+     "price": 1299,
+     "attributes": {
+      "Memoria": "16 GB",
+      "Almacenamiento": "512 GB"
+     },
+     "stock": 58
+    }
+   ],
+   "image": "008-xps-13.jpg"
+  },
+  {
+   "category": "Laptops",
+   "brand": "Lenovo",
+   "name": "IdeaPad Slim 3 15\"",
+   "description": "Laptop para el día a día: AMD Ryzen 5, 8 GB de RAM y SSD de 512 GB.",
+   "variants": [
+    {
+     "sku": "DM-LENOV-009-1",
+     "price": 549,
+     "attributes": {
+      "Color": "Gris Ártico"
+     },
+     "stock": 23
+    }
+   ],
+   "image": "009-ideapad-slim-3-15.jpg"
+  },
+  {
+   "category": "Laptops",
+   "brand": "HP",
+   "name": "Pavilion 15",
+   "description": "Pantalla Full HD de 15,6\", Intel Core i7 y teclado numérico completo para trabajar con planillas.",
+   "variants": [
+    {
+     "sku": "DM-HP-010-1",
+     "price": 799,
+     "attributes": {
+      "Memoria": "16 GB",
+      "Almacenamiento": "1 TB"
+     },
+     "stock": 75
+    }
+   ],
+   "image": "010-pavilion-15.jpg"
+  },
+  {
+   "category": "Laptops",
+   "brand": "ASUS",
+   "name": "ROG Strix G16",
+   "description": "Laptop gamer con GeForce RTX 4060, pantalla de 165 Hz y refrigeración de alto rendimiento.",
+   "variants": [
+    {
+     "sku": "DM-ASUS-011-1",
+     "price": 1399,
+     "attributes": {
+      "Memoria": "16 GB",
+      "Almacenamiento": "1 TB"
+     },
+     "stock": 66
+    }
+   ],
+   "image": "011-rog-strix-g16.jpg"
+  },
+  {
+   "category": "Laptops",
+   "brand": "Acer",
+   "name": "Chromebook 314",
+   "description": "Arranca en segundos, ideal para estudiantes: ChromeOS, 14\" y hasta 10 horas de batería.",
+   "variants": [
+    {
+     "sku": "DM-ACER-012-1",
+     "price": 229,
+     "attributes": {
+      "Color": "Plata"
+     },
+     "stock": 74
+    }
+   ],
+   "image": "012-chromebook-314.jpg"
+  },
+  {
+   "category": "Audio",
+   "brand": "Sony",
+   "name": "Audífonos WH-1000XM5",
+   "description": "Cancelación de ruido líder, 30 horas de batería y llamadas nítidas con 8 micrófonos.",
+   "variants": [
+    {
+     "sku": "DM-SONY-013-1",
+     "price": 399,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 79
+    },
+    {
+     "sku": "DM-SONY-013-2",
+     "price": 399,
+     "attributes": {
+      "Color": "Plata"
+     },
+     "stock": 65
+    }
+   ],
+   "image": "013-audifonos-wh-1000xm5.jpg"
+  },
+  {
+   "category": "Audio",
+   "brand": "Apple",
+   "name": "AirPods Pro (2.ª generación)",
+   "description": "Cancelación activa de ruido, modo Ambiente adaptativo y estuche de carga USB-C.",
+   "variants": [
+    {
+     "sku": "DM-APPLE-014-1",
+     "price": 249,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 73
+    }
+   ],
+   "image": "014-airpods-pro-2-a-generacion.jpg"
+  },
+  {
+   "category": "Audio",
+   "brand": "JBL",
+   "name": "Parlante Flip 6",
+   "description": "Parlante portátil resistente al agua y al polvo (IP67), sonido potente y 12 horas de reproducción.",
+   "variants": [
+    {
+     "sku": "DM-JBL-015-1",
+     "price": 129,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 15
+    },
+    {
+     "sku": "DM-JBL-015-2",
+     "price": 129,
+     "attributes": {
+      "Color": "Azul"
+     },
+     "stock": 28
+    },
+    {
+     "sku": "DM-JBL-015-3",
+     "price": 129,
+     "attributes": {
+      "Color": "Rojo"
+     },
+     "stock": 78
+    }
+   ],
+   "image": "015-parlante-flip-6.jpg"
+  },
+  {
+   "category": "Audio",
+   "brand": "Bose",
+   "name": "QuietComfort Earbuds II",
+   "description": "Audífonos inalámbricos con cancelación de ruido ajustada a tu oído.",
+   "variants": [
+    {
+     "sku": "DM-BOSE-016-1",
+     "price": 279,
+     "attributes": {
+      "Color": "Negro Triple"
+     },
+     "stock": 25
+    }
+   ],
+   "image": "016-quietcomfort-earbuds-ii.jpg"
+  },
+  {
+   "category": "Audio",
+   "brand": "Anker",
+   "name": "Soundcore Life Q30",
+   "description": "Audífonos con cancelación de ruido híbrida y 40 horas de batería a un precio razonable.",
+   "variants": [
+    {
+     "sku": "DM-ANKER-017-1",
+     "price": 79,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 66
+    },
+    {
+     "sku": "DM-ANKER-017-2",
+     "price": 79,
+     "attributes": {
+      "Color": "Azul"
+     },
+     "stock": 73
+    }
+   ],
+   "image": "017-soundcore-life-q30.jpg"
+  },
+  {
+   "category": "Audio",
+   "brand": "Marshall",
+   "name": "Parlante Emberton II",
+   "description": "Sonido estéreo de 360° con el estilo clásico de Marshall y más de 30 horas de batería.",
+   "variants": [
+    {
+     "sku": "DM-MARSH-018-1",
+     "price": 169,
+     "attributes": {
+      "Color": "Negro y bronce"
+     },
+     "stock": 27
+    }
+   ],
+   "image": "018-parlante-emberton-ii.jpg"
+  },
+  {
+   "category": "Televisores",
+   "brand": "Samsung",
+   "name": "Smart TV Crystal UHD 4K",
+   "description": "Colores vivos con PurColor, procesador Crystal 4K y Tizen con las principales apps.",
+   "variants": [
+    {
+     "sku": "DM-SAMSU-019-1",
+     "price": 379,
+     "attributes": {
+      "Tamaño": "50\""
+     },
+     "stock": 70
+    },
+    {
+     "sku": "DM-SAMSU-019-2",
+     "price": 449,
+     "attributes": {
+      "Tamaño": "55\""
+     },
+     "stock": 44
+    },
+    {
+     "sku": "DM-SAMSU-019-3",
+     "price": 599,
+     "attributes": {
+      "Tamaño": "65\""
+     },
+     "stock": 51
+    }
+   ],
+   "image": "019-smart-tv-crystal-uhd-4k.jpg"
+  },
+  {
+   "category": "Televisores",
+   "brand": "LG",
+   "name": "OLED evo C3",
+   "description": "Negros perfectos píxel a píxel, Dolby Vision y 120 Hz para cine y videojuegos.",
+   "variants": [
+    {
+     "sku": "DM-LG-020-1",
+     "price": 1399,
+     "attributes": {
+      "Tamaño": "55\""
+     },
+     "stock": 76
+    },
+    {
+     "sku": "DM-LG-020-2",
+     "price": 1799,
+     "attributes": {
+      "Tamaño": "65\""
+     },
+     "stock": 63
+    }
+   ],
+   "image": "020-oled-evo-c3.jpg"
+  },
+  {
+   "category": "Televisores",
+   "brand": "TCL",
+   "name": "Google TV QLED 4K 50\"",
+   "description": "Panel QLED, HDR10+ y Google TV integrado con control por voz.",
+   "variants": [
+    {
+     "sku": "DM-TCL-021-1",
+     "price": 329,
+     "attributes": {
+      "Tamaño": "50\""
+     },
+     "stock": 49
+    }
+   ],
+   "image": "021-google-tv-qled-4k-50.jpg"
+  },
+  {
+   "category": "Televisores",
+   "brand": "Amazon",
+   "name": "Fire TV Stick 4K",
+   "description": "Convierte cualquier TV en smart: Wi-Fi 6, Dolby Vision y control remoto por voz con Alexa.",
+   "variants": [
+    {
+     "sku": "DM-AMAZO-022-1",
+     "price": 49,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 13
+    }
+   ],
+   "image": "022-fire-tv-stick-4k.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "Logitech",
+   "name": "Mouse inalámbrico MX Master 3S",
+   "description": "Clics silenciosos, sensor de 8000 DPI que funciona sobre vidrio y rueda MagSpeed.",
+   "variants": [
+    {
+     "sku": "DM-LOGIT-023-1",
+     "price": 99,
+     "attributes": {
+      "Color": "Grafito"
+     },
+     "stock": 0
+    },
+    {
+     "sku": "DM-LOGIT-023-2",
+     "price": 99,
+     "attributes": {
+      "Color": "Gris pálido"
+     },
+     "stock": 70
+    }
+   ],
+   "image": "023-mouse-inalambrico-mx-master-3s.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "Logitech",
+   "name": "Teclado MX Keys S",
+   "description": "Teclado retroiluminado de bajo perfil, multidispositivo y con escritura precisa.",
+   "variants": [
+    {
+     "sku": "DM-LOGIT-024-1",
+     "price": 109,
+     "attributes": {
+      "Distribución": "Español"
+     },
+     "stock": 74
+    },
+    {
+     "sku": "DM-LOGIT-024-2",
+     "price": 109,
+     "attributes": {
+      "Distribución": "Inglés"
+     },
+     "stock": 37
+    }
+   ],
+   "image": "024-teclado-mx-keys-s.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "Anker",
+   "name": "Cargador USB-C 65 W Nano II",
+   "description": "Carga una laptop, una tablet y un celular desde un cargador del tamaño de un mazo de cartas.",
+   "variants": [
+    {
+     "sku": "DM-ANKER-025-1",
+     "price": 45,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 74
+    }
+   ],
+   "image": "025-cargador-usb-c-65-w-nano-ii.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "SanDisk",
+   "name": "SSD portátil Extreme",
+   "description": "Hasta 1050 MB/s, resistente a caídas de 3 metros y al agua (IP65).",
+   "variants": [
+    {
+     "sku": "DM-SANDI-026-1",
+     "price": 109,
+     "attributes": {
+      "Capacidad": "1 TB"
+     },
+     "stock": 75
+    },
+    {
+     "sku": "DM-SANDI-026-2",
+     "price": 179,
+     "attributes": {
+      "Capacidad": "2 TB"
+     },
+     "stock": 16
+    }
+   ],
+   "image": "026-ssd-portatil-extreme.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "Apple",
+   "name": "iPad 10.ª generación 64 GB",
+   "description": "Pantalla Liquid Retina de 10,9\", chip A14 Bionic y USB-C. Ideal para estudiar y entretenerse.",
+   "variants": [
+    {
+     "sku": "DM-APPLE-027-1",
+     "price": 349,
+     "attributes": {
+      "Color": "Azul"
+     },
+     "stock": 52
+    },
+    {
+     "sku": "DM-APPLE-027-2",
+     "price": 349,
+     "attributes": {
+      "Color": "Plata"
+     },
+     "stock": 24
+    }
+   ],
+   "image": "027-ipad-10-a-generacion-64-gb.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "Samsung",
+   "name": "Galaxy Watch6 44 mm",
+   "description": "Reloj inteligente con monitoreo del sueño, ECG y más de 90 modos de ejercicio.",
+   "variants": [
+    {
+     "sku": "DM-SAMSU-028-1",
+     "price": 299,
+     "attributes": {
+      "Color": "Grafito"
+     },
+     "stock": 77
+    },
+    {
+     "sku": "DM-SAMSU-028-2",
+     "price": 299,
+     "attributes": {
+      "Color": "Plata"
+     },
+     "stock": 35
+    }
+   ],
+   "image": "028-galaxy-watch6-44-mm.jpg"
+  },
+  {
+   "category": "Accesorios tecnológicos",
+   "brand": "Amazon",
+   "name": "Kindle Paperwhite",
+   "description": "Pantalla de 6,8\" sin reflejos, luz cálida ajustable y semanas de batería. Resistente al agua.",
+   "variants": [
+    {
+     "sku": "DM-AMAZO-029-1",
+     "price": 149,
+     "attributes": {
+      "Almacenamiento": "16 GB"
+     },
+     "stock": 73
+    }
+   ],
+   "image": "029-kindle-paperwhite.jpg"
+  },
+  {
+   "category": "Electrodomésticos de cocina",
+   "brand": "Ninja",
+   "name": "Freidora de aire AF101",
+   "description": "Cocina crocante con hasta 75 % menos grasa. Canasta de 3,8 L apta para lavavajillas.",
+   "variants": [
+    {
+     "sku": "DM-NINJA-030-1",
+     "price": 99,
+     "attributes": {
+      "Color": "Gris"
+     },
+     "stock": 46
+    }
+   ],
+   "image": "030-freidora-de-aire-af101.jpg"
+  },
+  {
+   "category": "Electrodomésticos de cocina",
+   "brand": "Oster",
+   "name": "Licuadora Pro 1200",
+   "description": "Motor de 1200 W, vaso de vidrio de 1,5 L y programas para smoothies y hielo.",
+   "variants": [
+    {
+     "sku": "DM-OSTER-031-1",
+     "price": 89,
+     "attributes": {
+      "Color": "Acero"
+     },
+     "stock": 59
+    }
+   ],
+   "image": "031-licuadora-pro-1200.jpg"
+  },
+  {
+   "category": "Electrodomésticos de cocina",
+   "brand": "KitchenAid",
+   "name": "Batidora de pie Artisan",
+   "description": "El clásico de la repostería: 10 velocidades y bol de acero inoxidable de 4,7 L.",
+   "variants": [
+    {
+     "sku": "DM-KITCH-032-1",
+     "price": 449,
+     "attributes": {
+      "Color": "Rojo Imperial"
+     },
+     "stock": 5
+    },
+    {
+     "sku": "DM-KITCH-032-2",
+     "price": 449,
+     "attributes": {
+      "Color": "Negro Ónix"
+     },
+     "stock": 2
+    },
+    {
+     "sku": "DM-KITCH-032-3",
+     "price": 449,
+     "attributes": {
+      "Color": "Crema"
+     },
+     "stock": 5
+    }
+   ],
+   "image": "032-batidora-de-pie-artisan.jpg"
+  },
+  {
+   "category": "Electrodomésticos de cocina",
+   "brand": "Instant Pot",
+   "name": "Olla a presión Duo 7 en 1",
+   "description": "Olla a presión, de cocción lenta, arrocera, vaporera, yogurtera y más, en un solo aparato.",
+   "variants": [
+    {
+     "sku": "DM-INSTA-033-1",
+     "price": 99,
+     "attributes": {
+      "Capacidad": "6 L"
+     },
+     "stock": 22
+    },
+    {
+     "sku": "DM-INSTA-033-2",
+     "price": 129,
+     "attributes": {
+      "Capacidad": "8 L"
+     },
+     "stock": 37
+    }
+   ],
+   "image": "033-olla-a-presion-duo-7-en-1.jpg"
+  },
+  {
+   "category": "Electrodomésticos de cocina",
+   "brand": "Hamilton Beach",
+   "name": "Tostadora de 2 rebanadas",
+   "description": "Ranuras extra anchas, 7 niveles de tostado y bandeja para migas extraíble.",
+   "variants": [
+    {
+     "sku": "DM-HAMIL-034-1",
+     "price": 29,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 17
+    }
+   ],
+   "image": "034-tostadora-de-2-rebanadas.jpg"
+  },
+  {
+   "category": "Electrodomésticos de cocina",
+   "brand": "Black+Decker",
+   "name": "Microondas digital 20 L",
+   "description": "Compacto, 700 W, 10 niveles de potencia y botones de un toque para palomitas y bebidas.",
+   "variants": [
+    {
+     "sku": "DM-BLACK-035-1",
+     "price": 89,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 46
+    }
+   ],
+   "image": "035-microondas-digital-20-l.jpg"
+  },
+  {
+   "category": "Café y té",
+   "brand": "Nespresso",
+   "name": "Cafetera Vertuo Next",
+   "description": "Prepara café y espresso con un toque: lee el código de cada cápsula para ajustar la receta.",
+   "variants": [
+    {
+     "sku": "DM-NESPR-036-1",
+     "price": 149,
+     "attributes": {
+      "Color": "Negro mate"
+     },
+     "stock": 57
+    },
+    {
+     "sku": "DM-NESPR-036-2",
+     "price": 149,
+     "attributes": {
+      "Color": "Gris claro"
+     },
+     "stock": 4
+    }
+   ],
+   "image": "036-cafetera-vertuo-next.jpg"
+  },
+  {
+   "category": "Café y té",
+   "brand": "De'Longhi",
+   "name": "Cafetera espresso Dedica",
+   "description": "Espresso de estilo barista en solo 15 cm de ancho, con vaporizador para espumar leche.",
+   "variants": [
+    {
+     "sku": "DM-DELON-037-1",
+     "price": 229,
+     "attributes": {
+      "Color": "Plata"
+     },
+     "stock": 74
+    }
+   ],
+   "image": "037-cafetera-espresso-dedica.jpg"
+  },
+  {
+   "category": "Café y té",
+   "brand": "Bialetti",
+   "name": "Cafetera moka Express",
+   "description": "La cafetera italiana original de aluminio, desde 1933. Para cocinas a gas y eléctricas.",
+   "variants": [
+    {
+     "sku": "DM-BIALE-038-1",
+     "price": 34,
+     "attributes": {
+      "Tamaño": "3 tazas"
+     },
+     "stock": 29
+    },
+    {
+     "sku": "DM-BIALE-038-2",
+     "price": 44,
+     "attributes": {
+      "Tamaño": "6 tazas"
+     },
+     "stock": 72
+    }
+   ],
+   "image": "038-cafetera-moka-express.jpg"
+  },
+  {
+   "category": "Café y té",
+   "brand": "Lavazza",
+   "name": "Café en grano Qualità Oro 1 kg",
+   "description": "Mezcla 100 % arábica de tostado medio con notas florales y frutales.",
+   "variants": [
+    {
+     "sku": "DM-LAVAZ-039-1",
+     "price": 24,
+     "attributes": {
+      "Presentación": "1 kg"
+     },
+     "stock": 76
+    }
+   ],
+   "image": "039-cafe-en-grano-qualita-oro-1-kg.jpg"
+  },
+  {
+   "category": "Café y té",
+   "brand": "Fellow",
+   "name": "Hervidor eléctrico Stagg EKG",
+   "description": "Hervidor de cuello de cisne con control exacto de temperatura para café de filtro y té.",
+   "variants": [
+    {
+     "sku": "DM-FELLO-040-1",
+     "price": 165,
+     "attributes": {
+      "Color": "Negro mate"
+     },
+     "stock": 65
+    }
+   ],
+   "image": "040-hervidor-electrico-stagg-ekg.jpg"
+  },
+  {
+   "category": "Muebles y decoración",
+   "brand": "IKEA",
+   "name": "Estantería KALLAX 4x2",
+   "description": "Estantería versátil que funciona como librero, separador de ambientes o mueble de TV.",
+   "variants": [
+    {
+     "sku": "DM-IKEA-041-1",
+     "price": 119,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 29
+    },
+    {
+     "sku": "DM-IKEA-041-2",
+     "price": 119,
+     "attributes": {
+      "Color": "Negro-marrón"
+     },
+     "stock": 51
+    }
+   ],
+   "image": "041-estanteria-kallax-4x2.jpg"
+  },
+  {
+   "category": "Muebles y decoración",
+   "brand": "Philips",
+   "name": "Kit de focos inteligentes Hue",
+   "description": "Iluminación de 16 millones de colores controlada desde el celular o por voz. Incluye 3 focos.",
+   "variants": [
+    {
+     "sku": "DM-PHILI-042-1",
+     "price": 129,
+     "attributes": {
+      "Rosca": "E27"
+     },
+     "stock": 61
+    }
+   ],
+   "image": "042-kit-de-focos-inteligentes-hue.jpg"
+  },
+  {
+   "category": "Muebles y decoración",
+   "brand": "Casper",
+   "name": "Almohada Original",
+   "description": "Soporte de tres capas que mantiene la cabeza y el cuello alineados toda la noche.",
+   "variants": [
+    {
+     "sku": "DM-CASPE-043-1",
+     "price": 65,
+     "attributes": {
+      "Tamaño": "Estándar"
+     },
+     "stock": 78
+    },
+    {
+     "sku": "DM-CASPE-043-2",
+     "price": 85,
+     "attributes": {
+      "Tamaño": "King"
+     },
+     "stock": 60
+    }
+   ],
+   "image": "043-almohada-original.jpg"
+  },
+  {
+   "category": "Muebles y decoración",
+   "brand": "Brooklinen",
+   "name": "Juego de sábanas de percal",
+   "description": "Algodón de fibra larga, fresco y crujiente al tacto. Incluye sábana bajera, encimera y fundas.",
+   "variants": [
+    {
+     "sku": "DM-BROOK-044-1",
+     "price": 149,
+     "attributes": {
+      "Tamaño": "Queen",
+      "Color": "Blanco"
+     },
+     "stock": 0
+    },
+    {
+     "sku": "DM-BROOK-044-2",
+     "price": 169,
+     "attributes": {
+      "Tamaño": "King",
+      "Color": "Gris"
+     },
+     "stock": 2
+    }
+   ],
+   "image": "044-juego-de-sabanas-de-percal.jpg"
+  },
+  {
+   "category": "Muebles y decoración",
+   "brand": "Yankee Candle",
+   "name": "Vela grande Clean Cotton",
+   "description": "Aroma a ropa recién lavada con hasta 150 horas de encendido.",
+   "variants": [
+    {
+     "sku": "DM-YANKE-045-1",
+     "price": 32,
+     "attributes": {
+      "Tamaño": "623 g"
+     },
+     "stock": 4
+    }
+   ],
+   "image": "045-vela-grande-clean-cotton.jpg"
+  },
+  {
+   "category": "Ropa de hombre",
+   "brand": "Levi's",
+   "name": "Jeans 501 Original",
+   "description": "El jean original desde 1873: corte recto, botones en la bragueta y algodón resistente.",
+   "variants": [
+    {
+     "sku": "DM-LEVIS-046-1",
+     "price": 69.5,
+     "attributes": {
+      "Talla": "30x32"
+     },
+     "stock": 15
+    },
+    {
+     "sku": "DM-LEVIS-046-2",
+     "price": 69.5,
+     "attributes": {
+      "Talla": "32x32"
+     },
+     "stock": 0
+    },
+    {
+     "sku": "DM-LEVIS-046-3",
+     "price": 69.5,
+     "attributes": {
+      "Talla": "34x32"
+     },
+     "stock": 50
+    },
+    {
+     "sku": "DM-LEVIS-046-4",
+     "price": 69.5,
+     "attributes": {
+      "Talla": "36x32"
+     },
+     "stock": 27
+    }
+   ],
+   "image": "046-jeans-501-original.jpg"
+  },
+  {
+   "category": "Ropa de hombre",
+   "brand": "Columbia",
+   "name": "Chaqueta impermeable Watertight II",
+   "description": "Liviana, transpirable y empacable en su propio bolsillo. Perfecta para viajar.",
+   "variants": [
+    {
+     "sku": "DM-COLUM-047-1",
+     "price": 99,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Negro"
+     },
+     "stock": 71
+    },
+    {
+     "sku": "DM-COLUM-047-2",
+     "price": 99,
+     "attributes": {
+      "Talla": "L",
+      "Color": "Negro"
+     },
+     "stock": 33
+    },
+    {
+     "sku": "DM-COLUM-047-3",
+     "price": 99,
+     "attributes": {
+      "Talla": "L",
+      "Color": "Azul marino"
+     },
+     "stock": 3
+    }
+   ],
+   "image": "047-chaqueta-impermeable-watertight-ii.jpg"
+  },
+  {
+   "category": "Ropa de hombre",
+   "brand": "Ralph Lauren",
+   "name": "Polo Custom Slim Fit",
+   "description": "Polo de piqué de algodón con el icónico pony bordado.",
+   "variants": [
+    {
+     "sku": "DM-RALPH-048-1",
+     "price": 98,
+     "attributes": {
+      "Talla": "S",
+      "Color": "Blanco"
+     },
+     "stock": 55
+    },
+    {
+     "sku": "DM-RALPH-048-2",
+     "price": 98,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Azul marino"
+     },
+     "stock": 41
+    },
+    {
+     "sku": "DM-RALPH-048-3",
+     "price": 98,
+     "attributes": {
+      "Talla": "L",
+      "Color": "Verde"
+     },
+     "stock": 20
+    }
+   ],
+   "image": "048-polo-custom-slim-fit.jpg"
+  },
+  {
+   "category": "Ropa de hombre",
+   "brand": "Hanes",
+   "name": "Pack de 6 camisetas de algodón",
+   "description": "Camisetas básicas de cuello redondo, suaves y sin etiqueta que pique.",
+   "variants": [
+    {
+     "sku": "DM-HANES-049-1",
+     "price": 24,
+     "attributes": {
+      "Talla": "M"
+     },
+     "stock": 16
+    },
+    {
+     "sku": "DM-HANES-049-2",
+     "price": 24,
+     "attributes": {
+      "Talla": "L"
+     },
+     "stock": 34
+    },
+    {
+     "sku": "DM-HANES-049-3",
+     "price": 24,
+     "attributes": {
+      "Talla": "XL"
+     },
+     "stock": 2
+    }
+   ],
+   "image": "049-pack-de-6-camisetas-de-algodon.jpg"
+  },
+  {
+   "category": "Ropa de hombre",
+   "brand": "The North Face",
+   "name": "Buzo con capucha Half Dome",
+   "description": "Buzo de felpa suave con bolsillo canguro y el logo clásico en el pecho.",
+   "variants": [
+    {
+     "sku": "DM-THENO-050-1",
+     "price": 65,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Gris jaspeado"
+     },
+     "stock": 36
+    },
+    {
+     "sku": "DM-THENO-050-2",
+     "price": 65,
+     "attributes": {
+      "Talla": "L",
+      "Color": "Negro"
+     },
+     "stock": 14
+    }
+   ],
+   "image": "050-buzo-con-capucha-half-dome.jpg"
+  },
+  {
+   "category": "Ropa de mujer",
+   "brand": "Levi's",
+   "name": "Jeans 721 High Rise Skinny",
+   "description": "Tiro alto y elasticidad que mantiene la forma todo el día.",
+   "variants": [
+    {
+     "sku": "DM-LEVIS-051-1",
+     "price": 79.5,
+     "attributes": {
+      "Talla": "26"
+     },
+     "stock": 3
+    },
+    {
+     "sku": "DM-LEVIS-051-2",
+     "price": 79.5,
+     "attributes": {
+      "Talla": "28"
+     },
+     "stock": 78
+    },
+    {
+     "sku": "DM-LEVIS-051-3",
+     "price": 79.5,
+     "attributes": {
+      "Talla": "30"
+     },
+     "stock": 29
+    }
+   ],
+   "image": "051-jeans-721-high-rise-skinny.jpg"
+  },
+  {
+   "category": "Ropa de mujer",
+   "brand": "Lululemon",
+   "name": "Leggings Align 25\"",
+   "description": "Tela Nulu ultra suave, como una segunda piel, ideal para yoga y uso diario.",
+   "variants": [
+    {
+     "sku": "DM-LULUL-052-1",
+     "price": 98,
+     "attributes": {
+      "Talla": "4",
+      "Color": "Negro"
+     },
+     "stock": 35
+    },
+    {
+     "sku": "DM-LULUL-052-2",
+     "price": 98,
+     "attributes": {
+      "Talla": "6",
+      "Color": "Negro"
+     },
+     "stock": 66
+    },
+    {
+     "sku": "DM-LULUL-052-3",
+     "price": 98,
+     "attributes": {
+      "Talla": "8",
+      "Color": "Verde salvia"
+     },
+     "stock": 22
+    }
+   ],
+   "image": "052-leggings-align-25.jpg"
+  },
+  {
+   "category": "Ropa de mujer",
+   "brand": "Mango",
+   "name": "Vestido midi de lino",
+   "description": "Vestido fresco de lino con tirantes finos, ideal para el verano.",
+   "variants": [
+    {
+     "sku": "DM-MANGO-053-1",
+     "price": 79.99,
+     "attributes": {
+      "Talla": "S",
+      "Color": "Crudo"
+     },
+     "stock": 35
+    },
+    {
+     "sku": "DM-MANGO-053-2",
+     "price": 79.99,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Crudo"
+     },
+     "stock": 45
+    },
+    {
+     "sku": "DM-MANGO-053-3",
+     "price": 79.99,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Terracota"
+     },
+     "stock": 65
+    }
+   ],
+   "image": "053-vestido-midi-de-lino.jpg"
+  },
+  {
+   "category": "Ropa de mujer",
+   "brand": "Zara",
+   "name": "Blazer oversize",
+   "description": "Blazer de corte holgado con hombreras, para combinar con jeans o pantalón de vestir.",
+   "variants": [
+    {
+     "sku": "DM-ZARA-054-1",
+     "price": 89.9,
+     "attributes": {
+      "Talla": "S",
+      "Color": "Negro"
+     },
+     "stock": 34
+    },
+    {
+     "sku": "DM-ZARA-054-2",
+     "price": 89.9,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Beige"
+     },
+     "stock": 73
+    }
+   ],
+   "image": "054-blazer-oversize.jpg"
+  },
+  {
+   "category": "Ropa de mujer",
+   "brand": "Patagonia",
+   "name": "Chaqueta polar Retro Pile",
+   "description": "Polar de pelo largo, abrigada y hecha con poliéster reciclado.",
+   "variants": [
+    {
+     "sku": "DM-PATAG-055-1",
+     "price": 139,
+     "attributes": {
+      "Talla": "S",
+      "Color": "Natural"
+     },
+     "stock": 79
+    },
+    {
+     "sku": "DM-PATAG-055-2",
+     "price": 139,
+     "attributes": {
+      "Talla": "M",
+      "Color": "Natural"
+     },
+     "stock": 47
+    }
+   ],
+   "image": "055-chaqueta-polar-retro-pile.jpg"
+  },
+  {
+   "category": "Calzado",
+   "brand": "Nike",
+   "name": "Air Force 1 '07",
+   "description": "El clásico del básquet convertido en ícono urbano: cuero blanco y unidad Air en la suela.",
+   "variants": [
+    {
+     "sku": "DM-NIKE-056-1",
+     "price": 115,
+     "attributes": {
+      "Talla": "39"
+     },
+     "stock": 39
+    },
+    {
+     "sku": "DM-NIKE-056-2",
+     "price": 115,
+     "attributes": {
+      "Talla": "40"
+     },
+     "stock": 23
+    },
+    {
+     "sku": "DM-NIKE-056-3",
+     "price": 115,
+     "attributes": {
+      "Talla": "41"
+     },
+     "stock": 54
+    },
+    {
+     "sku": "DM-NIKE-056-4",
+     "price": 115,
+     "attributes": {
+      "Talla": "42"
+     },
+     "stock": 35
+    },
+    {
+     "sku": "DM-NIKE-056-5",
+     "price": 115,
+     "attributes": {
+      "Talla": "43"
+     },
+     "stock": 57
+    }
+   ],
+   "image": "056-air-force-1-07.jpg"
+  },
+  {
+   "category": "Calzado",
+   "brand": "Adidas",
+   "name": "Ultraboost Light",
+   "description": "Zapatillas de running con la amortiguación Boost más liviana de Adidas.",
+   "variants": [
+    {
+     "sku": "DM-ADIDA-057-1",
+     "price": 190,
+     "attributes": {
+      "Talla": "40"
+     },
+     "stock": 57
+    },
+    {
+     "sku": "DM-ADIDA-057-2",
+     "price": 190,
+     "attributes": {
+      "Talla": "41"
+     },
+     "stock": 80
+    },
+    {
+     "sku": "DM-ADIDA-057-3",
+     "price": 190,
+     "attributes": {
+      "Talla": "42"
+     },
+     "stock": 47
+    }
+   ],
+   "image": "057-ultraboost-light.jpg"
+  },
+  {
+   "category": "Calzado",
+   "brand": "Converse",
+   "name": "Chuck Taylor All Star High",
+   "description": "Las zapatillas de lona que nunca pasan de moda.",
+   "variants": [
+    {
+     "sku": "DM-CONVE-058-1",
+     "price": 65,
+     "attributes": {
+      "Talla": "38",
+      "Color": "Negro"
+     },
+     "stock": 39
+    },
+    {
+     "sku": "DM-CONVE-058-2",
+     "price": 65,
+     "attributes": {
+      "Talla": "40",
+      "Color": "Negro"
+     },
+     "stock": 46
+    },
+    {
+     "sku": "DM-CONVE-058-3",
+     "price": 65,
+     "attributes": {
+      "Talla": "40",
+      "Color": "Blanco"
+     },
+     "stock": 28
+    }
+   ],
+   "image": "058-chuck-taylor-all-star-high.jpg"
+  },
+  {
+   "category": "Calzado",
+   "brand": "Vans",
+   "name": "Old Skool",
+   "description": "Zapatillas de skate con la franja lateral clásica y suela waffle.",
+   "variants": [
+    {
+     "sku": "DM-VANS-059-1",
+     "price": 70,
+     "attributes": {
+      "Talla": "39"
+     },
+     "stock": 4
+    },
+    {
+     "sku": "DM-VANS-059-2",
+     "price": 70,
+     "attributes": {
+      "Talla": "41"
+     },
+     "stock": 5
+    },
+    {
+     "sku": "DM-VANS-059-3",
+     "price": 70,
+     "attributes": {
+      "Talla": "42"
+     },
+     "stock": 19
+    }
+   ],
+   "image": "059-old-skool.jpg"
+  },
+  {
+   "category": "Calzado",
+   "brand": "Crocs",
+   "name": "Clog Classic",
+   "description": "Livianas, cómodas y fáciles de limpiar, con agujeros de ventilación.",
+   "variants": [
+    {
+     "sku": "DM-CROCS-060-1",
+     "price": 49.99,
+     "attributes": {
+      "Talla": "38",
+      "Color": "Negro"
+     },
+     "stock": 35
+    },
+    {
+     "sku": "DM-CROCS-060-2",
+     "price": 49.99,
+     "attributes": {
+      "Talla": "40",
+      "Color": "Blanco"
+     },
+     "stock": 25
+    }
+   ],
+   "image": "060-clog-classic.jpg"
+  },
+  {
+   "category": "Calzado",
+   "brand": "Timberland",
+   "name": "Botas 6-Inch Premium",
+   "description": "Botas de cuero nobuk impermeables, con cuello acolchado y suela de goma resistente.",
+   "variants": [
+    {
+     "sku": "DM-TIMBE-061-1",
+     "price": 210,
+     "attributes": {
+      "Talla": "41"
+     },
+     "stock": 47
+    },
+    {
+     "sku": "DM-TIMBE-061-2",
+     "price": 210,
+     "attributes": {
+      "Talla": "42"
+     },
+     "stock": 20
+    },
+    {
+     "sku": "DM-TIMBE-061-3",
+     "price": 210,
+     "attributes": {
+      "Talla": "43"
+     },
+     "stock": 52
+    }
+   ],
+   "image": "061-botas-6-inch-premium.jpg"
+  },
+  {
+   "category": "Relojes y lentes",
+   "brand": "Casio",
+   "name": "Reloj G-Shock GA-2100",
+   "description": "Estructura de carbono resistente a golpes, 200 m de resistencia al agua y diseño octogonal.",
+   "variants": [
+    {
+     "sku": "DM-CASIO-062-1",
+     "price": 99,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 44
+    },
+    {
+     "sku": "DM-CASIO-062-2",
+     "price": 99,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 5
+    }
+   ],
+   "image": "062-reloj-g-shock-ga-2100.jpg"
+  },
+  {
+   "category": "Relojes y lentes",
+   "brand": "Casio",
+   "name": "Reloj Vintage A168",
+   "description": "El clásico digital con luz, alarma y cronómetro.",
+   "variants": [
+    {
+     "sku": "DM-CASIO-063-1",
+     "price": 59,
+     "attributes": {
+      "Color": "Dorado"
+     },
+     "stock": 44
+    },
+    {
+     "sku": "DM-CASIO-063-2",
+     "price": 39,
+     "attributes": {
+      "Color": "Plateado"
+     },
+     "stock": 13
+    }
+   ],
+   "image": "063-reloj-vintage-a168.jpg"
+  },
+  {
+   "category": "Relojes y lentes",
+   "brand": "Ray-Ban",
+   "name": "Lentes de sol Wayfarer Classic",
+   "description": "El diseño más reconocible de Ray-Ban, con lentes G-15 de protección UV total.",
+   "variants": [
+    {
+     "sku": "DM-RAYBA-064-1",
+     "price": 163,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 3
+    }
+   ],
+   "image": "064-lentes-de-sol-wayfarer-classic.jpg"
+  },
+  {
+   "category": "Relojes y lentes",
+   "brand": "Ray-Ban",
+   "name": "Lentes de sol Aviator",
+   "description": "Los lentes de piloto originales, con armazón metálico y lentes polarizados.",
+   "variants": [
+    {
+     "sku": "DM-RAYBA-065-1",
+     "price": 173,
+     "attributes": {
+      "Color": "Dorado / verde"
+     },
+     "stock": 0
+    },
+    {
+     "sku": "DM-RAYBA-065-2",
+     "price": 173,
+     "attributes": {
+      "Color": "Plateado / gris"
+     },
+     "stock": 4
+    }
+   ],
+   "image": "065-lentes-de-sol-aviator.jpg"
+  },
+  {
+   "category": "Relojes y lentes",
+   "brand": "Fossil",
+   "name": "Reloj Grant Cronógrafo",
+   "description": "Reloj de cuarzo con cronógrafo, números romanos y correa de cuero marrón.",
+   "variants": [
+    {
+     "sku": "DM-FOSSI-066-1",
+     "price": 129,
+     "attributes": {
+      "Color": "Marrón"
+     },
+     "stock": 70
+    }
+   ],
+   "image": "066-reloj-grant-cronografo.jpg"
+  },
+  {
+   "category": "Fitness",
+   "brand": "Bowflex",
+   "name": "Mancuernas ajustables SelectTech 552",
+   "description": "Reemplazan 15 pares de mancuernas: de 2 a 24 kg con un giro del selector.",
+   "variants": [
+    {
+     "sku": "DM-BOWFL-067-1",
+     "price": 429,
+     "attributes": {
+      "Presentación": "Par"
+     },
+     "stock": 16
+    }
+   ],
+   "image": "067-mancuernas-ajustables-selecttech-552.jpg"
+  },
+  {
+   "category": "Fitness",
+   "brand": "Manduka",
+   "name": "Mat de yoga PRO 6 mm",
+   "description": "Mat denso y antideslizante que dura años, con garantía de por vida.",
+   "variants": [
+    {
+     "sku": "DM-MANDU-068-1",
+     "price": 129,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 52
+    },
+    {
+     "sku": "DM-MANDU-068-2",
+     "price": 129,
+     "attributes": {
+      "Color": "Verde musgo"
+     },
+     "stock": 71
+    }
+   ],
+   "image": "068-mat-de-yoga-pro-6-mm.jpg"
+  },
+  {
+   "category": "Fitness",
+   "brand": "Fitbit",
+   "name": "Pulsera Charge 6",
+   "description": "Monitorea frecuencia cardíaca, sueño y estrés, con GPS integrado.",
+   "variants": [
+    {
+     "sku": "DM-FITBI-069-1",
+     "price": 159,
+     "attributes": {
+      "Color": "Negro obsidiana"
+     },
+     "stock": 27
+    }
+   ],
+   "image": "069-pulsera-charge-6.jpg"
+  },
+  {
+   "category": "Fitness",
+   "brand": "Therabody",
+   "name": "Masajeador Theragun Mini",
+   "description": "Pistola de masaje compacta para aliviar la tensión muscular después de entrenar.",
+   "variants": [
+    {
+     "sku": "DM-THERA-070-1",
+     "price": 199,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 76
+    }
+   ],
+   "image": "070-masajeador-theragun-mini.jpg"
+  },
+  {
+   "category": "Fitness",
+   "brand": "Hydro Flask",
+   "name": "Botella térmica 32 oz",
+   "description": "Mantiene el agua fría 24 horas y las bebidas calientes 12 horas.",
+   "variants": [
+    {
+     "sku": "DM-HYDRO-071-1",
+     "price": 44.95,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 44
+    },
+    {
+     "sku": "DM-HYDRO-071-2",
+     "price": 44.95,
+     "attributes": {
+      "Color": "Azul pacífico"
+     },
+     "stock": 57
+    },
+    {
+     "sku": "DM-HYDRO-071-3",
+     "price": 44.95,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 5
+    }
+   ],
+   "image": "071-botella-termica-32-oz.jpg"
+  },
+  {
+   "category": "Camping",
+   "brand": "Coleman",
+   "name": "Carpa Sundome para 4 personas",
+   "description": "Se arma en 10 minutos, con costuras selladas y ventilación para noches de verano.",
+   "variants": [
+    {
+     "sku": "DM-COLEM-072-1",
+     "price": 99,
+     "attributes": {
+      "Capacidad": "4 personas"
+     },
+     "stock": 48
+    }
+   ],
+   "image": "072-carpa-sundome-para-4-personas.jpg"
+  },
+  {
+   "category": "Camping",
+   "brand": "YETI",
+   "name": "Hielera Roadie 24",
+   "description": "Hielera rígida que mantiene el hielo por días y aguanta el uso rudo.",
+   "variants": [
+    {
+     "sku": "DM-YETI-073-1",
+     "price": 250,
+     "attributes": {
+      "Color": "Navy"
+     },
+     "stock": 49
+    },
+    {
+     "sku": "DM-YETI-073-2",
+     "price": 250,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 27
+    }
+   ],
+   "image": "073-hielera-roadie-24.jpg"
+  },
+  {
+   "category": "Camping",
+   "brand": "Black Diamond",
+   "name": "Linterna frontal Spot 400",
+   "description": "400 lúmenes, resistente al agua y con modo rojo para no encandilar.",
+   "variants": [
+    {
+     "sku": "DM-BLACK-074-1",
+     "price": 49.95,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 65
+    }
+   ],
+   "image": "074-linterna-frontal-spot-400.jpg"
+  },
+  {
+   "category": "Camping",
+   "brand": "Osprey",
+   "name": "Mochila Atmos AG 65",
+   "description": "Mochila de trekking con espalda ventilada Anti-Gravity para travesías de varios días.",
+   "variants": [
+    {
+     "sku": "DM-OSPRE-075-1",
+     "price": 340,
+     "attributes": {
+      "Talla": "M"
+     },
+     "stock": 14
+    },
+    {
+     "sku": "DM-OSPRE-075-2",
+     "price": 340,
+     "attributes": {
+      "Talla": "L"
+     },
+     "stock": 55
+    }
+   ],
+   "image": "075-mochila-atmos-ag-65.jpg"
+  },
+  {
+   "category": "Camping",
+   "brand": "Coleman",
+   "name": "Saco de dormir Brazos",
+   "description": "Saco de dormir cálido y lavable, para campamentos de primavera y verano (hasta 4 °C).",
+   "variants": [
+    {
+     "sku": "DM-COLEM-076-1",
+     "price": 39,
+     "attributes": {
+      "Color": "Azul"
+     },
+     "stock": 19
+    }
+   ],
+   "image": "076-saco-de-dormir-brazos.jpg"
+  },
+  {
+   "category": "Ciclismo",
+   "brand": "Giro",
+   "name": "Casco Register MIPS",
+   "description": "Casco liviano con protección MIPS contra impactos rotacionales y ajuste rápido.",
+   "variants": [
+    {
+     "sku": "DM-GIRO-077-1",
+     "price": 75,
+     "attributes": {
+      "Talla": "Única",
+      "Color": "Negro mate"
+     },
+     "stock": 26
+    }
+   ],
+   "image": "077-casco-register-mips.jpg"
+  },
+  {
+   "category": "Ciclismo",
+   "brand": "Shimano",
+   "name": "Kit de luces LED recargables",
+   "description": "Luz delantera de 400 lúmenes y trasera roja, ambas con carga USB.",
+   "variants": [
+    {
+     "sku": "DM-SHIMA-078-1",
+     "price": 45,
+     "attributes": {
+      "Presentación": "Kit"
+     },
+     "stock": 27
+    }
+   ],
+   "image": "078-kit-de-luces-led-recargables.jpg"
+  },
+  {
+   "category": "Ciclismo",
+   "brand": "Kryptonite",
+   "name": "Candado en U Evolution",
+   "description": "Candado de acero endurecido con soporte para el cuadro de la bicicleta.",
+   "variants": [
+    {
+     "sku": "DM-KRYPT-079-1",
+     "price": 79.95,
+     "attributes": {
+      "Presentación": "Estándar"
+     },
+     "stock": 3
+    }
+   ],
+   "image": "079-candado-en-u-evolution.jpg"
+  },
+  {
+   "category": "Ciclismo",
+   "brand": "Topeak",
+   "name": "Inflador de pie JoeBlow Sport III",
+   "description": "Manómetro grande y cabezal compatible con válvulas Presta y Schrader.",
+   "variants": [
+    {
+     "sku": "DM-TOPEA-080-1",
+     "price": 55,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 50
+    }
+   ],
+   "image": "080-inflador-de-pie-joeblow-sport-iii.jpg"
+  },
+  {
+   "category": "Belleza y cuidado personal",
+   "brand": "CeraVe",
+   "name": "Crema hidratante 454 g",
+   "description": "Con ceramidas y ácido hialurónico, sin perfume. Recomendada por dermatólogos.",
+   "variants": [
+    {
+     "sku": "DM-CERAV-081-1",
+     "price": 18.99,
+     "attributes": {
+      "Presentación": "454 g"
+     },
+     "stock": 0
+    }
+   ],
+   "image": "081-crema-hidratante-454-g.jpg"
+  },
+  {
+   "category": "Belleza y cuidado personal",
+   "brand": "La Roche-Posay",
+   "name": "Protector solar Anthelios SPF 50",
+   "description": "Protección muy alta UVA/UVB con textura liviana, para rostro y cuerpo.",
+   "variants": [
+    {
+     "sku": "DM-LAROC-082-1",
+     "price": 36.99,
+     "attributes": {
+      "Presentación": "150 ml"
+     },
+     "stock": 57
+    }
+   ],
+   "image": "082-protector-solar-anthelios-spf-50.jpg"
+  },
+  {
+   "category": "Belleza y cuidado personal",
+   "brand": "The Ordinary",
+   "name": "Sérum Niacinamida 10 % + Zinc 1 %",
+   "description": "Ayuda a reducir imperfecciones y a equilibrar la grasa de la piel.",
+   "variants": [
+    {
+     "sku": "DM-THEOR-083-1",
+     "price": 6.5,
+     "attributes": {
+      "Presentación": "30 ml"
+     },
+     "stock": 60
+    },
+    {
+     "sku": "DM-THEOR-083-2",
+     "price": 11.9,
+     "attributes": {
+      "Presentación": "60 ml"
+     },
+     "stock": 65
+    }
+   ],
+   "image": "083-serum-niacinamida-10-zinc-1.jpg"
+  },
+  {
+   "category": "Belleza y cuidado personal",
+   "brand": "Dyson",
+   "name": "Secador Supersonic",
+   "description": "Secado rápido sin calor extremo, con 5 accesorios magnéticos.",
+   "variants": [
+    {
+     "sku": "DM-DYSON-084-1",
+     "price": 429,
+     "attributes": {
+      "Color": "Fucsia / níquel"
+     },
+     "stock": 28
+    }
+   ],
+   "image": "084-secador-supersonic.jpg"
+  },
+  {
+   "category": "Belleza y cuidado personal",
+   "brand": "Philips",
+   "name": "Afeitadora OneBlade",
+   "description": "Recorta, perfila y afeita cualquier largo de barba, en seco o en húmedo.",
+   "variants": [
+    {
+     "sku": "DM-PHILI-085-1",
+     "price": 39.99,
+     "attributes": {
+      "Presentación": "Con 3 peines"
+     },
+     "stock": 15
+    }
+   ],
+   "image": "085-afeitadora-oneblade.jpg"
+  },
+  {
+   "category": "Belleza y cuidado personal",
+   "brand": "Oral-B",
+   "name": "Cepillo eléctrico iO Series 5",
+   "description": "Cabezal redondo oscilante, sensor de presión y app que te guía mientras te cepillas.",
+   "variants": [
+    {
+     "sku": "DM-ORALB-086-1",
+     "price": 99.99,
+     "attributes": {
+      "Color": "Negro"
+     },
+     "stock": 62
+    },
+    {
+     "sku": "DM-ORALB-086-2",
+     "price": 99.99,
+     "attributes": {
+      "Color": "Rosa"
+     },
+     "stock": 30
+    }
+   ],
+   "image": "086-cepillo-electrico-io-series-5.jpg"
+  },
+  {
+   "category": "Libros",
+   "brand": "Debolsillo",
+   "name": "Cien años de soledad — Gabriel García Márquez",
+   "description": "La saga de los Buendía en Macondo, obra cumbre del realismo mágico.",
+   "variants": [
+    {
+     "sku": "DM-DEBOL-087-1",
+     "price": 12.95,
+     "attributes": {
+      "Formato": "Bolsillo"
+     },
+     "stock": 14
+    },
+    {
+     "sku": "DM-DEBOL-087-2",
+     "price": 29.95,
+     "attributes": {
+      "Formato": "Tapa dura"
+     },
+     "stock": 73
+    }
+   ],
+   "image": "087-cien-anos-de-soledad-gabriel-garcia-marquez.jpg"
+  },
+  {
+   "category": "Libros",
+   "brand": "Diana",
+   "name": "Hábitos atómicos — James Clear",
+   "description": "Cambios pequeños, resultados extraordinarios: un método práctico para crear buenos hábitos.",
+   "variants": [
+    {
+     "sku": "DM-DIANA-088-1",
+     "price": 18.9,
+     "attributes": {
+      "Formato": "Tapa blanda"
+     },
+     "stock": 52
+    }
+   ],
+   "image": "088-habitos-atomicos-james-clear.jpg"
+  },
+  {
+   "category": "Libros",
+   "brand": "Salamandra",
+   "name": "Harry Potter y la piedra filosofal — J. K. Rowling",
+   "description": "El primer año de Harry en Hogwarts. Edición en español.",
+   "variants": [
+    {
+     "sku": "DM-SALAM-089-1",
+     "price": 14.95,
+     "attributes": {
+      "Formato": "Tapa blanda"
+     },
+     "stock": 2
+    }
+   ],
+   "image": "089-harry-potter-y-la-piedra-filosofal-j-k-rowling.jpg"
+  },
+  {
+   "category": "Libros",
+   "brand": "Salamandra",
+   "name": "El principito — Antoine de Saint-Exupéry",
+   "description": "Un clásico para todas las edades, con las ilustraciones originales del autor.",
+   "variants": [
+    {
+     "sku": "DM-SALAM-090-1",
+     "price": 11.5,
+     "attributes": {
+      "Formato": "Tapa dura"
+     },
+     "stock": 16
+    }
+   ],
+   "image": "090-el-principito-antoine-de-saint-exupery.jpg"
+  },
+  {
+   "category": "Libros",
+   "brand": "Debate",
+   "name": "Sapiens — Yuval Noah Harari",
+   "description": "De animales a dioses: una breve historia de la humanidad.",
+   "variants": [
+    {
+     "sku": "DM-DEBAT-091-1",
+     "price": 21.9,
+     "attributes": {
+      "Formato": "Tapa blanda"
+     },
+     "stock": 77
+    }
+   ],
+   "image": "091-sapiens-yuval-noah-harari.jpg"
+  },
+  {
+   "category": "Libros",
+   "brand": "Alfaguara",
+   "name": "Rayuela — Julio Cortázar",
+   "description": "La novela que se puede leer de dos maneras. Edición conmemorativa.",
+   "variants": [
+    {
+     "sku": "DM-ALFAG-092-1",
+     "price": 19.95,
+     "attributes": {
+      "Formato": "Tapa blanda"
+     },
+     "stock": 55
+    }
+   ],
+   "image": "092-rayuela-julio-cortazar.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "Nintendo",
+   "name": "Consola Nintendo Switch OLED",
+   "description": "Pantalla OLED de 7\", base con puerto LAN y 64 GB de almacenamiento.",
+   "variants": [
+    {
+     "sku": "DM-NINTE-093-1",
+     "price": 349,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 52
+    },
+    {
+     "sku": "DM-NINTE-093-2",
+     "price": 349,
+     "attributes": {
+      "Color": "Neón rojo/azul"
+     },
+     "stock": 2
+    }
+   ],
+   "image": "093-consola-nintendo-switch-oled.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "Sony",
+   "name": "Consola PlayStation 5 Slim",
+   "description": "Juegos en 4K, carga ultrarrápida con SSD y control DualSense con respuesta háptica.",
+   "variants": [
+    {
+     "sku": "DM-SONY-094-1",
+     "price": 499,
+     "attributes": {
+      "Edición": "Con lectora"
+     },
+     "stock": 43
+    },
+    {
+     "sku": "DM-SONY-094-2",
+     "price": 449,
+     "attributes": {
+      "Edición": "Digital"
+     },
+     "stock": 40
+    }
+   ],
+   "image": "094-consola-playstation-5-slim.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "Nintendo",
+   "name": "The Legend of Zelda: Tears of the Kingdom",
+   "description": "Explora Hyrule por tierra y cielo en esta secuela para Nintendo Switch.",
+   "variants": [
+    {
+     "sku": "DM-NINTE-095-1",
+     "price": 69.99,
+     "attributes": {
+      "Formato": "Físico"
+     },
+     "stock": 31
+    }
+   ],
+   "image": "095-the-legend-of-zelda-tears-of-the-kingdom.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "LEGO",
+   "name": "LEGO Technic Ferrari Daytona SP3",
+   "description": "Réplica a escala 1:8 con caja de cambios de 8 velocidades y 3778 piezas.",
+   "variants": [
+    {
+     "sku": "DM-LEGO-096-1",
+     "price": 449.99,
+     "attributes": {
+      "Piezas": "3778"
+     },
+     "stock": 63
+    }
+   ],
+   "image": "096-lego-technic-ferrari-daytona-sp3.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "LEGO",
+   "name": "LEGO Classic Caja de ladrillos creativos",
+   "description": "790 piezas de 33 colores para construir lo que imagines.",
+   "variants": [
+    {
+     "sku": "DM-LEGO-097-1",
+     "price": 59.99,
+     "attributes": {
+      "Piezas": "790"
+     },
+     "stock": 58
+    }
+   ],
+   "image": "097-lego-classic-caja-de-ladrillos-creativos.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "Hasbro",
+   "name": "Juego de mesa Monopoly Clásico",
+   "description": "El juego de compraventa de propiedades más famoso del mundo.",
+   "variants": [
+    {
+     "sku": "DM-HASBR-098-1",
+     "price": 24.99,
+     "attributes": {
+      "Edición": "Español"
+     },
+     "stock": 41
+    }
+   ],
+   "image": "098-juego-de-mesa-monopoly-clasico.jpg"
+  },
+  {
+   "category": "Juguetes y videojuegos",
+   "brand": "Mattel",
+   "name": "Juego de cartas UNO",
+   "description": "El juego de cartas clásico para toda la familia.",
+   "variants": [
+    {
+     "sku": "DM-MATTE-099-1",
+     "price": 9.99,
+     "attributes": {
+      "Edición": "Estándar"
+     },
+     "stock": 47
+    }
+   ],
+   "image": "099-juego-de-cartas-uno.jpg"
+  },
+  {
+   "category": "Mascotas",
+   "brand": "Purina Pro Plan",
+   "name": "Alimento para perro adulto",
+   "description": "Fórmula con pollo como primer ingrediente y probióticos para la digestión.",
+   "variants": [
+    {
+     "sku": "DM-PURIN-100-1",
+     "price": 74.99,
+     "attributes": {
+      "Presentación": "13 kg"
+     },
+     "stock": 37
+    },
+    {
+     "sku": "DM-PURIN-100-2",
+     "price": 24.99,
+     "attributes": {
+      "Presentación": "3 kg"
+     },
+     "stock": 70
+    }
+   ],
+   "image": "100-alimento-para-perro-adulto.jpg"
+  },
+  {
+   "category": "Mascotas",
+   "brand": "Royal Canin",
+   "name": "Alimento para gato Indoor 3 kg",
+   "description": "Para gatos que viven en interiores: controla bolas de pelo y el peso.",
+   "variants": [
+    {
+     "sku": "DM-ROYAL-101-1",
+     "price": 38.99,
+     "attributes": {
+      "Presentación": "3 kg"
+     },
+     "stock": 72
+    }
+   ],
+   "image": "101-alimento-para-gato-indoor-3-kg.jpg"
+  },
+  {
+   "category": "Mascotas",
+   "brand": "KONG",
+   "name": "Juguete Classic para perro",
+   "description": "Juguete de goma resistente que se rellena con premios para entretenerlos por horas.",
+   "variants": [
+    {
+     "sku": "DM-KONG-102-1",
+     "price": 14.99,
+     "attributes": {
+      "Talla": "M"
+     },
+     "stock": 51
+    },
+    {
+     "sku": "DM-KONG-102-2",
+     "price": 17.99,
+     "attributes": {
+      "Talla": "L"
+     },
+     "stock": 64
+    }
+   ],
+   "image": "102-juguete-classic-para-perro.jpg"
+  },
+  {
+   "category": "Mascotas",
+   "brand": "Furhaven",
+   "name": "Cama ortopédica para perro",
+   "description": "Espuma viscoelástica que alivia las articulaciones, con funda lavable.",
+   "variants": [
+    {
+     "sku": "DM-FURHA-103-1",
+     "price": 49.99,
+     "attributes": {
+      "Talla": "M"
+     },
+     "stock": 2
+    },
+    {
+     "sku": "DM-FURHA-103-2",
+     "price": 69.99,
+     "attributes": {
+      "Talla": "L"
+     },
+     "stock": 78
+    }
+   ],
+   "image": "103-cama-ortopedica-para-perro.jpg"
+  },
+  {
+   "category": "Mascotas",
+   "brand": "PetSafe",
+   "name": "Fuente de agua Drinkwell 2 L",
+   "description": "Agua fresca y filtrada en movimiento, que anima a tu mascota a tomar más.",
+   "variants": [
+    {
+     "sku": "DM-PETSA-104-1",
+     "price": 34.95,
+     "attributes": {
+      "Color": "Blanco"
+     },
+     "stock": 16
+    }
+   ],
+   "image": "104-fuente-de-agua-drinkwell-2-l.jpg"
+  },
+  {
+   "category": "Mascotas",
+   "brand": "Frisco",
+   "name": "Rascador para gato de 3 niveles",
+   "description": "Torre con postes de sisal, cueva y plataformas para trepar y descansar.",
+   "variants": [
+    {
+     "sku": "DM-FRISC-105-1",
+     "price": 59.99,
+     "attributes": {
+      "Color": "Gris"
+     },
+     "stock": 22
+    }
+   ],
+   "image": "105-rascador-para-gato-de-3-niveles.jpg"
+  }
+ ]
+}

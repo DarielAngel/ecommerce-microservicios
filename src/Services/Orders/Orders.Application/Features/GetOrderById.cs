@@ -26,9 +26,6 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Check
             throw new NotFoundAppException("La orden no existe.");
         }
 
-        return new(
-            order.Id, order.Status.ToString(), order.TotalAmount,
-            order.Lines.Select(l => new OrderLineResult(l.VariantId, l.ProductName, l.Sku, l.UnitPrice, l.Quantity, l.LineTotal)).ToList(),
-            ApproveUrl: null);
+        return CheckoutResult.From(order);
     }
 }

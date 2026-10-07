@@ -58,6 +58,8 @@ Inspiración: Temu, Shein, Walmart, Shopify.
 - T3.1 Cupones de porcentaje y monto fijo, vigencia, mínimo de compra, límite de usos
 - T3.2 Validación desde el carrito y canje atómico en el checkout (saga de Órdenes)
 - T3.3 Administración de cupones en el panel de Admin
+- **Aceptación**: un cupón limitado nunca se usa de más aunque haya checkouts simultáneos; si el pago
+  falla, el uso vuelve a estar disponible; el cliente ve el motivo exacto cuando un cupón no aplica.
 
 ### Fase 4 — Descubrimiento (servicio `Catalog`)
 Inspiración: Amazon, Adobe Commerce (recomendaciones), Walmart.
@@ -88,4 +90,5 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 | 0 — Identidad visual | Hecha |
 | 1 — Reseñas | Hecha (pendiente: pantalla de moderación en el panel de Admin; el endpoint ya existe) |
 | 2 — Favoritos | Hecha |
-| 3 a 6 | Pendiente |
+| 3 — Cupones | Hecha |
+| 4 a 6 | Pendiente |

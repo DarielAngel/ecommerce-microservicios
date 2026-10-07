@@ -19,7 +19,16 @@ public class Order
     public DateTime UpdatedAtUtc { get; private set; }
     public DateTime? PaidAtUtc { get; private set; }
 
-    public decimal TotalAmount => _lines.Sum(l => l.LineTotal);
+    /// <summary>Código del cupón aplicado (ya normalizado por Promociones), o null si no hubo cupón.</summary>
+    public string? CouponCode { get; private set; }
+
+    /// <summary>Descuento del cupón, "congelado" al momento del checkout (lo calculó Promociones).</summary>
+    public decimal DiscountAmount { get; private set; }
+
+    public decimal Subtotal => _lines.Sum(l => l.LineTotal);
+
+    /// <summary>Lo que se cobra en PayPal: subtotal menos el descuento del cupón.</summary>
+    public decimal TotalAmount => Subtotal - DiscountAmount;
 
     private Order() { }
 
@@ -56,7 +65,8 @@ public class Order
         string userEmail,
         string userFullName,
         string shippingAddress,
-        IEnumerable<(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal UnitPrice, int Quantity)> items)
+        IEnumerable<(Guid VariantId, Guid ProductId, string ProductName, string Sku, decimal UnitPrice, int Quantity)> items,
+        (string Code, decimal DiscountAmount)? coupon = null)
     {
         if (string.IsNullOrWhiteSpace(shippingAddress))
         {
@@ -81,6 +91,19 @@ public class Order
         {
             order._lines.Add(new OrderLine(
                 item.VariantId, item.ProductId, item.ProductName, item.Sku, item.UnitPrice, item.Quantity));
+        }
+
+        if (coupon is { } c)
+        {
+            if (string.IsNullOrWhiteSpace(c.Code))
+                throw new DomainException("El código del cupón es obligatorio.");
+            // Defensa en profundidad: Promociones ya lo garantiza, pero una orden en $0 o negativa
+            // no se puede cobrar, así que la orden tampoco la acepta.
+            if (c.DiscountAmount <= 0 || c.DiscountAmount >= order.Subtotal)
+                throw new DomainException("El descuento del cupón debe ser mayor que 0 y menor que el subtotal.");
+
+            order.CouponCode = c.Code.Trim().ToUpperInvariant();
+            order.DiscountAmount = c.DiscountAmount;
         }
 
         return order;

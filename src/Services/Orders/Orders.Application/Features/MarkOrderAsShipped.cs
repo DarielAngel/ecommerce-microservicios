@@ -44,9 +44,6 @@ public class MarkOrderAsShippedCommandHandler : IRequestHandler<MarkOrderAsShipp
             }
         }
 
-        return new CheckoutResult(
-            order.Id, order.Status.ToString(), order.TotalAmount,
-            order.Lines.Select(l => new OrderLineResult(l.VariantId, l.ProductName, l.Sku, l.UnitPrice, l.Quantity, l.LineTotal)).ToList(),
-            ApproveUrl: null);
+        return CheckoutResult.From(order);
     }
 }
