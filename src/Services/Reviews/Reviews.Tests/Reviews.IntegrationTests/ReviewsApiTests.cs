@@ -54,6 +54,10 @@ public class ReviewsApiTests : IClassFixture<ReviewsApiFactory>
 
     private async Task PublishOrderPaidAsync(Guid userId, params Guid[]? productIds)
     {
+        // Si se publica antes de que el consumidor haya creado y enlazado su cola, RabbitMQ descarta el
+        // mensaje (nadie lo escucha todavía) y la prueba falla al azar: esperamos a que el bus esté listo.
+        await _factory.Services.GetRequiredService<IBusControl>()
+            .WaitForHealthStatus(BusHealthStatus.Healthy, TimeSpan.FromSeconds(30));
         using var scope = _factory.Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<IPublishEndpoint>().Publish(new OrderPaidEvent(
             Guid.NewGuid(), userId, "x@test.com", "Ana", 10m, "USD", DateTime.UtcNow, productIds));

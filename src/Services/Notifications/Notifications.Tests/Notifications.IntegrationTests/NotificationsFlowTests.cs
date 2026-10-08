@@ -23,6 +23,10 @@ public class NotificationsFlowTests : IClassFixture<NotificationsApiFactory>
 
     private async Task PublishAsync<T>(T message) where T : class
     {
+        // Si se publica antes de que el consumidor haya creado y enlazado su cola, RabbitMQ descarta el
+        // mensaje (nadie lo escucha todavía) y la prueba falla al azar: esperamos a que el bus esté listo.
+        await _factory.Services.GetRequiredService<IBusControl>()
+            .WaitForHealthStatus(BusHealthStatus.Healthy, TimeSpan.FromSeconds(30));
         using var scope = _factory.Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<IPublishEndpoint>().Publish(message);
     }

@@ -196,6 +196,10 @@ public class StockEndpointsTests : IClassFixture<InventoryApiFactory>
         // variante), y espera a que el consumidor de Inventario lo procese de forma asíncrona.
         var variantId = Guid.NewGuid();
 
+        // Si se publica antes de que el consumidor haya creado y enlazado su cola, RabbitMQ descarta el
+        // mensaje (nadie lo escucha todavía) y la prueba falla al azar: esperamos a que el bus esté listo.
+        await _factory.Services.GetRequiredService<IBusControl>()
+            .WaitForHealthStatus(BusHealthStatus.Healthy, TimeSpan.FromSeconds(30));
         using (var scope = _factory.Services.CreateScope())
         {
             var publishEndpoint = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
