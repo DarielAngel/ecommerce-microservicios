@@ -81,8 +81,17 @@ Inspiración: Mercado Libre (MELI+), Rakuten, Coupang (WOW), Shopify.
 - T6.1 Puntos por compra (consume `OrderPaidEvent`) y canje como descuento
 - T6.2 Correo de recuperación de carritos abandonados
 
+### Fase 7 — Devoluciones y reembolsos (Órdenes, Pagos, Inventario, Lealtad, Notificaciones)
+Inspiración: Amazon, Mercado Libre, Zalando.
+- T7.1 El cliente pide la devolución (total o parcial) de un pedido enviado, hasta 30 días después del envío
+- T7.2 Reembolso parcial o total por PayPal, proporcional a lo pagado (cupón y puntos repartidos)
+- T7.3 Panel de Admin: aprobar y reembolsar, rechazar o cancelar con una nota
+- T7.4 Al reembolsar: el stock vuelve a Inventario, se ajustan los puntos y se avisa por correo
+- **Aceptación**: nunca se devuelve más de lo cobrado (ni por redondeo, ni por reintentos, ni con dos Admins a
+  la vez); un mismo reembolso no repone stock ni ajusta puntos dos veces.
+
 ### Futuro (fuera de este ciclo)
-Devoluciones y reembolsos · multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
+Cancelar un pedido pagado antes del envío · multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
 con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volumen) · omnicanal.
 
 ## Estado
@@ -96,3 +105,4 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 | 4 — Descubrimiento | Hecha |
 | 5 — Checkout rápido y seguimiento | Hecha |
 | 6 — Lealtad y recuperación | Hecha |
+| 7 — Devoluciones y reembolsos | Hecha |

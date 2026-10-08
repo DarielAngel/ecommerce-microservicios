@@ -107,4 +107,56 @@ describe('OrdersHistoryView', () => {
     expect(orderItems(wrapper)[0].get('[data-testid="order-points-earned"]').text()).toBe('· +31 puntos')
     expect(orderItems(wrapper)[1].find('[data-testid="order-points-earned"]').exists()).toBe(false)
   })
+
+  it('pide una devolución: elige unidades y motivo, la envía y muestra su estado', async () => {
+    const returnable = {
+      ...shipped, canRequestReturn: true, returnDeadlineUtc: '2026-11-08T09:00:00Z', returns: [],
+      lines: shipped.lines.map((l) => ({ ...l, returnableQuantity: l.quantity, unitPrice: l.lineTotal / l.quantity }))
+    }
+    const wrapper = await mountView([returnable])
+    await orderItems(wrapper)[0].get('button').trigger('click')
+    expect(wrapper.get('[data-testid="return-deadline"]').text()).toMatch(/^Puedes pedir la devolución hasta el/)
+
+    await wrapper.get('[data-testid="request-return"]').trigger('click')
+    // Sin elegir nada no se envía.
+    await wrapper.get('[data-testid="return-form"]').trigger('submit')
+    expect(client.post).not.toHaveBeenCalled()
+    expect(wrapper.get('[data-testid="return-form"] [role="alert"]').text()).toMatch(/al menos un producto/)
+
+    client.post.mockResolvedValue({
+      ...returnable, canRequestReturn: false,
+      returns: [{ returnId: 'r1', status: 'Requested', reason: 'Damaged', refundAmount: 0, loyaltyPointsToRestore: 0, adminNote: null,
+        lines: [{ variantId: 'v1', productName: 'Taza', quantity: 1 }] }]
+    })
+    await wrapper.findAll('[data-testid="return-line"] input')[0].setValue(1)
+    await wrapper.get('[data-testid="return-form"] select').setValue('Damaged')
+    await wrapper.get('[data-testid="return-form"]').trigger('submit')
+    await flushPromises()
+
+    expect(client.post).toHaveBeenCalledWith('/api/orders/bbbbbbbb-0000/returns', {
+      items: [{ variantId: 'v1', quantity: 1 }], reason: 'Damaged', comment: null
+    })
+    expect(wrapper.find('[data-testid="return-form"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="request-return"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="order-return"]').text()).toContain('Solicitada')
+    expect(useToastStore().toasts.at(-1).type).toBe('success')
+  })
+
+  it('muestra lo reembolsado y la nota de una devolución rechazada', async () => {
+    const wrapper = await mountView([{
+      ...shipped, refundedAmount: 16, returns: [
+        { returnId: 'r2', status: 'Rejected', reason: 'ChangedMind', refundAmount: 0, loyaltyPointsToRestore: 0, adminNote: 'Tiene uso',
+          lines: [{ variantId: 'v2', productName: 'Plato', quantity: 1 }] },
+        { returnId: 'r1', status: 'Refunded', reason: 'Damaged', refundAmount: 16, loyaltyPointsToRestore: 200, adminNote: null,
+          lines: [{ variantId: 'v1', productName: 'Taza', quantity: 1 }] }
+      ]
+    }])
+
+    expect(orderItems(wrapper)[0].get('[data-testid="order-refunded"]').text()).toBe('· reembolsado $16.00')
+    await orderItems(wrapper)[0].get('button').trigger('click')
+    const returns = wrapper.findAll('[data-testid="order-return"]')
+    expect(returns[0].get('[data-testid="order-return-note"]').text()).toBe('Nota de la tienda: Tiene uso')
+    expect(returns[1].text()).toContain('Reembolsada: $16.00')
+    expect(returns[1].text()).toContain('+200 puntos devueltos')
+  })
 })

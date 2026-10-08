@@ -73,4 +73,25 @@ public class EmailTemplatesTests
         html.Should().Contain("Producto 5").And.NotContain("Producto 6");
         html.Should().Contain("…y 2 producto(s) más.");
     }
+
+    [Fact]
+    public void ReturnRefunded_ListaLoDevueltoElMontoYLosPuntos_Escapando()
+    {
+        var orderId = Guid.Parse("abcdef12-0000-0000-0000-000000000000");
+
+        var (subject, html) = EmailTemplates.ReturnRefunded(
+            orderId, "Ana", new[] { new EmailTemplates.RefundLine("<b>Taza</b>", 2) }, 16m, "USD", false, 200);
+
+        subject.Should().Contain("#ABCDEF12");
+        html.Should().Contain("2× &lt;b&gt;Taza&lt;/b&gt;").And.Contain("16.00 USD").And.Contain("200 puntos");
+        html.Should().NotContain("pedido completo");
+    }
+
+    [Fact]
+    public void ReturnRejected_MuestraLaNotaEscapada()
+    {
+        var (_, html) = EmailTemplates.ReturnRejected(Guid.NewGuid(), "Ana", "Producto <usado>");
+
+        html.Should().Contain("Producto &lt;usado&gt;");
+    }
 }

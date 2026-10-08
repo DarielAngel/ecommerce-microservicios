@@ -5,8 +5,23 @@ namespace Ecommerce.Orders.Application.Common;
 public interface IOrderRepository
 {
     Task<Order?> GetByIdAsync(Guid orderId, CancellationToken ct);
+
+    /// <summary>
+    /// Como GetByIdAsync, pero descartando lo que este contexto ya tenía cargado: después de bloquear el pedido se
+    /// necesitan los datos de la base, no una copia vieja en memoria.
+    /// </summary>
+    Task<Order?> GetByIdFreshAsync(Guid orderId, CancellationToken ct);
     Task<IReadOnlyList<Order>> ListByUserIdAsync(Guid userId, CancellationToken ct);
     Task<IReadOnlyList<Order>> ListAllAsync(int count, CancellationToken ct);
+
+    /// <summary>
+    /// Id de la orden a la que pertenece una devolución (Fase 7). Solo el id, sin cargar (ni rastrear) la orden:
+    /// quien llama la bloquea y recién entonces la carga, así trabaja con datos frescos.
+    /// </summary>
+    Task<Guid?> FindOrderIdByReturnIdAsync(Guid returnId, CancellationToken ct);
+
+    /// <summary>Órdenes con al menos una devolución (en ese estado, si se indica), la devolución más nueva primero.</summary>
+    Task<IReadOnlyList<Order>> ListWithReturnsAsync(Domain.Entities.ReturnStatus? status, int count, CancellationToken ct);
     Task AddAsync(Order order, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
@@ -47,8 +62,20 @@ public interface IInventoryServiceClient
 public record CreatePaymentResult(string Status, string? ApproveUrl);
 public record CapturePaymentResult(bool Success, string Status);
 
+/// <summary>Reembolso hecho por Pagos (Fase 7).</summary>
+public record RefundPaymentResult(Guid RefundId, decimal Amount, string PayPalRefundId, string PaymentStatus);
+
 public interface IPaymentServiceClient
 {
+    /// <summary>
+    /// Devuelve <paramref name="amount"/> de lo cobrado en la orden. <paramref name="refundId"/> es la clave de
+    /// idempotencia (el id de la devolución). Si Pagos/PayPal lo rechaza, lanza ConflictAppException con el motivo.
+    /// </summary>
+    Task<RefundPaymentResult> RefundAsync(Guid orderId, Guid refundId, decimal amount, string? reason, string accessToken, CancellationToken ct);
+
+    /// <summary>El reembolso con ese id, o null si Pagos nunca lo hizo.</summary>
+    Task<RefundPaymentResult?> FindRefundAsync(Guid orderId, Guid refundId, string accessToken, CancellationToken ct);
+
     Task<CreatePaymentResult> CreatePaymentAsync(Guid orderId, decimal amount, string currency, string accessToken, CancellationToken ct);
     Task<CapturePaymentResult> CapturePaymentAsync(Guid orderId, string accessToken, CancellationToken ct);
 }

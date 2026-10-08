@@ -35,6 +35,9 @@ public class LoyaltyRepository : ILoyaltyRepository
     public Task<LoyaltyEntry?> GetAsync(Guid orderId, LoyaltyEntryKind kind, CancellationToken ct) =>
         _context.Entries.FirstOrDefaultAsync(e => e.OrderId == orderId && e.Kind == kind, ct);
 
+    public async Task<IReadOnlyList<LoyaltyEntry>> ListByOrderAsync(Guid orderId, CancellationToken ct) =>
+        await _context.Entries.Where(e => e.OrderId == orderId).ToListAsync(ct);
+
     public async Task AddAsync(LoyaltyEntry entry, CancellationToken ct) => await _context.Entries.AddAsync(entry, ct);
 }
 

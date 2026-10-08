@@ -15,6 +15,7 @@ const routes = [
       { path: 'categories', name: 'categories', component: () => import('../views/categories/CategoriesView.vue') },
       { path: 'inventory', name: 'inventory', component: () => import('../views/inventory/StockView.vue') },
       { path: 'coupons', name: 'coupons', component: () => import('../views/coupons/CouponsView.vue') },
+      { path: 'returns', name: 'returns', component: () => import('../views/returns/ReturnsView.vue') },
       { path: 'reviews', name: 'reviews', component: () => import('../views/reviews/ReviewsView.vue') },
       { path: 'orders', name: 'orders', component: () => import('../views/orders/OrdersView.vue') },
       { path: 'admins', name: 'admins', component: () => import('../views/users/CreateAdminView.vue') },

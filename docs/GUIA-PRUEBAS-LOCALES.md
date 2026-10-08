@@ -167,6 +167,18 @@ Marca cada punto a medida que lo pruebas.
 - [ ] Espera otros minutos sin tocar el carrito: **no** llega un segundo correo. Cambia una cantidad, espera
   de nuevo y sí llega otro.
 
+### 4.8 Devoluciones y reembolsos (Fase 7)
+- [ ] Compra 2 unidades de algo y paga. En el panel de Admin → **Órdenes**, márcalo como *enviado*.
+- [ ] En **Mis pedidos**, abre el pedido: dice hasta cuándo puedes devolverlo. Toca **Solicitar devolución**, elige
+  1 unidad y un motivo y envíalo. El pedido muestra *"Solicitada — la estamos revisando"*.
+- [ ] En el panel → **Devoluciones** (pestaña *Pendientes*) aparece con lo que se va a devolver. **Aprobar y
+  reembolsar**: pasa a *Reembolsadas*.
+- [ ] En la tienda el pedido dice *"· reembolsado $X"* y la devolución *"Reembolsada"*. En **Mis puntos** aparece
+  *"Descontados por la devolución…"*. En **Inventario** la variante recuperó 1 unidad. En **Notificaciones**,
+  *"Devolución reembolsada"*.
+- [ ] Pide otra devolución de la unidad que queda y **recházala** con una nota: el cliente la ve en *Mis pedidos* y
+  puede volver a pedirla. Si devuelves todo, el pedido queda **Reembolsada**.
+
 ---
 
 ## 5. Recorrido como Admin (panel — http://localhost:8081)
@@ -177,10 +189,11 @@ Marca cada punto a medida que lo pruebas.
 - [ ] **Inventario**: busca un producto, elige la variante y ajusta su stock (ej. a 3) → en la tienda aparece "¡Quedan solo 3!".
 - [ ] **Cupones**: verás los 10 con su estado (*Activo, Programado, Vencido, Pausado*). Crea uno, edítalo, páusalo y comprueba en la tienda que deja de funcionar. La columna *Usos* sube con cada compra pagada.
 - [ ] **Órdenes**: la orden que pagaste aparece con el cupón y el descuento; márcala como **enviada**.
+- [ ] **Devoluciones**: pendientes, con reembolso pendiente, reembolsadas y rechazadas (ver sección 4.8).
 - [ ] **Reseñas**: verás las reseñas de todos los productos. Filtra por *1 estrella* o busca una palabra;
   toca el nombre de un producto para ver solo las suyas. Elimina una (pide confirmación) y comprueba en la
   tienda que ya no aparece.
-- [ ] **Notificaciones**: registro de los correos de "pago confirmado", "pedido enviado" y "carrito abandonado" (con `RESEND_API_KEY` llegan de verdad a tu correo).
+- [ ] **Notificaciones**: registro de los correos de "pago confirmado", "pedido enviado", "carrito abandonado" y de devoluciones (con `RESEND_API_KEY` llegan de verdad a tu correo).
 
 ---
 

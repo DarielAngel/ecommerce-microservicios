@@ -23,7 +23,7 @@ public class CapturePaymentCommandHandler : IRequestHandler<CapturePaymentComman
 
         // Idempotente: si ya está capturado, devolvemos el resultado actual sin volver a
         // llamar a PayPal (evita una captura duplicada si el caller reintenta).
-        if (payment.Status == Domain.Enums.PaymentStatus.Captured)
+        if (payment.Status is Domain.Enums.PaymentStatus.Captured or Domain.Enums.PaymentStatus.Refunded)
         {
             return CreatePaymentCommandHandler.MapToResult(payment, approveUrl: null);
         }

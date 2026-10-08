@@ -145,4 +145,123 @@ public class PaymentsEndpointsTests : IClassFixture<PaymentsApiFactory>
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
+
+    // ---- Reembolsos (Fase 7) ----
+
+    private async Task<Guid> CapturedOrderAsync(decimal amount)
+    {
+        var token = PaymentsApiFactory.CreateToken(Guid.NewGuid());
+        var orderId = Guid.NewGuid();
+        var create = WithAuth(HttpMethod.Post, "/api/payments", token);
+        create.Content = JsonContent.Create(new { OrderId = orderId, Amount = amount, Currency = "USD" });
+        (await _client.SendAsync(create)).EnsureSuccessStatusCode();
+        (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/payments/{orderId}/capture", token))).EnsureSuccessStatusCode();
+        return orderId;
+    }
+
+    private Task<HttpResponseMessage> RefundAsync(Guid orderId, Guid refundId, decimal amount, string role = "Admin")
+    {
+        var request = WithAuth(HttpMethod.Post, $"/api/payments/{orderId}/refunds", PaymentsApiFactory.CreateToken(Guid.NewGuid(), role));
+        request.Content = JsonContent.Create(new { RefundId = refundId, Amount = amount, Reason = "Devolución de prueba" });
+        return _client.SendAsync(request);
+    }
+
+    [Fact]
+    public async Task Reembolso_SoloLoPuedeHacerUnAdmin()
+    {
+        var orderId = await CapturedOrderAsync(30m);
+
+        (await RefundAsync(orderId, Guid.NewGuid(), 10m, role: "Cliente")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Reembolsos_ParcialesHastaElTotal_QuedanGuardadosYElPagoTerminaRefunded()
+    {
+        var orderId = await CapturedOrderAsync(30m);
+
+        var first = await RefundAsync(orderId, Guid.NewGuid(), 12.5m);
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await first.Content.ReadFromJsonAsync<RefundResult>())!.Should().Match<RefundResult>(r =>
+            r.TotalRefunded == 12.5m && r.Refundable == 17.5m && r.PaymentStatus == "Captured");
+
+        var tooMuch = await RefundAsync(orderId, Guid.NewGuid(), 17.51m);
+        tooMuch.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        var last = await (await RefundAsync(orderId, Guid.NewGuid(), 17.5m)).Content.ReadFromJsonAsync<RefundResult>();
+        last!.PaymentStatus.Should().Be("Refunded");
+        last.Refundable.Should().Be(0m);
+
+        // Quedó guardado en la base (no solo en memoria): una consulta nueva ve el pago reembolsado.
+        var get = await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/payments/{orderId}", PaymentsApiFactory.CreateToken(Guid.NewGuid())));
+        (await get.Content.ReadFromJsonAsync<PaymentResult>())!.Status.Should().Be("Refunded");
+    }
+
+    [Fact]
+    public async Task Reembolso_RepetidoConLaMismaClave_NoDevuelveDosVeces()
+    {
+        var orderId = await CapturedOrderAsync(20m);
+        var refundId = Guid.NewGuid();
+
+        var first = await (await RefundAsync(orderId, refundId, 8m)).Content.ReadFromJsonAsync<RefundResult>();
+        var again = await RefundAsync(orderId, refundId, 8m);
+
+        again.StatusCode.Should().Be(HttpStatusCode.OK);
+        var second = await again.Content.ReadFromJsonAsync<RefundResult>();
+        second!.PayPalRefundId.Should().Be(first!.PayPalRefundId);
+        second.TotalRefunded.Should().Be(8m, "el segundo pedido con la misma clave no suma otro reembolso");
+    }
+
+    [Fact]
+    public async Task Reembolso_SiPayPalLoRechaza_Devuelve409YNoQuedaRegistrado()
+    {
+        var orderId = await CapturedOrderAsync(20m);
+        _factory.FakePayPal.FailRefunds = true;
+        try
+        {
+            (await RefundAsync(orderId, Guid.NewGuid(), 5m)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        }
+        finally
+        {
+            _factory.FakePayPal.FailRefunds = false;
+        }
+
+        var ok = await (await RefundAsync(orderId, Guid.NewGuid(), 20m)).Content.ReadFromJsonAsync<RefundResult>();
+        ok!.TotalRefunded.Should().Be(20m, "el intento rechazado no descontó nada");
+    }
+
+    [Fact]
+    public async Task Reembolso_DeUnaOrdenSinPago_Devuelve404()
+    {
+        (await RefundAsync(Guid.NewGuid(), Guid.NewGuid(), 5m)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task ConsultarReembolso_DevuelveElHecho_Y404SiNunca()
+    {
+        var orderId = await CapturedOrderAsync(20m);
+        var refundId = Guid.NewGuid();
+        await RefundAsync(orderId, refundId, 5m);
+        var admin = PaymentsApiFactory.CreateToken(Guid.NewGuid(), "Admin");
+
+        var found = await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/payments/{orderId}/refunds/{refundId}", admin));
+        found.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await found.Content.ReadFromJsonAsync<RefundResult>())!.Amount.Should().Be(5m);
+
+        (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/payments/{orderId}/refunds/{Guid.NewGuid()}", admin)))
+            .StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/payments/{orderId}/refunds/{refundId}", PaymentsApiFactory.CreateToken(Guid.NewGuid()))))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task CapturarDeNuevoUnPagoReembolsado_NoLoMarcaFallido()
+    {
+        var orderId = await CapturedOrderAsync(10m);
+        await RefundAsync(orderId, Guid.NewGuid(), 10m);
+
+        var again = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/payments/{orderId}/capture", PaymentsApiFactory.CreateToken(Guid.NewGuid())));
+
+        again.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await again.Content.ReadFromJsonAsync<PaymentResult>())!.Status.Should().Be("Refunded");
+    }
 }

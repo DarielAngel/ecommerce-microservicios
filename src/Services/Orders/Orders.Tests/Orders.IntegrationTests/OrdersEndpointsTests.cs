@@ -450,4 +450,174 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
             .Should().Be("Necesitas al menos 100 puntos para usarlos (tienes 40).");
         _factory.FakeInventory.ReleasedOrders.Count.Should().Be(releasedBefore + 1);
     }
+
+    // ---- Devoluciones (Fase 7) ----
+
+    private async Task<(Guid OrderId, Guid VariantId, string UserToken)> ShippedOrderAsync(int quantity = 2)
+    {
+        var userToken = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId, quantity) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        _factory.FakePayments.ShouldCaptureSucceed = true;
+        var checkout = WithAuth(HttpMethod.Post, "/api/orders/checkout", userToken);
+        checkout.Content = JsonContent.Create(new { VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123" });
+        var order = await (await _client.SendAsync(checkout)).Content.ReadFromJsonAsync<CheckoutResult>();
+        await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{order!.OrderId}/confirm-payment", userToken));
+        (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{order.OrderId}/ship", OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin"))))
+            .EnsureSuccessStatusCode();
+        return (order.OrderId, variantId, userToken);
+    }
+
+    private Task<HttpResponseMessage> RequestReturnAsync(Guid orderId, string token, Guid variantId, int quantity, string reason = "Damaged")
+    {
+        var request = WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/returns", token);
+        request.Content = JsonContent.Create(new { Items = new[] { new { VariantId = variantId, Quantity = quantity } }, Reason = reason, Comment = "Llegó roto" });
+        return _client.SendAsync(request);
+    }
+
+    private static string AdminToken() => OrdersApiFactory.CreateToken(Guid.NewGuid(), "Admin");
+
+    [Fact]
+    public async Task Devolucion_FlujoCompleto_PedirAprobarYReembolsar()
+    {
+        var (orderId, variantId, userToken) = await ShippedOrderAsync(quantity: 2);
+
+        // El cliente pide devolver 1 de 2.
+        var requested = await RequestReturnAsync(orderId, userToken, variantId, 1);
+        requested.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = await requested.Content.ReadFromJsonAsync<CheckoutResult>();
+        var ret = order!.Returns!.Should().ContainSingle().Subject;
+        ret.Status.Should().Be("Requested");
+        order.Lines.Single().ReturnableQuantity.Should().Be(1);
+        order.CanRequestReturn.Should().BeFalse();
+
+        // El Admin la ve en "pendientes" con lo que se va a devolver.
+        var pending = await (await _client.SendAsync(WithAuth(HttpMethod.Get, "/api/orders/returns?status=Requested", AdminToken())))
+            .Content.ReadFromJsonAsync<List<AdminReturnResult>>();
+        var listed = pending!.Single(r => r.ReturnId == ret.ReturnId);
+        listed.RefundAmount.Should().Be(order.TotalAmount / 2);
+        listed.UserEmail.Should().NotBeNullOrWhiteSpace();
+
+        // Aprueba: se reembolsa en Pagos y se publica el evento para Inventario, Lealtad y Notificaciones.
+        var approved = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/approve", AdminToken()));
+        approved.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await approved.Content.ReadFromJsonAsync<AdminReturnResult>())!.Status.Should().Be("Refunded");
+        _factory.FakePayments.Refunds[ret.ReturnId].Should().Be(order.TotalAmount / 2);
+        _factory.Published.Events.OfType<Ecommerce.Contracts.Events.OrderRefundedEvent>()
+            .Should().ContainSingle(e => e.ReturnId == ret.ReturnId).Which.Items.Single().Should()
+            .Match<Ecommerce.Contracts.Events.RefundedItem>(i => i.VariantId == variantId && i.Quantity == 1);
+
+        // Quedó guardado: el cliente ve su devolución reembolsada y lo devuelto en dinero.
+        var reloaded = await (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken)))
+            .Content.ReadFromJsonAsync<CheckoutResult>();
+        reloaded!.Status.Should().Be("Shipped");
+        reloaded.RefundedAmount.Should().Be(order.TotalAmount / 2);
+        reloaded.Returns!.Single().Status.Should().Be("Refunded");
+        reloaded.CanRequestReturn.Should().BeTrue("todavía queda 1 unidad por devolver");
+
+        // Devuelve la otra: el pedido queda reembolsado completo.
+        var second = (await (await RequestReturnAsync(orderId, userToken, variantId, 1)).Content.ReadFromJsonAsync<CheckoutResult>())!
+            .Returns!.First(r => r.Status == "Requested");
+        await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{second.ReturnId}/approve", AdminToken()));
+        var final = await (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken)))
+            .Content.ReadFromJsonAsync<CheckoutResult>();
+        final!.Status.Should().Be("Refunded");
+        final.RefundedAmount.Should().Be(final.TotalAmount);
+    }
+
+    [Fact]
+    public async Task Devolucion_SiPagosRechaza_QuedaAprobadaYSePuedeReintentar()
+    {
+        var (orderId, variantId, userToken) = await ShippedOrderAsync();
+        var ret = (await (await RequestReturnAsync(orderId, userToken, variantId, 2)).Content.ReadFromJsonAsync<CheckoutResult>())!.Returns!.Single();
+
+        _factory.FakePayments.RefundFailure = "PayPal rechazó el reembolso (422).";
+        try
+        {
+            var failed = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/approve", AdminToken()));
+            failed.StatusCode.Should().Be(HttpStatusCode.Conflict);
+            (await failed.Content.ReadAsStringAsync()).Should().Contain("422");
+        }
+        finally
+        {
+            _factory.FakePayments.RefundFailure = null;
+        }
+
+        var approved = await (await _client.SendAsync(WithAuth(HttpMethod.Get, "/api/orders/returns?status=Approved", AdminToken())))
+            .Content.ReadFromJsonAsync<List<AdminReturnResult>>();
+        approved!.Should().Contain(r => r.ReturnId == ret.ReturnId, "el monto quedó fijado aunque PayPal fallara");
+
+        var retry = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/approve", AdminToken()));
+        (await retry.Content.ReadFromJsonAsync<AdminReturnResult>())!.Status.Should().Be("Refunded");
+    }
+
+    [Fact]
+    public async Task Devolucion_AprobadaSinReembolso_SePuedeCancelarYElPedidoNoQuedaTrabado()
+    {
+        var (orderId, variantId, userToken) = await ShippedOrderAsync();
+        var ret = (await (await RequestReturnAsync(orderId, userToken, variantId, 1)).Content.ReadFromJsonAsync<CheckoutResult>())!.Returns!.Single();
+
+        _factory.FakePayments.RefundFailure = "El pago no admite reembolsos.";
+        try
+        {
+            (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/approve", AdminToken())))
+                .StatusCode.Should().Be(HttpStatusCode.Conflict);
+        }
+        finally
+        {
+            _factory.FakePayments.RefundFailure = null;
+        }
+
+        var cancel = WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/reject", AdminToken());
+        cancel.Content = JsonContent.Create(new { Note = "PayPal no permite reembolsar este pago; te contactamos." });
+        var cancelled = await _client.SendAsync(cancel);
+        cancelled.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await cancelled.Content.ReadFromJsonAsync<AdminReturnResult>())!.Status.Should().Be("Rejected");
+
+        var order = await (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken))).Content.ReadFromJsonAsync<CheckoutResult>();
+        order!.CanRequestReturn.Should().BeTrue();
+        order.RefundedAmount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Devolucion_Rechazada_GuardaLaNotaYLiberaLasUnidades()
+    {
+        var (orderId, variantId, userToken) = await ShippedOrderAsync();
+        var ret = (await (await RequestReturnAsync(orderId, userToken, variantId, 2)).Content.ReadFromJsonAsync<CheckoutResult>())!.Returns!.Single();
+
+        var noNote = WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/reject", AdminToken());
+        noNote.Content = JsonContent.Create(new { Note = "" });
+        (await _client.SendAsync(noNote)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var reject = WithAuth(HttpMethod.Post, $"/api/orders/returns/{ret.ReturnId}/reject", AdminToken());
+        reject.Content = JsonContent.Create(new { Note = "El producto tiene uso." });
+        (await _client.SendAsync(reject)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var order = await (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken))).Content.ReadFromJsonAsync<CheckoutResult>();
+        order!.Returns!.Single().AdminNote.Should().Be("El producto tiene uso.");
+        order.Lines.Single().ReturnableQuantity.Should().Be(2);
+        order.CanRequestReturn.Should().BeTrue();
+        _factory.Published.Events.OfType<Ecommerce.Contracts.Events.ReturnRejectedEvent>().Should().Contain(e => e.ReturnId == ret.ReturnId);
+    }
+
+    [Fact]
+    public async Task Devolucion_ReglasYPermisos()
+    {
+        var (orderId, variantId, userToken) = await ShippedOrderAsync();
+
+        // Otro cliente no puede pedir devoluciones de este pedido (ni saber que existe).
+        (await RequestReturnAsync(orderId, OrdersApiFactory.CreateToken(Guid.NewGuid()), variantId, 1)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        // Más unidades de las compradas, o un motivo inventado: 400.
+        (await RequestReturnAsync(orderId, userToken, variantId, 3)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await RequestReturnAsync(orderId, userToken, variantId, 1, reason: "Porque sí")).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        // Un cliente no ve ni aprueba devoluciones.
+        (await _client.SendAsync(WithAuth(HttpMethod.Get, "/api/orders/returns", userToken))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{Guid.NewGuid()}/approve", userToken))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{Guid.NewGuid()}/approve", AdminToken()))).StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        // Un pedido pagado pero sin enviar todavía no se puede devolver.
+        var paidOnly = await CreatePaidOrderAsync(userToken);
+        (await RequestReturnAsync(paidOnly, userToken, _factory.FakeCart.Items[0].VariantId, 1)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

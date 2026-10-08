@@ -64,7 +64,7 @@ public class ConfirmPaymentCommandHandler : IRequestHandler<ConfirmPaymentComman
 
         // Idempotente: si ya está en un estado terminal, no repetimos la captura ni tocamos
         // el stock otra vez (protege contra doble-click o un reintento del cliente).
-        if (order.Status is Domain.Enums.OrderStatus.Paid or Domain.Enums.OrderStatus.Failed)
+        if (order.Status is not Domain.Enums.OrderStatus.PendingPayment)
         {
             return MapToResult(order);
         }

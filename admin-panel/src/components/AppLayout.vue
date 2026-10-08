@@ -13,6 +13,7 @@ const links = [
   { to: { name: 'inventory' }, label: 'Inventario', icon: '📊' },
   { to: { name: 'coupons' }, label: 'Cupones', icon: '🎟️' },
   { to: { name: 'orders' }, label: 'Órdenes', icon: '🧾' },
+  { to: { name: 'returns' }, label: 'Devoluciones', icon: '↩️' },
   { to: { name: 'reviews' }, label: 'Reseñas', icon: '⭐' },
   { to: { name: 'admins' }, label: 'Administradores', icon: '👤' },
   { to: { name: 'notifications' }, label: 'Notificaciones', icon: '✉️' }

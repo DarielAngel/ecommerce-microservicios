@@ -50,6 +50,16 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // EnsureCreated no toca una base existente: la tabla de reposiciones por devolución (Fase 7) se crea si falta.
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS stock_restocks (
+            return_id uuid NOT NULL,
+            variant_id uuid NOT NULL,
+            quantity integer NOT NULL,
+            created_at_utc timestamp with time zone NOT NULL,
+            CONSTRAINT "PK_stock_restocks" PRIMARY KEY (return_id, variant_id));
+        """);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

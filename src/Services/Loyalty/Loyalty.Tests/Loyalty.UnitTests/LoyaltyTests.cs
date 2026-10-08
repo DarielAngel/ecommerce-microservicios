@@ -15,7 +15,7 @@ internal sealed class FixedTime : TimeProvider
     public override DateTimeOffset GetUtcNow() => new(Now);
 }
 
-/// <summary>Repositorio en memoria con la misma regla de unicidad que la base (orden + tipo).</summary>
+/// <summary>Repositorio en memoria con la misma regla de unicidad que la base (orden + tipo + referencia).</summary>
 internal sealed class InMemoryLoyalty : ILoyaltyRepository, IUnitOfWork
 {
     public List<LoyaltyEntry> Saved { get; } = new();
@@ -30,6 +30,9 @@ internal sealed class InMemoryLoyalty : ILoyaltyRepository, IUnitOfWork
     public Task<LoyaltyEntry?> GetAsync(Guid orderId, LoyaltyEntryKind kind, CancellationToken ct) =>
         Task.FromResult(Saved.FirstOrDefault(e => e.OrderId == orderId && e.Kind == kind));
 
+    public Task<IReadOnlyList<LoyaltyEntry>> ListByOrderAsync(Guid orderId, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<LoyaltyEntry>>(Saved.Where(e => e.OrderId == orderId).ToList());
+
     public Task AddAsync(LoyaltyEntry entry, CancellationToken ct) { _pending.Add(entry); return Task.CompletedTask; }
 
     public Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> work, CancellationToken ct) => work();
@@ -38,7 +41,7 @@ internal sealed class InMemoryLoyalty : ILoyaltyRepository, IUnitOfWork
     {
         foreach (var e in _pending)
         {
-            if (Saved.Any(s => s.OrderId == e.OrderId && s.Kind == e.Kind))
+            if (Saved.Any(s => s.OrderId == e.OrderId && s.Kind == e.Kind && s.ReferenceId == e.ReferenceId))
             {
                 _pending.Clear();
                 throw new ConflictAppException("duplicado");
@@ -288,5 +291,39 @@ public class LoyaltyHandlerTests
         _time.Now = _time.Now.AddHours(3);
 
         (await Me()).History.Should().ContainSingle().Which.Kind.Should().Be("Earned");
+    }
+}
+
+public class RefundEntryTests
+{
+    private static readonly DateTime Now = new(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);
+
+    [Fact]
+    public void ElSaldoRestaLoDescontadoYSumaLoDevuelto_SinBajarDeCero()
+    {
+        var user = Guid.NewGuid();
+        var order = Guid.NewGuid();
+        var entries = new List<LoyaltyEntry>
+        {
+            LoyaltyEntry.Earn(user, order, 100m, Now)!,
+            LoyaltyEntry.ForRefund(user, order, Guid.NewGuid(), LoyaltyEntryKind.Reversed, 40, Now),
+            LoyaltyEntry.ForRefund(user, order, Guid.NewGuid(), LoyaltyEntryKind.Restored, 15, Now)
+        };
+
+        PointsLedger.Balance(entries, Now).Should().Be(100 - 40 + 15);
+
+        entries.Add(LoyaltyEntry.ForRefund(user, order, Guid.NewGuid(), LoyaltyEntryKind.Reversed, 500, Now));
+        PointsLedger.Balance(entries, Now).Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData(LoyaltyEntryKind.Earned, 10)]
+    [InlineData(LoyaltyEntryKind.Redeemed, 10)]
+    [InlineData(LoyaltyEntryKind.Reversed, 0)]
+    public void ForRefund_SoloAjustesConPuntosPositivos(LoyaltyEntryKind kind, int points)
+    {
+        var act = () => LoyaltyEntry.ForRefund(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), kind, points, Now);
+
+        act.Should().Throw<Ecommerce.Loyalty.Domain.Exceptions.DomainException>();
     }
 }

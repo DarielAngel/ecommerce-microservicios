@@ -15,5 +15,8 @@ public enum OrderStatus
     Cancelled = 3,
 
     /// <summary>El Admin marcó la orden como enviada.</summary>
-    Shipped = 4
+    Shipped = 4,
+
+    /// <summary>Se devolvieron (y reembolsaron) todas las unidades del pedido (Fase 7).</summary>
+    Refunded = 5
 }

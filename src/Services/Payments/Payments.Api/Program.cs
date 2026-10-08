@@ -46,6 +46,18 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // EnsureCreated no toca una base que ya existía: la tabla de reembolsos (Fase 7) se crea si falta.
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS payment_refunds (
+            id uuid PRIMARY KEY,
+            payment_id uuid NOT NULL REFERENCES payments("Id") ON DELETE CASCADE,
+            amount numeric(12,2) NOT NULL,
+            paypal_refund_id character varying(64) NOT NULL,
+            reason character varying(255) NULL,
+            created_at_utc timestamp with time zone NOT NULL);
+        CREATE INDEX IF NOT EXISTS "IX_payment_refunds_payment_id" ON payment_refunds (payment_id);
+        """);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

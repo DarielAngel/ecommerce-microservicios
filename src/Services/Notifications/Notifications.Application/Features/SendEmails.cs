@@ -71,3 +71,38 @@ public class SendCartAbandonedEmailCommandHandler : IRequestHandler<SendCartAban
         return _dispatcher.DispatchAsync(NotificationType.CartAbandoned, request.ReminderId, request.Email, subject, html, ct);
     }
 }
+
+// ---- Devolución reembolsada / rechazada (Fase 7) ----
+public record SendReturnRefundedEmailCommand(
+    Guid ReturnId, Guid OrderId, string Email, string FullName, IReadOnlyList<EmailTemplates.RefundLine> Items,
+    decimal Amount, string Currency, bool OrderFullyRefunded, int PointsRestored) : IRequest;
+
+public class SendReturnRefundedEmailCommandHandler : IRequestHandler<SendReturnRefundedEmailCommand>
+{
+    private readonly NotificationDispatcher _dispatcher;
+
+    public SendReturnRefundedEmailCommandHandler(NotificationDispatcher dispatcher) => _dispatcher = dispatcher;
+
+    public Task Handle(SendReturnRefundedEmailCommand request, CancellationToken ct)
+    {
+        var (subject, html) = EmailTemplates.ReturnRefunded(
+            request.OrderId, request.FullName, request.Items, request.Amount, request.Currency, request.OrderFullyRefunded,
+            request.PointsRestored);
+        return _dispatcher.DispatchAsync(NotificationType.ReturnRefunded, request.ReturnId, request.Email, subject, html, ct);
+    }
+}
+
+public record SendReturnRejectedEmailCommand(Guid ReturnId, Guid OrderId, string Email, string FullName, string Note) : IRequest;
+
+public class SendReturnRejectedEmailCommandHandler : IRequestHandler<SendReturnRejectedEmailCommand>
+{
+    private readonly NotificationDispatcher _dispatcher;
+
+    public SendReturnRejectedEmailCommandHandler(NotificationDispatcher dispatcher) => _dispatcher = dispatcher;
+
+    public Task Handle(SendReturnRejectedEmailCommand request, CancellationToken ct)
+    {
+        var (subject, html) = EmailTemplates.ReturnRejected(request.OrderId, request.FullName, request.Note);
+        return _dispatcher.DispatchAsync(NotificationType.ReturnRejected, request.ReturnId, request.Email, subject, html, ct);
+    }
+}

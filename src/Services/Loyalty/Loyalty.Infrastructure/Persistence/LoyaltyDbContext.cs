@@ -29,8 +29,10 @@ public class LoyaltyDbContext : DbContext
             entry.HasIndex(e => e.UserId).HasDatabaseName("ix_loyalty_entries_user_id");
             entry.Property(e => e.OrderId).HasColumnName("order_id").IsRequired();
             entry.Property(e => e.Kind).HasColumnName("kind").HasConversion<string>().HasMaxLength(20).IsRequired();
-            // Una orden gana puntos una sola vez y canjea una sola vez.
-            entry.HasIndex(e => new { e.OrderId, e.Kind }).IsUnique().HasDatabaseName("ux_loyalty_entries_order_kind");
+            entry.Property(e => e.ReferenceId).HasColumnName("reference_id").IsRequired();
+            // Una orden gana puntos una sola vez y canjea una sola vez; y cada devolución ajusta una sola vez.
+            entry.HasIndex(e => new { e.OrderId, e.Kind, e.ReferenceId }).IsUnique().HasDatabaseName("ux_loyalty_entries_order_kind_ref");
+            entry.Ignore(e => e.Adds);
             entry.Property(e => e.Points).HasColumnName("points").IsRequired();
             entry.Property(e => e.DiscountAmount).HasColumnName("discount_amount").HasColumnType("numeric(12,2)").IsRequired();
             entry.Property(e => e.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20).IsRequired();

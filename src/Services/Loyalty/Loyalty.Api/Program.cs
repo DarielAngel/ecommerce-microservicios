@@ -50,6 +50,14 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<LoyaltyDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+
+    // Fase 7 (devoluciones): una orden puede tener varios ajustes, uno por devolución. En una base de la Fase 6
+    // se agrega la columna y se cambia el índice único (orden, tipo) por (orden, tipo, referencia).
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        ALTER TABLE loyalty_entries ADD COLUMN IF NOT EXISTS reference_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+        DROP INDEX IF EXISTS ux_loyalty_entries_order_kind;
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_loyalty_entries_order_kind_ref ON loyalty_entries (order_id, kind, reference_id);
+        """);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

@@ -34,6 +34,29 @@ public class PaymentsController : ControllerBase
         return Ok(result);
     }
 
+    public record RefundRequest(Guid RefundId, decimal Amount, string? Reason);
+
+    /// <summary>
+    /// Reembolso total o parcial (Fase 7). Solo Admin: lo llama Órdenes con el token del Admin que aprobó la
+    /// devolución. Repetirlo con el mismo RefundId devuelve el mismo reembolso.
+    /// </summary>
+    [HttpPost("{orderId:guid}/refunds")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<RefundResult>> Refund(Guid orderId, RefundRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new RefundPaymentCommand(orderId, request.RefundId, request.Amount, request.Reason), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Un reembolso por su id (404 si nunca se hizo). Lo usa Órdenes antes de cancelar una devolución aprobada.</summary>
+    [HttpGet("{orderId:guid}/refunds/{refundId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<RefundResult>> GetRefund(Guid orderId, Guid refundId, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetRefundQuery(orderId, refundId), ct);
+        return Ok(result);
+    }
+
     [HttpGet("{orderId:guid}")]
     [Authorize]
     public async Task<ActionResult<PaymentResult>> GetByOrderId(Guid orderId, CancellationToken ct)

@@ -158,4 +158,24 @@ public class NotificationsFlowTests : IClassFixture<NotificationsApiFactory>
         // (HtmlEncode escribe la "á" como entidad; el correo se ve igual.)
         sent.Html.Should().Contain("2× Taza de cer").And.Contain("/cart");
     }
+
+    [Fact]
+    public async Task EventosDeDevolucion_ReembolsadaYRechazada_MandanUnCorreoCadaUno()
+    {
+        var refundedTo = $"{Guid.NewGuid():N}@test.com";
+        var refunded = new OrderRefundedEvent(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), refundedTo, "Ana", 16m, "USD", false, 200,
+            new List<RefundedItem> { new(Guid.NewGuid(), Guid.NewGuid(), "Taza", 1) }, DateTime.UtcNow);
+        var rejectedTo = $"{Guid.NewGuid():N}@test.com";
+
+        await PublishAsync(refunded);
+        await PublishAsync(refunded);
+        await PublishAsync(new ReturnRejectedEvent(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), rejectedTo, "Luis", "Tiene uso", DateTime.UtcNow));
+
+        (await WaitUntilAsync(() => SentTo(refundedTo) >= 1 && SentTo(rejectedTo) >= 1)).Should().BeTrue();
+        await Task.Delay(1500);
+        SentTo(refundedTo).Should().Be(1, "un reembolso, un correo");
+        _factory.FakeEmail.Sent.First(e => e.To == refundedTo).Html.Should().Contain("16.00 USD").And.Contain("200 puntos");
+        _factory.FakeEmail.Sent.First(e => e.To == rejectedTo).Html.Should().Contain("Tiene uso");
+    }
 }

@@ -9,6 +9,7 @@ public class InventoryDbContext : DbContext
 
     public DbSet<StockItem> StockItems => Set<StockItem>();
     public DbSet<StockReservation> StockReservations => Set<StockReservation>();
+    public DbSet<StockRestock> StockRestocks => Set<StockRestock>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,16 @@ public class InventoryDbContext : DbContext
 
             entity.Ignore(s => s.QuantityAvailable);
             entity.Ignore(s => s.IsLowStock);
+        });
+
+        modelBuilder.Entity<StockRestock>(entity =>
+        {
+            entity.ToTable("stock_restocks");
+            entity.HasKey(r => new { r.ReturnId, r.VariantId });
+            entity.Property(r => r.ReturnId).HasColumnName("return_id");
+            entity.Property(r => r.VariantId).HasColumnName("variant_id");
+            entity.Property(r => r.Quantity).HasColumnName("quantity").IsRequired();
+            entity.Property(r => r.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
         });
 
         modelBuilder.Entity<StockReservation>(entity =>

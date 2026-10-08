@@ -1595,6 +1595,52 @@ Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-
 
 Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (secciones 4.6 y 4.7).
 
+## Fase 7 — Devoluciones y reembolsos (Órdenes, Pagos, Inventario, Lealtad y Notificaciones)
+
+- **El cliente pide la devolución** desde *Mis pedidos* → *Solicitar devolución*: elige productos y unidades
+  (puede ser parcial), un motivo y un comentario. Solo pedidos **enviados**, hasta **30 días** después del envío,
+  y una solicitud abierta por pedido a la vez. Ve el estado: *solicitada*, *aprobada (reembolso en proceso)*,
+  *reembolsada* o *rechazada* (con la nota de la tienda).
+- **El Admin decide** en la nueva sección **Devoluciones** del panel:
+  - *Aprobar y reembolsar* (cuando recibió el producto): Pagos devuelve el dinero por PayPal.
+  - *Rechazar* con una nota para el cliente.
+  - Si PayPal no deja reembolsar, la devolución queda *aprobada · reembolso pendiente*: se puede **reintentar** o
+    **cancelar** con una nota (antes de cancelar se verifica en Pagos que el dinero no se haya devuelto).
+- **Cuánto se devuelve**: la parte proporcional de lo que el cliente pagó; el cupón y los puntos se reparten entre
+  todos los productos. Ejemplo: pedido de $50 con $10 de descuento ($40 cobrados); devolver un producto de $20 →
+  $16. La devolución que completa el pedido se lleva **exactamente lo que queda**: la suma nunca pasa de lo cobrado.
+  Con todo devuelto, el pedido pasa a **Reembolsada**.
+- **Sin pagar dos veces**: el monto se fija y se guarda al aprobar, ANTES de llamar a PayPal; el reembolso usa el id
+  de la devolución como clave (`PayPal-Request-Id`), así reintentar (doble clic, dos Admins, un corte) nunca
+  devuelve el dinero dos veces.
+- **Al reembolsar**, Órdenes publica `OrderRefundedEvent`:
+  - **Inventario** vuelve a sumar las unidades al stock (una sola vez por devolución y variante).
+  - **Lealtad** descuenta los puntos que esa parte de la compra había dado (1 por cada $1 devuelto, sin dejar el
+    saldo negativo) y devuelve en la misma proporción los puntos que el cliente había usado.
+  - **Notificaciones** manda el correo "Tu reembolso está en camino" (y "No pudimos aceptar tu devolución" al
+    rechazar).
+- **Fuera de alcance por ahora**: cancelar un pedido pagado que todavía no se envió, y devolver el uso del cupón.
+
+  | Método | Ruta | Acceso |
+  |---|---|---|
+  | POST | `/api/orders/{orderId}/returns` | cliente (solo sus pedidos) |
+  | GET | `/api/orders/returns?status=Requested\|Approved\|Refunded\|Rejected` | Admin |
+  | POST | `/api/orders/returns/{returnId}/approve` · `/reject` | Admin |
+  | POST | `/api/payments/{orderId}/refunds` · GET `/api/payments/{orderId}/refunds/{refundId}` | Admin (los usa Órdenes) |
+
+  Las respuestas de pedidos suman `returns`, `refundedAmount`, `returnDeadlineUtc`, `canRequestReturn` y, por
+  línea, `returnableQuantity`.
+
+- Bases que ya existían **no hay que borrarlas**: al arrancar, Órdenes crea `order_returns` y `order_return_lines`
+  (y completa la fecha de envío de pedidos viejos), Pagos crea `payment_refunds`, Inventario crea
+  `stock_restocks` y Lealtad agrega `reference_id` y cambia su índice único.
+
+```cmd
+docker compose up -d --build orders-service payments-service inventory-service loyalty-service notifications-service storefront admin-panel
+```
+
+Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (sección 4.8).
+
 ## Datos de demostración
 
 Para probar con una tienda "viva" en vez de productos con códigos raros:

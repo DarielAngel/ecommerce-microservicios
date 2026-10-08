@@ -41,6 +41,16 @@ public class FakePayPalClient : IPayPalClient
         return Task.FromResult(new CapturePayPalOrderResult(true, fakeCaptureId, null));
     }
 
+    public Task<RefundPayPalCaptureResult> RefundCaptureAsync(
+        string captureId, decimal amount, string currency, string requestId, string? note, CancellationToken ct)
+    {
+        // Mismo id para la misma clave: igual que PayPal con PayPal-Request-Id.
+        var fakeRefundId = $"FAKE-REFUND-{requestId}";
+        _logger.LogInformation("[Fake PayPal] Reembolso simulado de {Amount} {Currency} sobre {CaptureId}: {RefundId}",
+            amount, currency, captureId, fakeRefundId);
+        return Task.FromResult(new RefundPayPalCaptureResult(true, fakeRefundId, "COMPLETED", null));
+    }
+
     public Task<bool> VerifyWebhookSignatureAsync(IDictionary<string, string> headers, string rawBody, CancellationToken ct)
     {
         // No debería llegar ningún webhook real mientras este modo está activo (no hay

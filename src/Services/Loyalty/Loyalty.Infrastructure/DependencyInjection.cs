@@ -31,6 +31,7 @@ public static class DependencyInjection
         {
             busConfigurator.SetEndpointNameFormatter(MessagingConventions.EndpointNameFormatter);
             busConfigurator.AddConsumer<OrderPaidConsumer>();
+            busConfigurator.AddConsumer<OrderRefundedConsumer>();
 
             busConfigurator.UsingRabbitMq((context, rabbitConfigurator) =>
             {

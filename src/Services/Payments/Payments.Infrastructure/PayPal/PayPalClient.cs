@@ -44,6 +44,9 @@ public class PayPalClient : IPayPalClient
     private record Payments(Capture[]? captures);
     private record Capture(string id, string status);
 
+    private record RefundRequest(Amount amount, string? note_to_payer);
+    private record RefundResponse(string id, string status);
+
     private record VerifyWebhookRequest(
         string transmission_id, string transmission_time, string cert_url, string auth_algo,
         string transmission_sig, string webhook_id, JsonElement webhook_event);
@@ -118,6 +121,39 @@ public class PayPalClient : IPayPalClient
         }
 
         return new CapturePayPalOrderResult(true, captureId, null);
+    }
+
+    public async Task<RefundPayPalCaptureResult> RefundCaptureAsync(
+        string captureId, decimal amount, string currency, string requestId, string? note, CancellationToken ct)
+    {
+        var accessToken = await _tokenProvider.GetAccessTokenAsync(ct);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/v2/payments/captures/{captureId}/refund");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        // Misma idea que al crear y capturar: si se reintenta con la misma clave, PayPal devuelve el mismo
+        // reembolso en vez de devolver el dinero dos veces.
+        request.Headers.Add("PayPal-Request-Id", $"refund-{requestId}");
+        var noteToPayer = string.IsNullOrWhiteSpace(note) ? null : note.Length > 255 ? note[..255] : note;
+        request.Content = JsonContent.Create(new RefundRequest(
+            new Amount(currency.ToUpperInvariant(), amount.ToString("F2", CultureInfo.InvariantCulture)), noteToPayer));
+
+        var response = await _httpClient.SendAsync(request, ct);
+        var responseBody = await response.Content.ReadAsStringAsync(ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("PayPal rechazó el reembolso de {CaptureId} ({Status}): {Body}", captureId, response.StatusCode, responseBody);
+            return new RefundPayPalCaptureResult(false, null, null, $"PayPal rechazó el reembolso ({(int)response.StatusCode}).");
+        }
+
+        var parsed = JsonSerializer.Deserialize<RefundResponse>(responseBody);
+        // PENDING también es un reembolso aceptado (PayPal lo termina después, por ejemplo con eCheck).
+        if (parsed?.id is null || parsed.status is not ("COMPLETED" or "PENDING"))
+        {
+            return new RefundPayPalCaptureResult(false, null, parsed?.status, $"Estado inesperado del reembolso en PayPal: {parsed?.status}");
+        }
+
+        return new RefundPayPalCaptureResult(true, parsed.id, parsed.status, null);
     }
 
     public async Task<bool> VerifyWebhookSignatureAsync(IDictionary<string, string> headers, string rawBody, CancellationToken ct)

@@ -22,3 +22,19 @@ public class OrderPaidConsumer : IConsumer<OrderPaidEvent>
         await _mediator.Send(new EarnPointsCommand(m.UserId, m.OrderId, m.TotalAmount), context.CancellationToken);
     }
 }
+
+/// <summary>Devolución reembolsada (Fase 7): descuenta los puntos ganados por esa parte y devuelve los usados.</summary>
+public class OrderRefundedConsumer : IConsumer<OrderRefundedEvent>
+{
+    private readonly ISender _mediator;
+
+    public OrderRefundedConsumer(ISender mediator) => _mediator = mediator;
+
+    public Task Consume(ConsumeContext<OrderRefundedEvent> context)
+    {
+        var m = context.Message;
+        return _mediator.Send(
+            new ApplyRefundCommand(m.UserId, m.OrderId, m.ReturnId, m.RefundAmount, m.OrderFullyRefunded, m.LoyaltyPointsToRestore),
+            context.CancellationToken);
+    }
+}

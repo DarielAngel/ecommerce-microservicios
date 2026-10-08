@@ -286,4 +286,19 @@ public class ConfirmPaymentCommandHandlerTests
             _paymentClient.CapturePaymentAsync(orderId, "token", Arg.Any<CancellationToken>());
         });
     }
+
+    [Fact]
+    public async Task Handle_SobreUnaOrdenYaEnviada_NoVuelveACobrar()
+    {
+        var orderId = Guid.NewGuid();
+        var order = BuildPendingOrder(orderId, Guid.NewGuid());
+        order.MarkPaid();
+        order.MarkShipped();
+        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
+
+        var result = await CreateHandler().Handle(new ConfirmPaymentCommand(orderId, "token"), CancellationToken.None);
+
+        result.Status.Should().Be("Shipped");
+        await _paymentClient.DidNotReceiveWithAnyArgs().CapturePaymentAsync(default, default!, default);
+    }
 }

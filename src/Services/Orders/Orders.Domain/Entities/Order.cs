@@ -6,6 +6,10 @@ namespace Ecommerce.Orders.Domain.Entities;
 public class Order
 {
     private readonly List<OrderLine> _lines = new();
+    private readonly List<OrderReturn> _returns = new();
+
+    /// <summary>Días desde el envío en los que el cliente puede pedir una devolución (Fase 7).</summary>
+    public const int ReturnWindowDays = 30;
 
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
@@ -38,6 +42,12 @@ public class Order
     public decimal LoyaltyDiscount { get; private set; }
 
     public decimal Subtotal => _lines.Sum(l => l.LineTotal);
+
+    /// <summary>Devoluciones pedidas sobre este pedido (Fase 7).</summary>
+    public IReadOnlyCollection<OrderReturn> Returns => _returns.AsReadOnly();
+
+    /// <summary>Lo que ya se devolvió en dinero.</summary>
+    public decimal RefundedAmount => _returns.Where(r => r.Status == ReturnStatus.Refunded).Sum(r => r.RefundAmount);
 
     /// <summary>Lo que se cobra en PayPal: subtotal menos el cupón y menos los puntos.</summary>
     public decimal TotalAmount => Subtotal - DiscountAmount - LoyaltyDiscount;
@@ -179,5 +189,188 @@ public class Order
         Status = OrderStatus.Shipped;
         ShippedAtUtc = DateTime.UtcNow;
         UpdatedAtUtc = ShippedAtUtc.Value;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Devoluciones (Fase 7)
+    // ---------------------------------------------------------------------------------------------
+
+    /// <summary>Hasta cuándo se puede pedir una devolución (null si el pedido todavía no se envió).</summary>
+    public DateTime? ReturnDeadlineUtc =>
+        Status is OrderStatus.Shipped or OrderStatus.Refunded
+            // Pedidos enviados antes de la Fase 5 no guardaron la fecha de envío: se usa la del pago (nunca
+            // UpdatedAtUtc, que cambia con cada devolución y correría el plazo).
+            ? (ShippedAtUtc ?? PaidAtUtc ?? CreatedAtUtc).AddDays(ReturnWindowDays)
+            : null;
+
+    /// <summary>Unidades de esa variante que todavía se pueden devolver (descontadas las ya pedidas o devueltas).</summary>
+    public int ReturnableQuantity(Guid variantId)
+    {
+        var bought = _lines.Where(l => l.VariantId == variantId).Sum(l => l.Quantity);
+        var held = _returns.Where(r => r.HoldsUnits).SelectMany(r => r.Lines).Where(l => l.VariantId == variantId).Sum(l => l.Quantity);
+        return Math.Max(bought - held, 0);
+    }
+
+    public OrderReturn? OpenReturn => _returns.FirstOrDefault(r => r.IsOpen);
+
+    /// <summary>Por qué no se puede pedir una devolución ahora (null = sí se puede).</summary>
+    public string? WhyCannotRequestReturn(DateTime nowUtc)
+    {
+        if (Status != OrderStatus.Shipped)
+            return Status == OrderStatus.Refunded
+                ? "Este pedido ya se devolvió completo."
+                : "Solo se pueden devolver pedidos que ya fueron enviados.";
+        if (nowUtc > ReturnDeadlineUtc)
+            return $"El plazo para devolver este pedido ({ReturnWindowDays} días desde el envío) ya venció.";
+        if (OpenReturn is not null)
+            return "Ya hay una devolución en curso para este pedido; espera a que se resuelva.";
+        if (_lines.All(l => ReturnableQuantity(l.VariantId) == 0))
+            return "Ya pediste la devolución de todos los productos de este pedido.";
+        return null;
+    }
+
+    public OrderReturn RequestReturn(
+        IEnumerable<(Guid VariantId, int Quantity)> items, ReturnReason reason, string? comment, DateTime nowUtc)
+    {
+        if (WhyCannotRequestReturn(nowUtc) is { } why) throw new DomainException(why);
+
+        var cleanComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+        if (cleanComment?.Length > OrderReturn.MaxCommentLength)
+            throw new DomainException($"El comentario admite hasta {OrderReturn.MaxCommentLength} caracteres.");
+        if (reason == ReturnReason.Other && cleanComment is null)
+            throw new DomainException("Cuéntanos el motivo de la devolución.");
+        if (!Enum.IsDefined(reason))
+            throw new DomainException("Motivo de devolución inválido.");
+
+        var requested = items
+            .Where(i => i.Quantity != 0)
+            .GroupBy(i => i.VariantId)
+            .Select(g => (VariantId: g.Key, Quantity: g.Sum(i => i.Quantity)))
+            .ToList();
+        if (requested.Count == 0)
+            throw new DomainException("Elige al menos un producto para devolver.");
+
+        var lines = new List<OrderReturnLine>();
+        foreach (var (variantId, quantity) in requested)
+        {
+            var line = _lines.FirstOrDefault(l => l.VariantId == variantId)
+                ?? throw new DomainException("Uno de los productos no es de este pedido.");
+            if (quantity < 0)
+                throw new DomainException("Las cantidades deben ser mayores a cero.");
+            var available = ReturnableQuantity(variantId);
+            if (quantity > available)
+                throw new DomainException(available == 0
+                    ? $"Ya pediste la devolución de todas las unidades de {line.ProductName}."
+                    : $"De {line.ProductName} puedes devolver como máximo {available}.");
+            lines.Add(new OrderReturnLine(line.VariantId, line.ProductId, line.ProductName, line.UnitPrice, quantity));
+        }
+
+        var orderReturn = new OrderReturn(Guid.NewGuid(), reason, cleanComment, lines, nowUtc);
+        _returns.Add(orderReturn);
+        UpdatedAtUtc = nowUtc;
+        return orderReturn;
+    }
+
+    private OrderReturn GetReturn(Guid returnId) =>
+        _returns.FirstOrDefault(r => r.Id == returnId) ?? throw new DomainException("La devolución no es de este pedido.");
+
+    /// <summary>
+    /// Cuánto dinero (y cuántos puntos usados) se devuelven con esta devolución: la parte proporcional de lo que
+    /// el cliente realmente pagó, porque el cupón y los puntos se reparten entre todos los productos. La devolución
+    /// que completa el pedido se lleva exactamente lo que queda, así la suma nunca pasa de lo cobrado (ni queda
+    /// un centavo suelto por redondeo).
+    /// </summary>
+    public RefundQuote QuoteRefund(Guid returnId)
+    {
+        var target = GetReturn(returnId);
+        if (target.Status is ReturnStatus.Approved or ReturnStatus.Refunded)
+            return new RefundQuote(target.RefundAmount, target.LoyaltyPointsToRestore, CompletesWith(target));
+
+        var committed = _returns.Where(r => r.Id != target.Id && r.Status is ReturnStatus.Approved or ReturnStatus.Refunded).ToList();
+        var amountLeft = TotalAmount - committed.Sum(r => r.RefundAmount);
+        var pointsLeft = LoyaltyPoints - committed.Sum(r => r.LoyaltyPointsToRestore);
+        var completes = CompletesWith(target);
+
+        if (completes) return new RefundQuote(amountLeft, pointsLeft, true);
+
+        var share = Subtotal == 0 ? 0m : target.ReturnedSubtotal / Subtotal;
+        var amount = Math.Min(decimal.Round(TotalAmount * share, 2, MidpointRounding.AwayFromZero), amountLeft);
+        var points = Math.Min((int)Math.Floor(LoyaltyPoints * share), pointsLeft);
+        return new RefundQuote(amount, points, false);
+    }
+
+    /// <summary>¿Con esta devolución quedan devueltas (aprobadas o reembolsadas) todas las unidades del pedido?</summary>
+    private bool CompletesWith(OrderReturn target)
+    {
+        var settled = _returns
+            .Where(r => r.Id == target.Id || r.Status is ReturnStatus.Approved or ReturnStatus.Refunded)
+            .SelectMany(r => r.Lines)
+            .Sum(l => l.Quantity);
+        return settled >= _lines.Sum(l => l.Quantity);
+    }
+
+    /// <summary>
+    /// El Admin la aprueba: el monto queda fijado. Idempotente: aprobar de nuevo una ya aprobada (para reintentar
+    /// el reembolso) no cambia nada.
+    /// </summary>
+    public OrderReturn ApproveReturn(Guid returnId, string? note, DateTime nowUtc)
+    {
+        var target = GetReturn(returnId);
+        switch (target.Status)
+        {
+            case ReturnStatus.Approved:
+            case ReturnStatus.Refunded:
+                return target;
+            case ReturnStatus.Rejected:
+                throw new DomainException("Esa devolución ya fue rechazada.");
+        }
+
+        var cleanNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        if (cleanNote?.Length > OrderReturn.MaxCommentLength)
+            throw new DomainException($"La nota admite hasta {OrderReturn.MaxCommentLength} caracteres.");
+
+        var quote = QuoteRefund(returnId);
+        if (quote.Amount <= 0)
+            throw new DomainException("No queda dinero por devolver en este pedido.");
+
+        target.Approve(quote.Amount, quote.LoyaltyPointsToRestore, cleanNote, nowUtc);
+        UpdatedAtUtc = nowUtc;
+        return target;
+    }
+
+    /// <summary>PayPal confirmó el reembolso. Si con esto se devolvió todo el pedido, el pedido pasa a Refunded.</summary>
+    public void MarkReturnRefunded(Guid returnId, DateTime nowUtc)
+    {
+        var target = GetReturn(returnId);
+        if (target.Status == ReturnStatus.Refunded) return;
+        if (target.Status != ReturnStatus.Approved)
+            throw new DomainException("Solo se puede reembolsar una devolución aprobada.");
+
+        target.MarkRefunded(nowUtc);
+        var refundedUnits = _returns.Where(r => r.Status == ReturnStatus.Refunded).SelectMany(r => r.Lines).Sum(l => l.Quantity);
+        if (refundedUnits >= _lines.Sum(l => l.Quantity)) Status = OrderStatus.Refunded;
+        UpdatedAtUtc = nowUtc;
+    }
+
+    /// <param name="approvedWithoutRefund">
+    /// true = quien llama verificó con Pagos que el reembolso de esta devolución aprobada NO existe, así que se
+    /// puede cancelar (por ejemplo, PayPal lo rechaza siempre y si no, el pedido quedaría trabado).
+    /// </param>
+    public OrderReturn RejectReturn(Guid returnId, string note, DateTime nowUtc, bool approvedWithoutRefund = false)
+    {
+        var target = GetReturn(returnId);
+        if (target.Status == ReturnStatus.Rejected) return target;
+        if (target.Status == ReturnStatus.Refunded)
+            throw new DomainException("Esa devolución ya fue reembolsada; no se puede rechazar.");
+        if (target.Status == ReturnStatus.Approved && !approvedWithoutRefund)
+            throw new DomainException("Esa devolución ya fue aprobada; no se puede rechazar.");
+        if (string.IsNullOrWhiteSpace(note))
+            throw new DomainException("Escribe una nota para el cliente explicando por qué se rechaza.");
+        if (note.Trim().Length > OrderReturn.MaxCommentLength)
+            throw new DomainException($"La nota admite hasta {OrderReturn.MaxCommentLength} caracteres.");
+
+        target.Reject(note.Trim(), nowUtc);
+        UpdatedAtUtc = nowUtc;
+        return target;
     }
 }

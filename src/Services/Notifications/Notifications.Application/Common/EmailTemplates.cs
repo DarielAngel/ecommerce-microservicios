@@ -78,4 +78,41 @@ public static class EmailTemplates
                 "border-radius: 9999px; text-decoration: none;\">Volver a mi carrito</a></p>" +
                 "<p style=\"font-size: 12px; color: #6b7280;\">Los precios y el stock pueden cambiar hasta que completes la compra.</p>"));
     }
+
+    public record RefundLine(string ProductName, int Quantity);
+
+    /// <summary>Devolución reembolsada (Fase 7): qué se devolvió, cuánto vuelve y cuándo se ve en PayPal.</summary>
+    public static (string Subject, string Html) ReturnRefunded(
+        Guid orderId, string fullName, IReadOnlyList<RefundLine> items, decimal amount, string currency, bool orderFullyRefunded,
+        int pointsRestored)
+    {
+        var name = WebUtility.HtmlEncode(fullName);
+        var shortId = ShortOrderId(orderId);
+        var rows = string.Concat(items.Select(i => $"<li>{i.Quantity}× {WebUtility.HtmlEncode(i.ProductName)}</li>"));
+        var money = $"{amount.ToString("F2", CultureInfo.InvariantCulture)} {WebUtility.HtmlEncode(currency)}";
+        var points = pointsRestored > 0
+            ? $"<p>También te devolvimos <b>{pointsRestored} puntos</b> que habías usado en esa compra.</p>"
+            : "";
+        return (
+            $"Reembolso de tu pedido #{shortId}",
+            Wrap("Tu reembolso está en camino",
+                $"<p>Hola <b>{name}</b>, aprobamos la devolución de tu pedido <b>#{shortId}</b>:</p>" +
+                $"<ul>{rows}</ul>" +
+                $"<p><b>Te devolvemos:</b> {money}{(orderFullyRefunded ? " (el pedido completo)" : "")}</p>" +
+                points +
+                "<p style=\"font-size: 12px; color: #6b7280;\">El dinero vuelve al mismo medio de pago en PayPal; puede tardar unos días en verse reflejado.</p>"));
+    }
+
+    /// <summary>Devolución rechazada (Fase 7), con la explicación del Admin.</summary>
+    public static (string Subject, string Html) ReturnRejected(Guid orderId, string fullName, string note)
+    {
+        var name = WebUtility.HtmlEncode(fullName);
+        var shortId = ShortOrderId(orderId);
+        return (
+            $"Sobre la devolución de tu pedido #{shortId}",
+            Wrap("No pudimos aceptar tu devolución",
+                $"<p>Hola <b>{name}</b>, revisamos la devolución que pediste del pedido <b>#{shortId}</b> y no la pudimos aceptar.</p>" +
+                $"<p><b>Motivo:</b> {WebUtility.HtmlEncode(note)}</p>" +
+                "<p>Si crees que es un error, responde desde la sección de ayuda de la tienda y lo revisamos.</p>"));
+    }
 }

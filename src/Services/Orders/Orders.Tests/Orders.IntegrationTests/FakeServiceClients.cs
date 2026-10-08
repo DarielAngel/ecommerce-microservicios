@@ -49,6 +49,34 @@ public class FakePaymentServiceClient : IPaymentServiceClient
 
     public Task<CapturePaymentResult> CapturePaymentAsync(Guid orderId, string accessToken, CancellationToken ct) =>
         Task.FromResult(new CapturePaymentResult(ShouldCaptureSucceed, ShouldCaptureSucceed ? "Captured" : "Failed"));
+
+    /// <summary>Reembolsos pedidos (por id de devolución). Con <see cref="RefundFailure"/> se simula que PayPal dice que no.</summary>
+    public ConcurrentDictionary<Guid, decimal> Refunds { get; } = new();
+    public string? RefundFailure { get; set; }
+
+    public Task<RefundPaymentResult> RefundAsync(Guid orderId, Guid refundId, decimal amount, string? reason, string accessToken, CancellationToken ct)
+    {
+        if (RefundFailure is not null) throw new ConflictAppException(RefundFailure);
+        Refunds.AddOrUpdate(refundId, amount, (_, previous) => previous);
+        return Task.FromResult(new RefundPaymentResult(refundId, amount, $"FAKE-REFUND-{refundId}", "Captured"));
+    }
+
+    public Task<RefundPaymentResult?> FindRefundAsync(Guid orderId, Guid refundId, string accessToken, CancellationToken ct) =>
+        Task.FromResult(Refunds.TryGetValue(refundId, out var amount)
+            ? new RefundPaymentResult(refundId, amount, $"FAKE-REFUND-{refundId}", "Captured")
+            : null);
+}
+
+/// <summary>Guarda los eventos en memoria en vez de mandarlos a RabbitMQ, para poder revisarlos en las pruebas.</summary>
+public class CapturingEventPublisher : IEventPublisher
+{
+    public ConcurrentQueue<object> Events { get; } = new();
+
+    public Task PublishAsync<TEvent>(TEvent integrationEvent, CancellationToken ct) where TEvent : class
+    {
+        Events.Enqueue(integrationEvent);
+        return Task.CompletedTask;
+    }
 }
 
 public class FakeCouponServiceClient : ICouponServiceClient

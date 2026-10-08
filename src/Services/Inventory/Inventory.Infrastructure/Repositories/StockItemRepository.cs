@@ -69,5 +69,22 @@ public class StockItemRepository : IStockItemRepository
                 .SetProperty(s => s.UpdatedAtUtc, DateTime.UtcNow), ct);
     }
 
+    public async Task<bool> RestockReturnedAsync(Guid returnId, Guid variantId, int quantity, CancellationToken ct)
+    {
+        // Una sola sentencia: si la fila (devolución, variante) ya existía, el INSERT no devuelve nada y el UPDATE
+        // no suma. Así un evento repetido (o dos copias a la vez) nunca suma dos veces.
+        var affected = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            WITH inserted AS (
+                INSERT INTO stock_restocks (return_id, variant_id, quantity, created_at_utc)
+                VALUES ({returnId}, {variantId}, {quantity}, {DateTime.UtcNow})
+                ON CONFLICT (return_id, variant_id) DO NOTHING
+                RETURNING 1)
+            UPDATE stock_items
+               SET quantity_on_hand = quantity_on_hand + {quantity}, updated_at_utc = {DateTime.UtcNow}
+             WHERE variant_id = {variantId} AND EXISTS (SELECT 1 FROM inserted)
+            """, ct);
+        return affected > 0;
+    }
+
     public Task SaveChangesAsync(CancellationToken ct) => _context.SaveChangesAsync(ct);
 }

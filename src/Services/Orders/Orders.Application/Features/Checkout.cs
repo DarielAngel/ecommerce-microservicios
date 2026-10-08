@@ -12,10 +12,14 @@ public record CheckoutCommand(
     string? CouponCode = null, bool UsePoints = false) : IRequest<CheckoutResult>;
 
 public record OrderLineResult(Guid VariantId, string ProductName, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal,
-    Guid ProductId = default)
+    Guid ProductId = default, int ReturnableQuantity = 0)
 {
     public static OrderLineResult From(OrderLine l) =>
         new(l.VariantId, l.ProductName, l.Sku, l.UnitPrice, l.Quantity, l.LineTotal, l.ProductId);
+
+    /// <summary>Con las unidades que todavía se pueden devolver (Fase 7).</summary>
+    public static OrderLineResult From(Order order, OrderLine l) =>
+        From(l) with { ReturnableQuantity = order.ReturnableQuantity(l.VariantId) };
 }
 
 /// <summary>
@@ -28,15 +32,20 @@ public record CheckoutResult(
     decimal Subtotal, decimal DiscountAmount, string? CouponCode,
     string ShippingAddress = "", DateTime CreatedAtUtc = default, DateTime? PaidAtUtc = null, DateTime? ShippedAtUtc = null,
     DateOnly? EstimatedDeliveryFrom = null, DateOnly? EstimatedDeliveryTo = null,
-    int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0)
+    int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0,
+    IReadOnlyList<ReturnResult>? Returns = null, decimal RefundedAmount = 0, DateTime? ReturnDeadlineUtc = null,
+    bool CanRequestReturn = false)
 {
     public static CheckoutResult From(Order order, string? approveUrl = null) => new(
         order.Id, order.Status.ToString(), order.TotalAmount,
-        order.Lines.Select(OrderLineResult.From).ToList(),
+        order.Lines.Select(l => OrderLineResult.From(order, l)).ToList(),
         approveUrl, order.Subtotal, order.DiscountAmount, order.CouponCode,
         order.ShippingAddress, order.CreatedAtUtc, order.PaidAtUtc, order.ShippedAtUtc,
         order.EstimatedDelivery?.From, order.EstimatedDelivery?.To,
-        order.LoyaltyPoints, order.LoyaltyDiscount);
+        order.LoyaltyPoints, order.LoyaltyDiscount,
+        order.Returns.OrderByDescending(r => r.CreatedAtUtc).Select(r => ReturnResult.From(order, r)).ToList(),
+        order.RefundedAmount, order.ReturnDeadlineUtc,
+        order.WhyCannotRequestReturn(DateTime.UtcNow) is null);
 }
 
 public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>

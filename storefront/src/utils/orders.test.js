@@ -44,6 +44,13 @@ describe('utils/orders — línea de tiempo', () => {
     expect(states(timelineSteps({ ...base, status: 'Failed' }))).toEqual(['placed:done', 'failed:failed'])
     expect(timelineSteps({ ...base, status: 'Cancelled' })[1].label).toBe('Pedido cancelado')
   })
+
+  it('un pedido devuelto completo termina en "Devuelto y reembolsado"', () => {
+    const steps = timelineSteps({ ...base, status: 'Refunded', paidAtUtc: '2026-10-07T15:05:00Z', shippedAtUtc: '2026-10-08T10:00:00Z',
+      returns: [{ refundedAtUtc: '2026-10-12T09:00:00Z' }, { refundedAtUtc: '2026-10-10T09:00:00Z' }] })
+    expect(states(steps)).toEqual(['placed:done', 'paid:done', 'shipped:done', 'delivered:done', 'refunded:done'])
+    expect(steps.at(-1).date).toBe('2026-10-12T09:00:00Z')
+  })
 })
 
 describe('utils/orders — comprar de nuevo', () => {

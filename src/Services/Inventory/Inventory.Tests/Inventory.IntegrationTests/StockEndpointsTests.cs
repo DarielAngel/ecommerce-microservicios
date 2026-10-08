@@ -7,6 +7,7 @@ using Ecommerce.Inventory.Domain.Entities;
 using Ecommerce.Inventory.Infrastructure.Persistence;
 using FluentAssertions;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -278,5 +279,62 @@ public class StockEndpointsTests : IClassFixture<InventoryApiFactory>
     {
         _client.DefaultRequestHeaders.Authorization = null;
         (await _client.GetAsync("/api/stock/availability")).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // ---- Fase 7: las devoluciones reembolsadas vuelven al stock ----
+
+    private async Task<int> OnHandAsync(Guid variantId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+        return (await db.StockItems.AsNoTracking().SingleAsync(s => s.VariantId == variantId)).QuantityOnHand;
+    }
+
+    [Fact]
+    public async Task Reposicion_PorDevolucion_SumaUnaSolaVezAunqueElComandoSeRepita()
+    {
+        var mug = await SeedStockItemAsync(quantityOnHand: 5);
+        var plate = await SeedStockItemAsync(quantityOnHand: 0);
+        var returnId = Guid.NewGuid();
+        var command = new RestockReturnedItemsCommand(returnId, new[] { (mug, 2), (plate, 1) });
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var mediator = scope.ServiceProvider.GetRequiredService<MediatR.ISender>();
+            (await mediator.Send(command)).Should().Be(2);
+            (await mediator.Send(command)).Should().Be(0, "el mismo reembolso no repone dos veces");
+        }
+
+        (await OnHandAsync(mug)).Should().Be(7);
+        (await OnHandAsync(plate)).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task EventoOrderRefunded_ReponeElStock_YUnDuplicadoNoSumaDeNuevo()
+    {
+        var variantId = await SeedStockItemAsync(quantityOnHand: 3);
+        var refunded = new OrderRefundedEvent(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "ana@test.com", "Ana", 20m, "USD", false, 0,
+            new[] { new RefundedItem(variantId, Guid.NewGuid(), "Taza", 2) }, DateTime.UtcNow);
+
+        await _factory.Services.GetRequiredService<IBusControl>()
+            .WaitForHealthStatus(BusHealthStatus.Healthy, TimeSpan.FromSeconds(30));
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var publish = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
+            await publish.Publish(refunded);
+            await publish.Publish(refunded); // RabbitMQ entrega "al menos una vez"
+        }
+
+        var onHand = 0;
+        for (var i = 0; i < 40 && onHand != 5; i++)
+        {
+            await Task.Delay(250);
+            onHand = await OnHandAsync(variantId);
+        }
+        onHand.Should().Be(5);
+
+        await Task.Delay(1500); // margen para que el duplicado también se procese (y se ignore)
+        (await OnHandAsync(variantId)).Should().Be(5);
     }
 }

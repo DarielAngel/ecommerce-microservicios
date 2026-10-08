@@ -8,6 +8,10 @@ describe('utils/loyalty', () => {
     expect(entryText({ kind: 'Redeemed', status: 'Reserved', orderId: '12345678-x' })).toMatch(/esperando el pago/)
     expect(entryPoints({ kind: 'Earned', points: 120 })).toBe('+120')
     expect(entryPoints({ kind: 'Redeemed', points: 300 })).toBe('−300')
+    expect(entryText({ kind: 'Reversed', orderId: '12345678-x' })).toBe('Descontados por la devolución del pedido #12345678')
+    expect(entryPoints({ kind: 'Reversed', points: 48 })).toBe('−48')
+    expect(entryText({ kind: 'Restored', orderId: '12345678-x' })).toBe('Te devolvimos los usados en el pedido #12345678')
+    expect(entryPoints({ kind: 'Restored', points: 150 })).toBe('+150')
   })
 
   it('calcula los puntos de una compra y cuánto falta para el mínimo', () => {

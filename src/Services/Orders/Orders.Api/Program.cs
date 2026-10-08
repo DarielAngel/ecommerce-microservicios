@@ -61,6 +61,36 @@ using (var scope = app.Services.CreateScope())
         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_points integer NOT NULL DEFAULT 0;");
     await dbContext.Database.ExecuteSqlRawAsync(
         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_discount numeric(12,2) NOT NULL DEFAULT 0;");
+    // Fase 7: el plazo de devolución cuenta desde el envío. Pedidos enviados antes de la Fase 5 no guardaron esa
+    // fecha: se completa una sola vez con su última modificación (antes de la Fase 7 era el momento del envío).
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "UPDATE orders SET shipped_at_utc = updated_at_utc WHERE status = 'Shipped' AND shipped_at_utc IS NULL;");
+    // Fase 7 (devoluciones y reembolsos).
+    await dbContext.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS order_returns (
+            id uuid PRIMARY KEY,
+            order_id uuid NOT NULL REFERENCES orders("Id") ON DELETE CASCADE,
+            status character varying(20) NOT NULL,
+            reason character varying(30) NOT NULL,
+            comment character varying(500) NULL,
+            admin_note character varying(500) NULL,
+            refund_amount numeric(12,2) NOT NULL,
+            loyalty_points_to_restore integer NOT NULL,
+            created_at_utc timestamp with time zone NOT NULL,
+            resolved_at_utc timestamp with time zone NULL,
+            refunded_at_utc timestamp with time zone NULL);
+        CREATE INDEX IF NOT EXISTS "IX_order_returns_order_id" ON order_returns (order_id);
+        CREATE INDEX IF NOT EXISTS "IX_order_returns_status" ON order_returns (status);
+        CREATE TABLE IF NOT EXISTS order_return_lines (
+            id uuid PRIMARY KEY,
+            return_id uuid NOT NULL REFERENCES order_returns(id) ON DELETE CASCADE,
+            variant_id uuid NOT NULL,
+            product_id uuid NOT NULL,
+            product_name character varying(200) NOT NULL,
+            unit_price numeric(12,2) NOT NULL,
+            quantity integer NOT NULL);
+        CREATE INDEX IF NOT EXISTS "IX_order_return_lines_return_id" ON order_return_lines (return_id);
+        """);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

@@ -98,24 +98,72 @@ public class PaymentTests
         act.Should().Throw<DomainException>();
     }
 
-    [Fact]
-    public void MarkRefunded_SoloDesdeCaptured_DeberiaFuncionar()
+    private static readonly DateTime Now = new(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);
+
+    private static Payment CapturedPayment()
     {
         var payment = CreateValidPayment();
         payment.MarkCaptured("CAPTURE-1");
-
-        payment.MarkRefunded();
-
-        payment.Status.Should().Be(PaymentStatus.Refunded);
+        return payment;
     }
 
     [Fact]
-    public void MarkRefunded_SinHaberSidoCapturado_DeberiaLanzarDomainException()
+    public void AddRefund_Parciales_SumanYAlDevolverTodoQuedaRefunded()
     {
-        var payment = CreateValidPayment();
+        var payment = CapturedPayment();
 
-        var act = () => payment.MarkRefunded();
+        payment.AddRefund(Guid.NewGuid(), 30m, "R-1", "talla", Now);
+        payment.Status.Should().Be(PaymentStatus.Captured);
+        payment.RefundedAmount.Should().Be(30m);
+        payment.RefundableAmount.Should().Be(70m);
+
+        payment.AddRefund(Guid.NewGuid(), 70m, "R-2", null, Now);
+        payment.Status.Should().Be(PaymentStatus.Refunded);
+        payment.RefundableAmount.Should().Be(0m);
+        payment.Refunds.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void AddRefund_SinHaberSidoCapturado_DeberiaLanzarDomainException()
+    {
+        var act = () => CreateValidPayment().AddRefund(Guid.NewGuid(), 10m, "R-1", null, Now);
+
+        act.Should().Throw<DomainException>().WithMessage("*capturado*");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    [InlineData(10.005)]
+    [InlineData(100.01)]
+    public void EnsureCanRefund_MontosInvalidosOMayoresAlSaldo_Fallan(decimal amount)
+    {
+        var act = () => CapturedPayment().EnsureCanRefund(amount);
 
         act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void AddRefund_NoPermiteDevolverMasDeLoQueQueda()
+    {
+        var payment = CapturedPayment();
+        payment.AddRefund(Guid.NewGuid(), 80m, "R-1", null, Now);
+
+        var act = () => payment.AddRefund(Guid.NewGuid(), 20.01m, "R-2", null, Now);
+
+        act.Should().Throw<DomainException>().WithMessage("*quedan 20.00 USD*");
+    }
+
+    [Fact]
+    public void AddRefund_ConElMismoId_DeberiaLanzarDomainException()
+    {
+        var payment = CapturedPayment();
+        var id = Guid.NewGuid();
+        payment.AddRefund(id, 10m, "R-1", null, Now);
+
+        var act = () => payment.AddRefund(id, 10m, "R-1", null, Now);
+
+        act.Should().Throw<DomainException>();
+        payment.RefundedAmount.Should().Be(10m);
     }
 }

@@ -2,16 +2,29 @@
 
 const shortId = (id) => (id ?? '').slice(0, 8)
 
+/** ¿El movimiento suma al saldo? (ganados por una compra, o devueltos por una devolución). */
+export function entryAdds(entry) {
+  return entry.kind === 'Earned' || entry.kind === 'Restored'
+}
+
 /** Texto de un movimiento del historial. */
 export function entryText(entry) {
-  if (entry.kind === 'Earned') return `Ganaste por el pedido #${shortId(entry.orderId)}`
-  const base = `Usados en el pedido #${shortId(entry.orderId)}`
+  const order = `#${shortId(entry.orderId)}`
+  if (entry.kind === 'Earned') return `Ganaste por el pedido ${order}`
+  if (entry.kind === 'Reversed') return `Descontados por la devolución del pedido ${order}`
+  if (entry.kind === 'Restored') return `Te devolvimos los usados en el pedido ${order}`
+  const base = `Usados en el pedido ${order}`
   return entry.status === 'Reserved' ? `${base} (esperando el pago)` : base
 }
 
 /** "+120" o "−300". */
 export function entryPoints(entry) {
-  return entry.kind === 'Earned' ? `+${entry.points}` : `−${entry.points}`
+  return entryAdds(entry) ? `+${entry.points}` : `−${entry.points}`
+}
+
+/** Clave única de un movimiento (una orden puede tener varios ajustes por devoluciones). */
+export function entryKey(entry) {
+  return `${entry.orderId}-${entry.kind}-${entry.referenceId ?? ''}`
 }
 
 /** Puntos que da una compra pagada por `amount` (lo mismo que calcula Lealtad). */

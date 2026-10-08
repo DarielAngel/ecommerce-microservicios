@@ -13,11 +13,21 @@ public interface IPaymentRepository
 public record CreatePayPalOrderResult(string PayPalOrderId, string ApproveUrl);
 public record CapturePayPalOrderResult(bool Success, string? CaptureId, string? FailureReason);
 
+/// <summary>Resultado de un reembolso: PayPal lo puede dejar COMPLETED o PENDING (igual queda registrado).</summary>
+public record RefundPayPalCaptureResult(bool Success, string? RefundId, string? Status, string? FailureReason);
+
 /// <summary>Abstrae la comunicación con la API real de PayPal (sandbox o producción).</summary>
 public interface IPayPalClient
 {
     Task<CreatePayPalOrderResult> CreateOrderAsync(decimal amount, string currency, Guid internalOrderId, CancellationToken ct);
     Task<CapturePayPalOrderResult> CaptureOrderAsync(string payPalOrderId, CancellationToken ct);
+
+    /// <summary>
+    /// Devuelve <paramref name="amount"/> de una captura. <paramref name="requestId"/> es la clave de idempotencia:
+    /// repetir la llamada con la misma clave no reembolsa dos veces.
+    /// </summary>
+    Task<RefundPayPalCaptureResult> RefundCaptureAsync(
+        string captureId, decimal amount, string currency, string requestId, string? note, CancellationToken ct);
 
     /// <summary>Verifica que un webhook entrante realmente venga de PayPal (evita webhooks falsificados).</summary>
     Task<bool> VerifyWebhookSignatureAsync(IDictionary<string, string> headers, string rawBody, CancellationToken ct);

@@ -11,7 +11,9 @@ const typeLabels = {
   UserRegistered: 'Bienvenida',
   OrderPaid: 'Confirmación de pedido',
   OrderShipped: 'Pedido enviado',
-  CartAbandoned: 'Carrito abandonado'
+  CartAbandoned: 'Carrito abandonado',
+  ReturnRefunded: 'Devolución reembolsada',
+  ReturnRejected: 'Devolución rechazada'
 }
 
 async function load() {

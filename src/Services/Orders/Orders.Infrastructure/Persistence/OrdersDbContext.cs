@@ -51,6 +51,49 @@ public class OrdersDbContext : DbContext
             });
 
             order.Navigation(o => o.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            order.Ignore(o => o.RefundedAmount);
+            order.Ignore(o => o.ReturnDeadlineUtc);
+            order.Ignore(o => o.OpenReturn);
+
+            // Fase 7: devoluciones (cada una con sus líneas), dentro del agregado de la orden.
+            order.OwnsMany(o => o.Returns, ret =>
+            {
+                ret.ToTable("order_returns");
+                ret.WithOwner().HasForeignKey("OrderId");
+                ret.Property<Guid>("OrderId").HasColumnName("order_id");
+                ret.HasKey(r => r.Id);
+                ret.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
+                ret.Property(r => r.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20).IsRequired();
+                ret.Property(r => r.Reason).HasColumnName("reason").HasConversion<string>().HasMaxLength(30).IsRequired();
+                ret.Property(r => r.Comment).HasColumnName("comment").HasMaxLength(500);
+                ret.Property(r => r.AdminNote).HasColumnName("admin_note").HasMaxLength(500);
+                ret.Property(r => r.RefundAmount).HasColumnName("refund_amount").HasColumnType("numeric(12,2)").IsRequired();
+                ret.Property(r => r.LoyaltyPointsToRestore).HasColumnName("loyalty_points_to_restore").IsRequired();
+                ret.Property(r => r.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+                ret.Property(r => r.ResolvedAtUtc).HasColumnName("resolved_at_utc");
+                ret.Property(r => r.RefundedAtUtc).HasColumnName("refunded_at_utc");
+                ret.Ignore(r => r.ReturnedSubtotal);
+                ret.Ignore(r => r.IsOpen);
+                ret.Ignore(r => r.HoldsUnits);
+                ret.HasIndex(r => r.Status);
+
+                ret.OwnsMany(r => r.Lines, line =>
+                {
+                    line.ToTable("order_return_lines");
+                    line.WithOwner().HasForeignKey("ReturnId");
+                    line.Property<Guid>("ReturnId").HasColumnName("return_id");
+                    line.HasKey(l => l.Id);
+                    line.Property(l => l.Id).HasColumnName("id").ValueGeneratedNever();
+                    line.Property(l => l.VariantId).HasColumnName("variant_id").IsRequired();
+                    line.Property(l => l.ProductId).HasColumnName("product_id").IsRequired();
+                    line.Property(l => l.ProductName).HasColumnName("product_name").HasMaxLength(200).IsRequired();
+                    line.Property(l => l.UnitPrice).HasColumnName("unit_price").HasColumnType("numeric(12,2)").IsRequired();
+                    line.Property(l => l.Quantity).HasColumnName("quantity").IsRequired();
+                });
+                ret.Navigation(r => r.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
+            });
+            order.Navigation(o => o.Returns).UsePropertyAccessMode(PropertyAccessMode.Field);
         });
     }
 }

@@ -22,7 +22,9 @@ public static class DependencyInjection
         }
 
         services.AddDbContext<OrdersDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            // Una orden trae sus líneas y sus devoluciones (con sus líneas) en una sola consulta: son pocas filas
+            // por orden, y así una lectura nunca ve "media orden" entre dos consultas separadas.
+            options.UseNpgsql(connectionString, npgsql => npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery)));
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IEventPublisher, MassTransitEventPublisher>();

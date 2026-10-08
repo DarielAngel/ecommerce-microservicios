@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddMassTransit(busConfigurator =>
         {
             busConfigurator.AddConsumer<VariantCreatedConsumer>();
+            busConfigurator.AddConsumer<ReturnRestockConsumer>();
 
             busConfigurator.UsingRabbitMq((context, rabbitConfigurator) =>
             {

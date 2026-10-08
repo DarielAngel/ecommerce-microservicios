@@ -25,6 +25,12 @@ public interface IStockItemRepository
     /// <summary>Libera una reserva: solo descuenta QuantityReserved, QuantityOnHand queda igual.</summary>
     Task ReleaseReservedAsync(Guid variantId, int quantity, CancellationToken ct);
 
+    /// <summary>
+    /// Vuelve a sumar al stock las unidades de una devolución reembolsada (Fase 7), UNA sola vez por devolución y
+    /// variante: registra (devolución, variante) y suma en la misma sentencia. Devuelve false si ya se había sumado.
+    /// </summary>
+    Task<bool> RestockReturnedAsync(Guid returnId, Guid variantId, int quantity, CancellationToken ct);
+
     Task SaveChangesAsync(CancellationToken ct);
 }
 

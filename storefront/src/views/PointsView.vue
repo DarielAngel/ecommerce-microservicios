@@ -4,7 +4,7 @@ import { useApi } from '../api/useApi'
 import { loyaltyApi } from '../api/loyalty'
 import { formatMoney } from '../utils/format'
 import { formatMoment } from '../utils/orders'
-import { entryText, entryPoints, pointsToMinimum } from '../utils/loyalty'
+import { entryText, entryPoints, entryAdds, entryKey, pointsToMinimum } from '../utils/loyalty'
 import AccountNav from '../components/AccountNav.vue'
 
 const apiClient = useApi()
@@ -56,14 +56,14 @@ onMounted(async () => {
         Todavía no tienes movimientos. Tu primera compra ya suma puntos.
       </p>
       <ul v-else class="divide-y divide-line rounded-xl border border-line bg-surface">
-        <li v-for="e in summary.history" :key="`${e.orderId}-${e.kind}`" class="flex items-center justify-between gap-3 px-4 py-3"
+        <li v-for="e in summary.history" :key="entryKey(e)" class="flex items-center justify-between gap-3 px-4 py-3"
           data-testid="points-entry">
           <div class="min-w-0 text-sm">
             <p class="text-ink">{{ entryText(e) }}</p>
             <p class="text-xs text-ink-muted">{{ formatMoment(e.createdAtUtc) }}</p>
           </div>
           <span class="flex-shrink-0 font-semibold"
-            :class="e.kind === 'Earned' ? 'text-emerald-700 dark:text-emerald-400' : 'text-ink-soft'">
+            :class="entryAdds(e) ? 'text-emerald-700 dark:text-emerald-400' : 'text-ink-soft'">
             {{ entryPoints(e) }}
           </span>
         </li>

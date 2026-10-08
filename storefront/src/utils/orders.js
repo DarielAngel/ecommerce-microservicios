@@ -50,10 +50,18 @@ export function timelineSteps(order) {
     return steps
   }
 
-  const paid = order.status === 'Paid' || order.status === 'Shipped'
-  const shipped = order.status === 'Shipped'
+  const refunded = order.status === 'Refunded'
+  const paid = order.status === 'Paid' || order.status === 'Shipped' || refunded
+  const shipped = order.status === 'Shipped' || refunded
   steps.push({ key: 'paid', label: paid ? 'Pago confirmado' : 'Esperando el pago', date: order.paidAtUtc ?? null, state: paid ? 'done' : 'current' })
   steps.push({ key: 'shipped', label: 'Enviado', date: order.shippedAtUtc ?? null, state: shipped ? 'done' : paid ? 'current' : 'pending' })
+  if (refunded) {
+    // Devuelto completo (Fase 7): se entregó y después volvió todo.
+    steps.push({ key: 'delivered', label: 'Entregado', date: null, state: 'done' })
+    const lastRefund = (order.returns ?? []).map((r) => r.refundedAtUtc).filter(Boolean).sort().at(-1) ?? null
+    steps.push({ key: 'refunded', label: 'Devuelto y reembolsado', date: lastRefund, state: 'done' })
+    return steps
+  }
   steps.push({ key: 'delivered', label: 'Entregado', date: null, state: shipped ? 'current' : 'pending', estimate: deliveryText(order) })
   return steps
 }

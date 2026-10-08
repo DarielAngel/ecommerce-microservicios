@@ -88,6 +88,47 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    // ---- Devoluciones (Fase 7) ----
+
+    public record RequestReturnRequest(List<ReturnItemInput> Items, string Reason, string? Comment);
+    public record ResolveReturnRequest(string? Note);
+
+    /// <summary>El cliente pide devolver productos de un pedido enviado (hasta 30 días después del envío).</summary>
+    [HttpPost("{orderId:guid}/returns")]
+    public async Task<ActionResult<CheckoutResult>> RequestReturn(Guid orderId, RequestReturnRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(
+            new RequestReturnCommand(orderId, GetUserId(), request.Items ?? new(), request.Reason ?? "", request.Comment), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Todas las devoluciones (Admin), las más nuevas primero. ?status=Requested|Approved|Refunded|Rejected</summary>
+    [HttpGet("returns")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IReadOnlyList<AdminReturnResult>>> ListReturns(
+        [FromQuery] string? status, [FromQuery] int count = 100, CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new ListReturnsQuery(status, count), ct);
+        return Ok(result);
+    }
+
+    /// <summary>Aprueba y reembolsa (Admin). Repetirlo sobre una ya aprobada reintenta el reembolso.</summary>
+    [HttpPost("returns/{returnId:guid}/approve")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AdminReturnResult>> ApproveReturn(Guid returnId, ResolveReturnRequest? request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new ApproveReturnCommand(returnId, request?.Note, GetRawAccessToken()), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("returns/{returnId:guid}/reject")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AdminReturnResult>> RejectReturn(Guid returnId, ResolveReturnRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new RejectReturnCommand(returnId, request.Note ?? "", GetRawAccessToken()), ct);
+        return Ok(result);
+    }
+
     [HttpGet("{orderId:guid}")]
     public async Task<ActionResult<CheckoutResult>> GetById(Guid orderId, CancellationToken ct)
     {

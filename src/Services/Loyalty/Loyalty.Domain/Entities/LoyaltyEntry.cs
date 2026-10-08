@@ -8,7 +8,13 @@ public enum LoyaltyEntryKind
     Earned = 0,
 
     /// <summary>Puntos usados como descuento en una compra.</summary>
-    Redeemed = 1
+    Redeemed = 1,
+
+    /// <summary>Se descuentan puntos ganados porque esa parte de la compra se devolvió (Fase 7).</summary>
+    Reversed = 2,
+
+    /// <summary>Vuelven puntos que se habían usado en una compra que se devolvió (Fase 7).</summary>
+    Restored = 3
 }
 
 public enum LoyaltyEntryStatus
@@ -26,8 +32,8 @@ public enum LoyaltyEntryStatus
 /// <summary>
 /// Un movimiento de puntos ligado a UNA orden. El saldo nunca se guarda: se calcula sumando los
 /// movimientos (ver <see cref="PointsLedger"/>), así no hay forma de que quede desincronizado.
-/// Una orden tiene como mucho un movimiento de cada tipo (lo garantiza un índice único): reintentar
-/// la misma orden nunca suma ni descuenta dos veces.
+/// Una orden tiene como mucho un movimiento de cada tipo por referencia (lo garantiza un índice único): reintentar
+/// la misma orden (o la misma devolución) nunca suma ni descuenta dos veces.
 /// </summary>
 public class LoyaltyEntry
 {
@@ -35,6 +41,12 @@ public class LoyaltyEntry
     public Guid UserId { get; private set; }
     public Guid OrderId { get; private set; }
     public LoyaltyEntryKind Kind { get; private set; }
+
+    /// <summary>
+    /// Para los movimientos de una devolución (Reversed / Restored): el id de la devolución. Vacío en los demás.
+    /// Una orden puede tener varias devoluciones parciales, cada una con sus movimientos.
+    /// </summary>
+    public Guid ReferenceId { get; private set; }
     public int Points { get; private set; }
 
     /// <summary>Solo en canjes: cuánto se descontó de la compra.</summary>
@@ -87,6 +99,25 @@ public class LoyaltyEntry
             ExpiresAtUtc = nowUtc + LoyaltyRules.ReservationTtl, CreatedAtUtc = nowUtc, UpdatedAtUtc = nowUtc
         };
     }
+
+    /// <summary>Movimiento por una devolución reembolsada (Fase 7): descontar ganados o devolver usados.</summary>
+    public static LoyaltyEntry ForRefund(Guid userId, Guid orderId, Guid returnId, LoyaltyEntryKind kind, int points, DateTime nowUtc)
+    {
+        Require(userId, orderId);
+        if (returnId == Guid.Empty) throw new DomainException("La devolución es obligatoria.");
+        if (kind is not (LoyaltyEntryKind.Reversed or LoyaltyEntryKind.Restored))
+            throw new DomainException("Una devolución solo descuenta puntos ganados o devuelve puntos usados.");
+        if (points <= 0) throw new DomainException("Los puntos deben ser mayores que 0.");
+
+        return new LoyaltyEntry
+        {
+            Id = Guid.NewGuid(), UserId = userId, OrderId = orderId, ReferenceId = returnId, Kind = kind,
+            Points = points, Status = LoyaltyEntryStatus.Confirmed, CreatedAtUtc = nowUtc, UpdatedAtUtc = nowUtc
+        };
+    }
+
+    /// <summary>¿Suma al saldo (ganados, devueltos) o resta (usados, descontados)?</summary>
+    public bool Adds => Kind is LoyaltyEntryKind.Earned or LoyaltyEntryKind.Restored;
 
     /// <summary>¿Es un canje apartado cuyo plazo ya venció (dejó de descontar del saldo)?</summary>
     public bool IsExpiredAt(DateTime nowUtc) => Status == LoyaltyEntryStatus.Reserved && ExpiresAtUtc <= nowUtc;

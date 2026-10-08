@@ -32,6 +32,23 @@ public class PaymentsDbContext : DbContext
             entity.Property(p => p.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
             entity.Property(p => p.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
             entity.Property(p => p.CapturedAtUtc).HasColumnName("captured_at_utc");
+            entity.Ignore(p => p.RefundedAmount);
+            entity.Ignore(p => p.RefundableAmount);
+
+            // Fase 7: reembolsos (pueden ser varios parciales). El Id lo elige Órdenes (id de la devolución).
+            entity.OwnsMany(p => p.Refunds, refund =>
+            {
+                refund.ToTable("payment_refunds");
+                refund.WithOwner().HasForeignKey("PaymentId");
+                refund.Property<Guid>("PaymentId").HasColumnName("payment_id");
+                refund.HasKey(r => r.Id);
+                refund.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
+                refund.Property(r => r.Amount).HasColumnName("amount").HasColumnType("numeric(12,2)").IsRequired();
+                refund.Property(r => r.PayPalRefundId).HasColumnName("paypal_refund_id").HasMaxLength(64).IsRequired();
+                refund.Property(r => r.Reason).HasColumnName("reason").HasMaxLength(255);
+                refund.Property(r => r.CreatedAtUtc).HasColumnName("created_at_utc").IsRequired();
+            });
+            entity.Navigation(p => p.Refunds).UsePropertyAccessMode(PropertyAccessMode.Field);
         });
     }
 }

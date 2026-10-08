@@ -7,7 +7,9 @@ import { useToastStore } from '../stores/toast'
 import { formatMoney } from '../utils/format'
 import { timelineSteps, deliveryText, formatMoment, canBuyAgain, buyAgain, buyAgainMessage } from '../utils/orders'
 import { pointsFor } from '../utils/loyalty'
+import { returnStatus, reasonLabel, returnDeadlineText } from '../utils/returns'
 import AccountNav from '../components/AccountNav.vue'
+import ReturnRequestForm from '../components/ReturnRequestForm.vue'
 
 const apiClient = useApi()
 const cartStore = useCartStore()
@@ -19,20 +21,24 @@ const loading = ref(true)
 const error = ref('')
 const expandedId = ref(null)
 const buyingAgainId = ref(null)
+const returningId = ref(null)
+const sendingReturn = ref(false)
 
 const statusLabels = {
   PendingPayment: 'Pago pendiente',
   Paid: 'Pagada',
   Shipped: 'Enviada',
   Failed: 'Pago fallido',
-  Cancelled: 'Cancelada'
+  Cancelled: 'Cancelada',
+  Refunded: 'Reembolsada'
 }
 const statusStyles = {
   PendingPayment: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
   Paid: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
   Shipped: 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300',
   Failed: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-  Cancelled: 'bg-surface-muted text-ink-soft'
+  Cancelled: 'bg-surface-muted text-ink-soft',
+  Refunded: 'bg-surface-muted text-ink-soft'
 }
 const dotStyles = {
   done: 'bg-brand-600 border-brand-600',
@@ -80,6 +86,26 @@ async function onBuyAgain(order) {
   }
 }
 
+const returnTones = {
+  info: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200',
+  danger: 'border-red-200 bg-red-50 text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200'
+}
+
+async function onRequestReturn(order, request) {
+  sendingReturn.value = true
+  try {
+    const updated = await apiClient.post(`/api/orders/${order.orderId}/returns`, request)
+    orders.value = orders.value.map((o) => (o.orderId === updated.orderId ? updated : o))
+    returningId.value = null
+    toast.push({ type: 'success', message: 'Recibimos tu solicitud de devolución. Te avisaremos por correo cuando la revisemos.' })
+  } catch (err) {
+    toast.push({ type: 'error', message: err.message, duration: 8000 })
+  } finally {
+    sendingReturn.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -108,6 +134,7 @@ onMounted(load)
               <span v-if="o.couponCode" class="text-emerald-700 dark:text-emerald-400">· cupón {{ o.couponCode }} (−{{ formatMoney(o.discountAmount) }})</span>
               <span v-if="o.loyaltyPoints" class="text-emerald-700 dark:text-emerald-400" data-testid="order-points-used">· {{ o.loyaltyPoints }} puntos (−{{ formatMoney(o.loyaltyDiscount) }})</span>
               <span v-if="o.status === 'Paid' || o.status === 'Shipped'" data-testid="order-points-earned">· +{{ pointsFor(o.totalAmount) }} puntos</span>
+              <span v-if="o.refundedAmount > 0" class="text-emerald-700 dark:text-emerald-400" data-testid="order-refunded">· reembolsado {{ formatMoney(o.refundedAmount) }}</span>
             </p>
             <p v-if="deliveryText(o)" class="mt-1 text-xs font-medium text-brand-ink" data-testid="order-delivery">{{ deliveryText(o) }}</p>
           </div>
@@ -146,11 +173,38 @@ onMounted(load)
             <p class="text-sm text-ink-soft" data-testid="order-address">{{ o.shippingAddress }}</p>
           </div>
 
-          <button v-if="canBuyAgain(o)" type="button" data-testid="buy-again" :disabled="buyingAgainId === o.orderId"
-            @click="onBuyAgain(o)"
-            class="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60">
-            {{ buyingAgainId === o.orderId ? 'Agregando…' : 'Comprar de nuevo' }}
-          </button>
+          <!-- Devoluciones (Fase 7) -->
+          <div v-if="o.returns?.length" data-testid="order-returns">
+            <p class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">Devoluciones</p>
+            <ul class="space-y-2">
+              <li v-for="r in o.returns" :key="r.returnId" class="rounded-lg border px-3 py-2 text-sm"
+                :class="returnTones[returnStatus(r).tone]" data-testid="order-return" :data-status="r.status">
+                <p class="font-medium">{{ returnStatus(r).label }}</p>
+                <p class="text-xs">
+                  {{ r.lines.map((l) => `${l.quantity}× ${l.productName}`).join(', ') }} · {{ reasonLabel(r.reason) }}
+                  <span v-if="r.loyaltyPointsToRestore > 0 && r.status === 'Refunded'"> · +{{ r.loyaltyPointsToRestore }} puntos devueltos</span>
+                </p>
+                <p v-if="r.adminNote" class="mt-1 text-xs" data-testid="order-return-note">Nota de la tienda: {{ r.adminNote }}</p>
+              </li>
+            </ul>
+          </div>
+
+          <ReturnRequestForm v-if="returningId === o.orderId" :order="o" :submitting="sendingReturn"
+            @submit="(request) => onRequestReturn(o, request)" @cancel="returningId = null" />
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button v-if="o.canRequestReturn && returningId !== o.orderId" type="button" data-testid="request-return"
+              @click="returningId = o.orderId"
+              class="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface-muted">
+              Solicitar devolución
+            </button>
+            <button v-if="canBuyAgain(o)" type="button" data-testid="buy-again" :disabled="buyingAgainId === o.orderId"
+              @click="onBuyAgain(o)"
+              class="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60">
+              {{ buyingAgainId === o.orderId ? 'Agregando…' : 'Comprar de nuevo' }}
+            </button>
+          </div>
+          <p v-if="o.canRequestReturn" class="text-xs text-ink-muted" data-testid="return-deadline">{{ returnDeadlineText(o, formatMoment) }}</p>
         </div>
       </div>
     </div>

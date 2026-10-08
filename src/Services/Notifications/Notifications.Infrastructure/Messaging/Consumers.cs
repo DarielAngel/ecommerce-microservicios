@@ -71,3 +71,38 @@ public class CartAbandonedConsumer : IConsumer<CartAbandonedEvent>
             context.CancellationToken);
     }
 }
+
+/// <summary>
+/// Devolución reembolsada (Fase 7). La cola se llama "OrderRefunded"; Inventario y Lealtad escuchan el mismo
+/// evento con colas propias ("ReturnRestock" y "loyalty-order-refunded"), así cada servicio recibe su copia.
+/// </summary>
+public class OrderRefundedConsumer : IConsumer<OrderRefundedEvent>
+{
+    private readonly ISender _mediator;
+
+    public OrderRefundedConsumer(ISender mediator) => _mediator = mediator;
+
+    public Task Consume(ConsumeContext<OrderRefundedEvent> context)
+    {
+        var m = context.Message;
+        return _mediator.Send(
+            new SendReturnRefundedEmailCommand(
+                m.ReturnId, m.OrderId, m.Email, m.FullName,
+                m.Items.Select(i => new Application.Common.EmailTemplates.RefundLine(i.ProductName, i.Quantity)).ToList(),
+                m.RefundAmount, m.Currency, m.OrderFullyRefunded, m.LoyaltyPointsToRestore),
+            context.CancellationToken);
+    }
+}
+
+public class ReturnRejectedConsumer : IConsumer<ReturnRejectedEvent>
+{
+    private readonly ISender _mediator;
+
+    public ReturnRejectedConsumer(ISender mediator) => _mediator = mediator;
+
+    public Task Consume(ConsumeContext<ReturnRejectedEvent> context) =>
+        _mediator.Send(
+            new SendReturnRejectedEmailCommand(context.Message.ReturnId, context.Message.OrderId, context.Message.Email,
+                context.Message.FullName, context.Message.Note),
+            context.CancellationToken);
+}

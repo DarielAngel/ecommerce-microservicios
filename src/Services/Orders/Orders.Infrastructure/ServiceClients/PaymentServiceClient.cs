@@ -36,6 +36,41 @@ public class PaymentServiceClient : IPaymentServiceClient
         return new CreatePaymentResult(body?.Status ?? "Unknown", body?.ApproveUrl);
     }
 
+    private record RefundRequest(Guid RefundId, decimal Amount, string? Reason);
+    private record RefundResponse(Guid RefundId, decimal Amount, string PayPalRefundId, string PaymentStatus);
+    private record ErrorResponse(string? Message);
+
+    public async Task<RefundPaymentResult> RefundAsync(
+        Guid orderId, Guid refundId, decimal amount, string? reason, string accessToken, CancellationToken ct)
+    {
+        var request = WithAuth(HttpMethod.Post, $"api/payments/{orderId}/refunds", accessToken);
+        request.Content = JsonContent.Create(new RefundRequest(refundId, amount, reason));
+
+        var response = await _httpClient.SendAsync(request, ct);
+
+        // 4xx: Pagos/PayPal dijo que no (monto, pago sin capturar, PayPal rechazó). El mensaje es para el Admin.
+        if ((int)response.StatusCode is >= 400 and < 500)
+        {
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(cancellationToken: ct).ConfigureAwait(false);
+            throw new ConflictAppException(error?.Message ?? $"Pagos rechazó el reembolso ({(int)response.StatusCode}).");
+        }
+
+        response.EnsureSuccessStatusCode(); // 5xx: HttpRequestException → 502, se puede reintentar
+        var body = await response.Content.ReadFromJsonAsync<RefundResponse>(cancellationToken: ct)
+            ?? throw new InvalidOperationException("Pagos respondió sin cuerpo al reembolsar.");
+        return new RefundPaymentResult(body.RefundId, body.Amount, body.PayPalRefundId, body.PaymentStatus);
+    }
+
+    public async Task<RefundPaymentResult?> FindRefundAsync(Guid orderId, Guid refundId, string accessToken, CancellationToken ct)
+    {
+        var response = await _httpClient.SendAsync(WithAuth(HttpMethod.Get, $"api/payments/{orderId}/refunds/{refundId}", accessToken), ct);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadFromJsonAsync<RefundResponse>(cancellationToken: ct)
+            ?? throw new InvalidOperationException("Pagos respondió sin cuerpo al consultar el reembolso.");
+        return new RefundPaymentResult(body.RefundId, body.Amount, body.PayPalRefundId, body.PaymentStatus);
+    }
+
     public async Task<CapturePaymentResult> CapturePaymentAsync(Guid orderId, string accessToken, CancellationToken ct)
     {
         var response = await _httpClient.SendAsync(

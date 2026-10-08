@@ -12,6 +12,9 @@ public interface ILoyaltyRepository
 
     Task<IReadOnlyList<LoyaltyEntry>> ListByUserAsync(Guid userId, CancellationToken ct);
     Task<LoyaltyEntry?> GetAsync(Guid orderId, LoyaltyEntryKind kind, CancellationToken ct);
+
+    /// <summary>Todos los movimientos de una orden (para saber cuánto se ajustó ya por devoluciones).</summary>
+    Task<IReadOnlyList<LoyaltyEntry>> ListByOrderAsync(Guid orderId, CancellationToken ct);
     Task AddAsync(LoyaltyEntry entry, CancellationToken ct);
 }
 

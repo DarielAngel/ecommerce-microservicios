@@ -31,6 +31,18 @@ public class FakePayPalClient : IPayPalClient
         return Task.FromResult(new CapturePayPalOrderResult(true, captureId, null));
     }
 
+    public ConcurrentDictionary<string, decimal> Refunds { get; } = new();
+    public bool FailRefunds { get; set; }
+
+    public Task<RefundPayPalCaptureResult> RefundCaptureAsync(
+        string captureId, decimal amount, string currency, string requestId, string? note, CancellationToken ct)
+    {
+        if (FailRefunds)
+            return Task.FromResult(new RefundPayPalCaptureResult(false, null, null, "Reembolso rechazado (simulado)."));
+        Refunds.AddOrUpdate(requestId, amount, (_, previous) => previous); // misma clave = mismo reembolso
+        return Task.FromResult(new RefundPayPalCaptureResult(true, $"FAKE-REFUND-{requestId}", "COMPLETED", null));
+    }
+
     public Task<bool> VerifyWebhookSignatureAsync(IDictionary<string, string> headers, string rawBody, CancellationToken ct) =>
         Task.FromResult(AlwaysValidWebhookSignature);
 }

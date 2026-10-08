@@ -156,4 +156,85 @@ public class LoyaltyApiTests : IClassFixture<LoyaltyApiFactory>
         (await intruder.PostAsync($"/internal/loyalty/redemptions/{order}/confirm", null)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await intruder.PostAsync($"/internal/loyalty/redemptions/{order}/release", null)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    // ---- Fase 7: devoluciones ----
+
+    private async Task ApplyRefundAsync(Guid user, Guid order, Guid returnId, decimal amount, bool full, int restore)
+    {
+        using var scope = _factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<MediatR.ISender>()
+            .Send(new ApplyRefundCommand(user, order, returnId, amount, full, restore));
+    }
+
+    [Fact]
+    public async Task Devoluciones_DescuentanLoGanadoYDevuelvenLoUsado_UnaSolaVezCadaUna()
+    {
+        var user = Guid.NewGuid();
+        var client = ClientFor(user);
+
+        // Compra A: gana 300. Compra B ($100): usa esos 300 puntos (−$3) y paga $97 → gana 97.
+        await PublishOrderPaidAsync(user, Guid.NewGuid(), 300m);
+        (await WaitForBalanceAsync(client, 300)).Should().Be(300);
+        var orderB = Guid.NewGuid();
+        (await client.PostAsJsonAsync("/internal/loyalty/redemptions", new { OrderId = orderB, Amount = 100m })).EnsureSuccessStatusCode();
+        await PublishOrderPaidAsync(user, orderB, 97m);
+        (await WaitForBalanceAsync(client, 97)).Should().Be(97);
+
+        // Devuelve la mitad de B: se descuentan 48 ganados (por $48.50) y vuelven 150 de los 300 usados.
+        var firstReturn = Guid.NewGuid();
+        await ApplyRefundAsync(user, orderB, firstReturn, 48.5m, full: false, restore: 150);
+        await ApplyRefundAsync(user, orderB, firstReturn, 48.5m, full: false, restore: 150); // evento repetido
+        (await MeAsync(client)).Balance.Should().Be(97 - 48 + 150);
+
+        // Devuelve el resto: se descuenta lo que quedaba de lo ganado (49) y vuelven los otros 150.
+        await ApplyRefundAsync(user, orderB, Guid.NewGuid(), 48.5m, full: true, restore: 150);
+        var me = await MeAsync(client);
+        me.Balance.Should().Be(300, "queda como antes de la compra B");
+        me.History.Where(h => h.OrderId == orderB).Select(h => h.Kind).Should()
+            .Contain(new[] { "Reversed", "Restored" });
+
+        // Nunca devuelve más de lo usado ni descuenta más de lo ganado, aunque se lo pidan.
+        await ApplyRefundAsync(user, orderB, Guid.NewGuid(), 500m, full: true, restore: 999);
+        (await MeAsync(client)).Balance.Should().Be(300);
+    }
+
+    [Fact]
+    public async Task EventoOrderRefunded_AjustaLosPuntos()
+    {
+        var user = Guid.NewGuid();
+        var client = ClientFor(user);
+        var order = Guid.NewGuid();
+        await PublishOrderPaidAsync(user, order, 200m);
+        (await WaitForBalanceAsync(client, 200)).Should().Be(200);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<IPublishEndpoint>().Publish(new OrderRefundedEvent(
+                Guid.NewGuid(), order, user, "cliente@ejemplo.com", "Cliente", 80m, "USD", false, 0,
+                new[] { new RefundedItem(Guid.NewGuid(), Guid.NewGuid(), "Taza", 1) }, DateTime.UtcNow));
+        }
+
+        (await WaitForBalanceAsync(client, 120)).Should().Be(120);
+    }
+
+    [Fact]
+    public async Task Devolucion_DePuntosYaGastados_NoDejaDeudaQueSeComaLasComprasSiguientes()
+    {
+        var user = Guid.NewGuid();
+        var client = ClientFor(user);
+        var order = Guid.NewGuid();
+        await PublishOrderPaidAsync(user, order, 150m);
+        (await WaitForBalanceAsync(client, 150)).Should().Be(150);
+        // Los gasta todos en otra compra.
+        var spend = Guid.NewGuid();
+        (await client.PostAsJsonAsync("/internal/loyalty/redemptions", new { OrderId = spend, Amount = 400m })).EnsureSuccessStatusCode();
+        (await client.PostAsync($"/internal/loyalty/redemptions/{spend}/confirm", null)).EnsureSuccessStatusCode();
+        (await MeAsync(client)).Balance.Should().Be(0);
+
+        // Devuelve la primera compra completa: no hay puntos que descontar.
+        await ApplyRefundAsync(user, order, Guid.NewGuid(), 150m, full: true, restore: 0);
+        // Una compra nueva suma sus puntos completos.
+        await PublishOrderPaidAsync(user, Guid.NewGuid(), 40m);
+        (await WaitForBalanceAsync(client, 40)).Should().Be(40);
+    }
 }

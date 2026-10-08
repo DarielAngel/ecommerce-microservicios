@@ -11,10 +11,13 @@ public record LoyaltyRulesResult(int PointsPerDollar, decimal PointValue, int Mi
         LoyaltyRules.PointsPerDollar, LoyaltyRules.PointValue, LoyaltyRules.MinRedeemPoints, LoyaltyRules.MaxRedeemShare);
 }
 
-public record LoyaltyEntryResult(Guid OrderId, string Kind, int Points, decimal DiscountAmount, string Status, DateTime CreatedAtUtc)
+/// <param name="ReferenceId">En los ajustes por devolución (Reversed / Restored), el id de la devolución.</param>
+public record LoyaltyEntryResult(Guid OrderId, string Kind, int Points, decimal DiscountAmount, string Status, DateTime CreatedAtUtc,
+    Guid? ReferenceId = null)
 {
     public static LoyaltyEntryResult From(LoyaltyEntry e) =>
-        new(e.OrderId, e.Kind.ToString(), e.Points, e.DiscountAmount, e.Status.ToString(), e.CreatedAtUtc);
+        new(e.OrderId, e.Kind.ToString(), e.Points, e.DiscountAmount, e.Status.ToString(), e.CreatedAtUtc,
+            e.ReferenceId == Guid.Empty ? null : e.ReferenceId);
 }
 
 public record LoyaltySummaryResult(int Balance, decimal BalanceValue, LoyaltyRulesResult Rules, IReadOnlyList<LoyaltyEntryResult> History);
