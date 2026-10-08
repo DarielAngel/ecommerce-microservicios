@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { loadSeedData, registerNewCustomer, fillShippingAddress } from './helpers.js'
-import { STOREFRONT_URL } from '../playwright.config.js'
+import { loadSeedData, registerNewCustomer, fillShippingAddress, loginToAdminPanel } from './helpers.js'
+import { ADMIN_PANEL_URL, STOREFRONT_URL } from '../playwright.config.js'
 
 /** Escribe y publica una reseña desde la página del producto (el cliente ya debe tener sesión). */
 async function publishReview(page, { stars = 4, title, comment = 'Funciona muy bien.' }) {
@@ -135,5 +135,32 @@ test.describe('Storefront — reseñas y calificaciones', () => {
       await page.reload()
       await expect(page.getByTestId('verified-badge').first()).toBeVisible({ timeout: 2000 })
     }).toPass({ timeout: 30_000 })
+  })
+
+  test('el Admin encuentra una reseña en el panel y la elimina; desaparece de la tienda', async ({ page }) => {
+    const seed = await loadSeedData()
+    await registerNewCustomer(page)
+    await page.goto(`${STOREFRONT_URL}/products/${seed.productId}`)
+    const title = `Para moderar ${Date.now()}`
+    await publishReview(page, { stars: 1, title, comment: 'Texto que no cumple las reglas.' })
+
+    await loginToAdminPanel(page, seed.adminEmail, seed.adminPassword)
+    await page.getByRole('link', { name: 'Reseñas' }).first().click()
+    await expect(page).toHaveURL(`${ADMIN_PANEL_URL}/reviews`)
+    await page.getByLabel('Estrellas', { exact: true }).selectOption('1')
+    await page.getByLabel('Buscar en título, comentario o autor').fill(title)
+    await page.getByRole('button', { name: 'Buscar' }).click()
+
+    const row = page.getByTestId('review-row').filter({ hasText: title })
+    await expect(row).toHaveCount(1)
+    await expect(row.getByTestId('review-product')).toHaveText(seed.productName)
+    await row.getByTestId('review-delete').click()
+    await row.getByTestId('review-confirm-delete').click()
+    await expect(page.getByText(`Reseña "${title}" eliminada.`)).toBeVisible()
+    await expect(page.getByTestId('reviews-empty')).toBeVisible()
+
+    await page.goto(`${STOREFRONT_URL}/products/${seed.productId}`)
+    await expect(page.getByRole('heading', { name: 'Opiniones de clientes' })).toBeVisible()
+    await expect(inPublicList(page, title)).toHaveCount(0)
   })
 })

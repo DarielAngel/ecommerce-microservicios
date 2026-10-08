@@ -330,6 +330,64 @@ public class ReviewsApiTests : IClassFixture<ReviewsApiFactory>
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
+    // ---- Moderación (Admin) ----
+    private async Task<HttpResponseMessage> ModerationAsync(string query, string role = "Admin") =>
+        await _client.SendAsync(Request(HttpMethod.Get, $"/api/reviews/admin{query}", TokenFor(Guid.NewGuid(), role)));
+
+    [Fact]
+    public async Task Moderacion_SinSesionOComoCliente_NoSePuedeVer()
+    {
+        (await _client.GetAsync("/api/reviews/admin")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await ModerationAsync("", role: "Cliente")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Moderacion_ListaTodosLosProductos_LasMasNuevasPrimero_YFiltraPorEstrellasYProducto()
+    {
+        var productA = Guid.NewGuid();
+        var productB = Guid.NewGuid();
+        var vieja = await CreateAsync(productA, Guid.NewGuid(), rating: 1, title: "Primera mala");
+        await CreateAsync(productB, Guid.NewGuid(), rating: 5, title: "Buenísima");
+        var nueva = await CreateAsync(productB, Guid.NewGuid(), rating: 1, title: "Segunda mala");
+
+        var unaEstrella = await (await ModerationAsync("?rating=1&pageSize=50")).Content.ReadFromJsonAsync<PageDto>();
+        var ids = unaEstrella!.Items.Select(r => r.Id).ToList();
+        ids.Should().Contain(new[] { vieja.Id, nueva.Id });
+        ids.IndexOf(nueva.Id).Should().BeLessThan(ids.IndexOf(vieja.Id), "las más nuevas van primero");
+        unaEstrella.Items.Should().OnlyContain(r => r.Rating == 1);
+
+        var deB = await (await ModerationAsync($"?productId={productB}&rating=1")).Content.ReadFromJsonAsync<PageDto>();
+        deB!.Items.Should().ContainSingle().Which.Id.Should().Be(nueva.Id);
+        deB.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Moderacion_BuscaEnTituloComentarioYAutor_SinTratarElPorcientoComoComodin()
+    {
+        var productId = Guid.NewGuid();
+        var marca = Guid.NewGuid().ToString("N")[..8];
+        var conTexto = await _client.SendAsync(Request(HttpMethod.Post, $"/api/reviews/products/{productId}",
+            TokenFor(Guid.NewGuid()), new { rating = 2, title = "Regular", comment = $"Descuento del 100% falso {marca}" }));
+        conTexto.StatusCode.Should().Be(HttpStatusCode.Created);
+        await CreateAsync(productId, Guid.NewGuid(), rating: 2, title: $"Otra {marca}");
+
+        var porComentario = await (await ModerationAsync($"?search={marca.ToUpperInvariant()}")).Content.ReadFromJsonAsync<PageDto>();
+        porComentario!.TotalCount.Should().Be(2, "busca sin distinguir mayúsculas en título y comentario");
+
+        var porciento = await (await ModerationAsync($"?search={Uri.EscapeDataString("100% falso " + marca)}")).Content.ReadFromJsonAsync<PageDto>();
+        porciento!.Items.Should().ContainSingle().Which.Title.Should().Be("Regular");
+
+        var soloPorciento = await (await ModerationAsync($"?search={Uri.EscapeDataString("%" + marca)}")).Content.ReadFromJsonAsync<PageDto>();
+        soloPorciento!.TotalCount.Should().Be(0, "el % se busca como texto, no como comodín");
+    }
+
+    [Fact]
+    public async Task Moderacion_ConFiltrosInvalidos_Devuelve400()
+    {
+        (await ModerationAsync("?rating=7")).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ModerationAsync("?pageSize=500")).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     // ---- Compra verificada (evento OrderPaid) ----
     [Fact]
     public async Task EventoOrderPaid_DeberiaMarcarComoVerificadaLaReseñaCreadaDespuesDeComprar()

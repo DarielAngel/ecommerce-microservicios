@@ -39,6 +39,30 @@ public class ReviewRepository : IReviewRepository
         return new ReviewPage(items, total);
     }
 
+    public async Task<ReviewPage> ListForModerationAsync(ReviewModerationFilter filter, int page, int pageSize, CancellationToken ct)
+    {
+        var query = _context.Reviews.AsNoTracking();
+
+        if (filter.Rating is { } rating) query = query.Where(r => r.Rating == rating);
+        if (filter.ProductId is { } productId) query = query.Where(r => r.ProductId == productId);
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            // ILIKE con los comodines del texto escapados (con la barra invertida como escape: Npgsql por defecto
+            // lo desactiva con ESCAPE ''). Así buscar "100%" no trae todo.
+            var pattern = "%" + filter.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+            query = query.Where(r => EF.Functions.ILike(r.Title, pattern, "\\")
+                                  || EF.Functions.ILike(r.Comment, pattern, "\\")
+                                  || EF.Functions.ILike(r.AuthorName, pattern, "\\"));
+        }
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(r => r.CreatedAtUtc).ThenBy(r => r.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .ToListAsync(ct);
+        return new ReviewPage(items, total);
+    }
+
     public async Task<IReadOnlyDictionary<int, int>> GetRatingDistributionAsync(Guid productId, CancellationToken ct)
     {
         var rows = await _context.Reviews.AsNoTracking()

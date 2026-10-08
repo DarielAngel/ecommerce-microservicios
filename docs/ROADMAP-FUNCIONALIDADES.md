@@ -90,7 +90,7 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 | Fase | Estado |
 |---|---|
 | 0 — Identidad visual | Hecha |
-| 1 — Reseñas | Hecha (pendiente: pantalla de moderación en el panel de Admin; el endpoint ya existe) |
+| 1 — Reseñas | Hecha (incluye la moderación en el panel de Admin) |
 | 2 — Favoritos | Hecha |
 | 3 — Cupones | Hecha |
 | 4 — Descubrimiento | Hecha |

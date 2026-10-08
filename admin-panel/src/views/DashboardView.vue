@@ -19,7 +19,9 @@ const sections = [
   { to: { name: 'products' }, title: 'Productos', desc: 'Crear y editar productos, variantes e imágenes.' },
   { to: { name: 'categories' }, title: 'Categorías', desc: 'Organizar el catálogo.' },
   { to: { name: 'inventory' }, title: 'Inventario', desc: 'Ajustar stock y ver alertas de bajo inventario.' },
+  { to: { name: 'coupons' }, title: 'Cupones', desc: 'Crear, pausar y ver el uso de los cupones.' },
   { to: { name: 'orders' }, title: 'Órdenes', desc: 'Ver todas las órdenes y marcarlas como enviadas.' },
+  { to: { name: 'reviews' }, title: 'Reseñas', desc: 'Revisar y eliminar reseñas que no cumplen las reglas.' },
   { to: { name: 'admins' }, title: 'Administradores', desc: 'Crear nuevas cuentas de Admin.' },
   { to: { name: 'notifications' }, title: 'Notificaciones', desc: 'Auditoría de emails enviados.' }
 ]

@@ -1379,6 +1379,22 @@ insignia **Compra verificada**.
 
 > **Contenedores**: ahora son **20** (se suman `postgres-reviews` y `reviews-service`).
 
+### Moderación en el panel de Admin (completa la Fase 1)
+
+Nueva sección **Reseñas** en el panel: todas las reseñas de la tienda, las más nuevas primero, con el
+nombre del producto. Filtros por **estrellas** y **texto** (busca en título, comentario y autor, sin
+distinguir mayúsculas; `%` y `_` se buscan como texto). Tocar el producto muestra solo sus reseñas.
+**Eliminar** pide confirmación en la misma fila; si otro Admin ya la había borrado, solo se refresca.
+
+| Método | Ruta | Acceso |
+|---|---|---|
+| GET | `/api/reviews/admin?rating=&search=&productId=&page=&pageSize=` | Admin (hasta 50 por página) |
+| DELETE | `/api/reviews/{id}` | el autor o un Admin (ya existía) |
+
+```cmd
+docker compose up -d --build reviews-service admin-panel
+```
+
 ## Fase 2 — Favoritos (servicio `Wishlist`, puerto 5009)
 
 - **Corazón** en cada tarjeta del catálogo y en el detalle del producto. Se actualiza al instante

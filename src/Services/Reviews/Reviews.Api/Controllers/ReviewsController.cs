@@ -65,6 +65,23 @@ public class ReviewsController : ControllerBase
         return Ok(result);
     }
 
+    // ---- Moderación (Admin) ----
+
+    /// <summary>Todas las reseñas, las más nuevas primero. Filtros: ?rating=1..5&amp;search=texto&amp;productId=</summary>
+    [HttpGet("admin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<PagedResult<ReviewResult>>> ListForModeration(
+        [FromQuery] int? rating,
+        [FromQuery] string? search,
+        [FromQuery] Guid? productId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new ListReviewsForModerationQuery(rating, search, productId, page, pageSize), ct);
+        return Ok(result);
+    }
+
     // ---- Acciones del cliente autenticado ----
 
     [HttpGet("products/{productId:guid}/mine")]

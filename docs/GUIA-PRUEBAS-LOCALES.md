@@ -177,6 +177,9 @@ Marca cada punto a medida que lo pruebas.
 - [ ] **Inventario**: busca un producto, elige la variante y ajusta su stock (ej. a 3) → en la tienda aparece "¡Quedan solo 3!".
 - [ ] **Cupones**: verás los 10 con su estado (*Activo, Programado, Vencido, Pausado*). Crea uno, edítalo, páusalo y comprueba en la tienda que deja de funcionar. La columna *Usos* sube con cada compra pagada.
 - [ ] **Órdenes**: la orden que pagaste aparece con el cupón y el descuento; márcala como **enviada**.
+- [ ] **Reseñas**: verás las reseñas de todos los productos. Filtra por *1 estrella* o busca una palabra;
+  toca el nombre de un producto para ver solo las suyas. Elimina una (pide confirmación) y comprueba en la
+  tienda que ya no aparece.
 - [ ] **Notificaciones**: registro de los correos de "pago confirmado", "pedido enviado" y "carrito abandonado" (con `RESEND_API_KEY` llegan de verdad a tu correo).
 
 ---

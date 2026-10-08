@@ -12,6 +12,9 @@ public enum ReviewSort
 /// <summary>Una página de reseñas ya ordenada, más el total para calcular el número de páginas.</summary>
 public record ReviewPage(IReadOnlyList<Review> Items, int TotalCount);
 
+/// <summary>Filtros de la pantalla de moderación. Todos opcionales; sin filtros trae todas las reseñas.</summary>
+public record ReviewModerationFilter(int? Rating = null, string? Search = null, Guid? ProductId = null);
+
 public interface IReviewRepository
 {
     Task<Review?> GetByIdAsync(Guid id, CancellationToken ct);
@@ -20,6 +23,9 @@ public interface IReviewRepository
     void Remove(Review review);
 
     Task<ReviewPage> ListByProductAsync(Guid productId, ReviewSort sort, int page, int pageSize, CancellationToken ct);
+
+    /// <summary>Todas las reseñas (de cualquier producto), las más nuevas primero, para que el Admin modere.</summary>
+    Task<ReviewPage> ListForModerationAsync(ReviewModerationFilter filter, int page, int pageSize, CancellationToken ct);
 
     /// <summary>Estrella -> cantidad de reseñas. Solo trae las estrellas que existen.</summary>
     Task<IReadOnlyDictionary<int, int>> GetRatingDistributionAsync(Guid productId, CancellationToken ct);
