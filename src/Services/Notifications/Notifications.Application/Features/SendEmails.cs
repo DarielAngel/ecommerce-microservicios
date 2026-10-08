@@ -75,7 +75,7 @@ public class SendCartAbandonedEmailCommandHandler : IRequestHandler<SendCartAban
 // ---- Devolución reembolsada / rechazada (Fase 7) ----
 public record SendReturnRefundedEmailCommand(
     Guid ReturnId, Guid OrderId, string Email, string FullName, IReadOnlyList<EmailTemplates.RefundLine> Items,
-    decimal Amount, string Currency, bool OrderFullyRefunded, int PointsRestored) : IRequest;
+    decimal Amount, string Currency, bool OrderFullyRefunded, int PointsRestored, bool OrderCancelled = false) : IRequest;
 
 public class SendReturnRefundedEmailCommandHandler : IRequestHandler<SendReturnRefundedEmailCommand>
 {
@@ -87,12 +87,13 @@ public class SendReturnRefundedEmailCommandHandler : IRequestHandler<SendReturnR
     {
         var (subject, html) = EmailTemplates.ReturnRefunded(
             request.OrderId, request.FullName, request.Items, request.Amount, request.Currency, request.OrderFullyRefunded,
-            request.PointsRestored);
+            request.PointsRestored, request.OrderCancelled);
         return _dispatcher.DispatchAsync(NotificationType.ReturnRefunded, request.ReturnId, request.Email, subject, html, ct);
     }
 }
 
-public record SendReturnRejectedEmailCommand(Guid ReturnId, Guid OrderId, string Email, string FullName, string Note) : IRequest;
+public record SendReturnRejectedEmailCommand(Guid ReturnId, Guid OrderId, string Email, string FullName, string Note,
+    bool IsCancellation = false) : IRequest;
 
 public class SendReturnRejectedEmailCommandHandler : IRequestHandler<SendReturnRejectedEmailCommand>
 {
@@ -102,7 +103,7 @@ public class SendReturnRejectedEmailCommandHandler : IRequestHandler<SendReturnR
 
     public Task Handle(SendReturnRejectedEmailCommand request, CancellationToken ct)
     {
-        var (subject, html) = EmailTemplates.ReturnRejected(request.OrderId, request.FullName, request.Note);
+        var (subject, html) = EmailTemplates.ReturnRejected(request.OrderId, request.FullName, request.Note, request.IsCancellation);
         return _dispatcher.DispatchAsync(NotificationType.ReturnRejected, request.ReturnId, request.Email, subject, html, ct);
     }
 }

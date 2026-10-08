@@ -10,20 +10,26 @@ public record MarkOrderAsShippedCommand(Guid OrderId) : IRequest<CheckoutResult>
 public class MarkOrderAsShippedCommandHandler : IRequestHandler<MarkOrderAsShippedCommand, CheckoutResult>
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly IOrderLock _orderLock;
     private readonly IEventPublisher _eventPublisher;
     private readonly ILogger<MarkOrderAsShippedCommandHandler> _logger;
 
     public MarkOrderAsShippedCommandHandler(
-        IOrderRepository orderRepository, IEventPublisher eventPublisher, ILogger<MarkOrderAsShippedCommandHandler> logger)
+        IOrderRepository orderRepository, IOrderLock orderLock, IEventPublisher eventPublisher,
+        ILogger<MarkOrderAsShippedCommandHandler> logger)
     {
         _orderRepository = orderRepository;
+        _orderLock = orderLock;
         _eventPublisher = eventPublisher;
         _logger = logger;
     }
 
     public async Task<CheckoutResult> Handle(MarkOrderAsShippedCommand request, CancellationToken ct)
     {
-        var order = await _orderRepository.GetByIdAsync(request.OrderId, ct)
+        // Con el pedido bloqueado y leído de la base: enviar no puede cruzarse con una cancelación que se pide o se
+        // aprueba al mismo tiempo (si no, se podría despachar un pedido que además se reembolsa completo).
+        await using var orderLock = await _orderLock.AcquireAsync(request.OrderId, ct);
+        var order = await _orderRepository.GetByIdFreshAsync(request.OrderId, ct)
             ?? throw new NotFoundAppException("La orden no existe.");
 
         // Idempotente: si ya estaba marcada como enviada, no volvemos a publicar el evento

@@ -120,4 +120,60 @@ test.describe('Devoluciones y reembolsos (Fase 7)', () => {
     await expect(order.getByTestId('order-return')).toContainText('Rechazada')
     await expect(order.getByTestId('order-return-note')).toHaveText('Nota de la tienda: Pasaron más de 7 días desde la entrega para este motivo.')
   })
+
+  test('un pedido sin pagar se cancela al instante; uno pagado se pide y el Admin lo cancela con reembolso', async ({ page }) => {
+    const seed = await loadSeedData()
+    await registerNewCustomer(page)
+
+    async function checkout({ add = 0, firstTime = false } = {}) {
+      if (add > 0) {
+        await page.goto(`${STOREFRONT_URL}/products/${seed.productId}`)
+        await page.getByLabel('Cantidad').fill(String(add))
+        await page.getByRole('button', { name: 'Agregar al carrito' }).click()
+        await expect(page.getByText('Agregado al carrito.')).toBeVisible()
+      }
+      await page.goto(`${STOREFRONT_URL}/cart`)
+      await page.getByRole('button', { name: 'Continuar al checkout' }).click()
+      await expect(page).toHaveURL(/\/checkout$/)
+      // La primera vez se escribe la dirección (queda guardada); después ya viene elegida.
+      if (firstTime) await fillShippingAddress(page)
+      await page.getByRole('button', { name: 'Pagar con PayPal' }).click()
+      await expect(page).toHaveURL(/\/orders\/.+\/pending$/)
+      return page.url().match(/\/orders\/([^/]+)\/pending$/)[1]
+    }
+
+    // 1) Sin pagar: se cancela en el acto.
+    const unpaidId = await checkout({ add: 2, firstTime: true })
+    await page.goto(`${STOREFRONT_URL}/orders`)
+    const unpaid = page.getByTestId('order-item').filter({ hasText: unpaidId.slice(0, 8) })
+    await unpaid.getByRole('button', { name: new RegExp(unpaidId.slice(0, 8)) }).click()
+    await unpaid.getByTestId('cancel-order').click()
+    await unpaid.getByTestId('cancel-submit').click()
+    await expect(page.getByText('Pedido cancelado.')).toBeVisible()
+    await expect(unpaid).toContainText('Cancelada')
+
+    // 2) Pagado: el cliente pide la cancelación. (Cancelar sin pagar deja los productos en el carrito: se usan.)
+    const paidId = await checkout()
+    await page.getByRole('button', { name: 'Ya aprobé el pago — confirmar' }).click()
+    await expect(page.getByText('¡Pago confirmado!')).toBeVisible()
+    await page.goto(`${STOREFRONT_URL}/orders`)
+    const paid = page.getByTestId('order-item').filter({ hasText: paidId.slice(0, 8) })
+    await paid.getByRole('button', { name: new RegExp(paidId.slice(0, 8)) }).click()
+    await paid.getByTestId('cancel-order').click()
+    await paid.getByLabel('Motivo').selectOption('WrongItem')
+    await paid.getByTestId('cancel-submit').click()
+    await expect(paid.getByTestId('order-return')).toContainText('Cancelación solicitada')
+
+    // 3) El Admin la aprueba en Devoluciones: se reembolsa todo.
+    await loginToAdminPanel(page, seed.adminEmail, seed.adminPassword)
+    await page.goto(`${ADMIN_PANEL_URL}/returns`)
+    const row = page.getByTestId('return-row').filter({ hasText: `#${paidId.slice(0, 8).toUpperCase()}` })
+    await expect(row.getByTestId('return-is-cancellation')).toBeVisible()
+    await row.getByTestId('return-approve').click()
+    await expect(page.getByText(/Cancelación del pedido .* reembolsada: \$51\.00/)).toBeVisible()
+
+    await page.goto(`${STOREFRONT_URL}/orders`)
+    await expect(paid).toContainText('Cancelada')
+    await expect(paid.getByTestId('order-refunded')).toHaveText('· reembolsado $51.00')
+  })
 })

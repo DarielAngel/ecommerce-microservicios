@@ -73,6 +73,9 @@ public interface IPaymentServiceClient
     /// </summary>
     Task<RefundPaymentResult> RefundAsync(Guid orderId, Guid refundId, decimal amount, string? reason, string accessToken, CancellationToken ct);
 
+    /// <summary>Estado del pago de la orden en Pagos ("PendingApproval", "Captured"...), o null si no hay pago.</summary>
+    Task<string?> GetPaymentStatusAsync(Guid orderId, string accessToken, CancellationToken ct);
+
     /// <summary>El reembolso con ese id, o null si Pagos nunca lo hizo.</summary>
     Task<RefundPaymentResult?> FindRefundAsync(Guid orderId, Guid refundId, string accessToken, CancellationToken ct);
 

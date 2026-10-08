@@ -87,11 +87,13 @@ Inspiración: Amazon, Mercado Libre, Zalando.
 - T7.2 Reembolso parcial o total por PayPal, proporcional a lo pagado (cupón y puntos repartidos)
 - T7.3 Panel de Admin: aprobar y reembolsar, rechazar o cancelar con una nota
 - T7.4 Al reembolsar: el stock vuelve a Inventario, se ajustan los puntos y se avisa por correo
+- T7.5 Cancelar antes del envío: sin pagar al instante; pagado, pedido por el cliente y aprobado por el Admin
+  (reembolso total), o cancelado directo por el Admin
 - **Aceptación**: nunca se devuelve más de lo cobrado (ni por redondeo, ni por reintentos, ni con dos Admins a
   la vez); un mismo reembolso no repone stock ni ajusta puntos dos veces.
 
 ### Futuro (fuera de este ciclo)
-Cancelar un pedido pagado antes del envío · multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
+Devolver el uso del cupón al devolver o cancelar · multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
 con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volumen) · omnicanal.
 
 ## Estado

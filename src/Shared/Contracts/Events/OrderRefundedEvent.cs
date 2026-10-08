@@ -11,6 +11,10 @@ namespace Ecommerce.Contracts.Events;
 /// <see cref="ReturnId"/> identifica la devolución: los consumidores lo usan para no aplicar dos veces el mismo
 /// evento (RabbitMQ entrega "al menos una vez").
 /// </summary>
+/// <param name="OrderCancelled">
+/// true si no fue una devolución sino la cancelación de un pedido pagado antes de enviarlo (todo se reembolsa).
+/// Opcional y al final: los consumidores que no lo usan siguen funcionando igual.
+/// </param>
 public record OrderRefundedEvent(
     Guid ReturnId,
     Guid OrderId,
@@ -22,7 +26,8 @@ public record OrderRefundedEvent(
     bool OrderFullyRefunded,
     int LoyaltyPointsToRestore,
     IReadOnlyList<RefundedItem> Items,
-    DateTime RefundedAtUtc);
+    DateTime RefundedAtUtc,
+    bool OrderCancelled = false);
 
 public record RefundedItem(Guid VariantId, Guid ProductId, string ProductName, int Quantity);
 
@@ -34,4 +39,5 @@ public record ReturnRejectedEvent(
     string Email,
     string FullName,
     string Note,
-    DateTime RejectedAtUtc);
+    DateTime RejectedAtUtc,
+    bool IsCancellation = false);

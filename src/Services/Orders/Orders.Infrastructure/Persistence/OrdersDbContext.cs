@@ -30,6 +30,7 @@ public class OrdersDbContext : DbContext
             order.Property(o => o.UpdatedAtUtc).HasColumnName("updated_at_utc").IsRequired();
             order.Property(o => o.PaidAtUtc).HasColumnName("paid_at_utc");
             order.Property(o => o.ShippedAtUtc).HasColumnName("shipped_at_utc");
+            order.Property(o => o.CancelledAtUtc).HasColumnName("cancelled_at_utc");
             order.Ignore(o => o.EstimatedDelivery);
             order.Property(o => o.CouponCode).HasColumnName("coupon_code").HasMaxLength(30);
             order.Property(o => o.DiscountAmount).HasColumnName("discount_amount").HasColumnType("numeric(12,2)").IsRequired();
@@ -64,6 +65,7 @@ public class OrdersDbContext : DbContext
                 ret.Property<Guid>("OrderId").HasColumnName("order_id");
                 ret.HasKey(r => r.Id);
                 ret.Property(r => r.Id).HasColumnName("id").ValueGeneratedNever();
+                ret.Property(r => r.IsCancellation).HasColumnName("is_cancellation").IsRequired();
                 ret.Property(r => r.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20).IsRequired();
                 ret.Property(r => r.Reason).HasColumnName("reason").HasConversion<string>().HasMaxLength(30).IsRequired();
                 ret.Property(r => r.Comment).HasColumnName("comment").HasMaxLength(500);

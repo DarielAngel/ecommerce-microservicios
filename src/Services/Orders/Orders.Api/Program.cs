@@ -90,6 +90,8 @@ using (var scope = app.Services.CreateScope())
             unit_price numeric(12,2) NOT NULL,
             quantity integer NOT NULL);
         CREATE INDEX IF NOT EXISTS "IX_order_return_lines_return_id" ON order_return_lines (return_id);
+        ALTER TABLE order_returns ADD COLUMN IF NOT EXISTS is_cancellation boolean NOT NULL DEFAULT false;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_at_utc timestamp with time zone NULL;
         """);
 }
 

@@ -34,7 +34,7 @@ public record CheckoutResult(
     DateOnly? EstimatedDeliveryFrom = null, DateOnly? EstimatedDeliveryTo = null,
     int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0,
     IReadOnlyList<ReturnResult>? Returns = null, decimal RefundedAmount = 0, DateTime? ReturnDeadlineUtc = null,
-    bool CanRequestReturn = false)
+    bool CanRequestReturn = false, bool CanCancel = false, DateTime? CancelledAtUtc = null)
 {
     public static CheckoutResult From(Order order, string? approveUrl = null) => new(
         order.Id, order.Status.ToString(), order.TotalAmount,
@@ -45,7 +45,8 @@ public record CheckoutResult(
         order.LoyaltyPoints, order.LoyaltyDiscount,
         order.Returns.OrderByDescending(r => r.CreatedAtUtc).Select(r => ReturnResult.From(order, r)).ToList(),
         order.RefundedAmount, order.ReturnDeadlineUtc,
-        order.WhyCannotRequestReturn(DateTime.UtcNow) is null);
+        order.WhyCannotRequestReturn(DateTime.UtcNow) is null,
+        order.WhyCannotCancel() is null, order.CancelledAtUtc);
 }
 
 public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>

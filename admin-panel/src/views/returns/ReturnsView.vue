@@ -73,9 +73,10 @@ async function act(r, action) {
   try {
     const note = (notes[r.returnId] ?? '').trim() || null
     const updated = await apiClient.post(`/api/orders/returns/${r.returnId}/${action}`, { note })
+    const what = r.isCancellation ? 'Cancelación' : 'Devolución'
     notice.value = action === 'approve'
-      ? `Devolución del pedido #${shortId(r.orderId)} reembolsada: ${money(updated.refundAmount)} a ${r.userEmail}.`
-      : `Devolución del pedido #${shortId(r.orderId)} rechazada. Le avisamos a ${r.userEmail}.`
+      ? `${what} del pedido #${shortId(r.orderId)} reembolsada: ${money(updated.refundAmount)} a ${r.userEmail}.`
+      : `${what} del pedido #${shortId(r.orderId)} rechazada. Le avisamos a ${r.userEmail}.`
     rejecting.value = null
     delete notes[r.returnId]
     await load()
@@ -128,6 +129,7 @@ onMounted(load)
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
             <p class="text-sm font-medium text-gray-900">
+              <span v-if="r.isCancellation" class="mr-1 rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700" data-testid="return-is-cancellation">Cancelación</span>
               Pedido #{{ shortId(r.orderId) }} · {{ r.userFullName }}
               <span class="font-normal text-gray-500">({{ r.userEmail }})</span>
             </p>
@@ -162,7 +164,8 @@ onMounted(load)
             <button v-if="rejecting !== r.returnId" type="button" :disabled="busyId === r.returnId" @click="act(r, 'approve')"
               data-testid="return-approve"
               class="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60">
-              {{ busyId === r.returnId ? 'Reembolsando…' : r.status === 'Approved' ? 'Reintentar reembolso' : `Aprobar y reembolsar ${money(r.refundAmount)}` }}
+              {{ busyId === r.returnId ? 'Reembolsando…' : r.status === 'Approved' ? 'Reintentar reembolso'
+                : r.isCancellation ? `Cancelar el pedido y reembolsar ${money(r.refundAmount)}` : `Aprobar y reembolsar ${money(r.refundAmount)}` }}
             </button>
             <template v-if="r.status === 'Requested' || r.status === 'Approved'">
               <button v-if="rejecting !== r.returnId" type="button" @click="rejecting = r.returnId" data-testid="return-reject"

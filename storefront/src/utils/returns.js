@@ -18,6 +18,18 @@ const money = (value) => `$${Number(value ?? 0).toFixed(2)}`
 
 /** Estado de una devolución en palabras del cliente: { label, tone } (tone: info | success | danger). */
 export function returnStatus(ret) {
+  if (ret.isCancellation) {
+    switch (ret.status) {
+      case 'Requested':
+        return { label: 'Cancelación solicitada — la estamos revisando', tone: 'info' }
+      case 'Approved':
+        return { label: `Cancelación aprobada — reembolso de ${money(ret.refundAmount)} en proceso`, tone: 'info' }
+      case 'Refunded':
+        return { label: `Pedido cancelado y reembolsado: ${money(ret.refundAmount)}`, tone: 'success' }
+      case 'Rejected':
+        return { label: 'Cancelación rechazada', tone: 'danger' }
+    }
+  }
   switch (ret.status) {
     case 'Requested':
       return { label: 'Solicitada — la estamos revisando', tone: 'info' }

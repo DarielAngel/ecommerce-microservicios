@@ -26,6 +26,9 @@ public class Order
     /// <summary>Cuándo el Admin lo marcó como enviado (null en pedidos enviados antes de la Fase 5).</summary>
     public DateTime? ShippedAtUtc { get; private set; }
 
+    /// <summary>Cuándo se canceló (Fase 7). Null si no está cancelado.</summary>
+    public DateTime? CancelledAtUtc { get; private set; }
+
     /// <summary>Ventana de entrega estimada para mostrar al cliente (null si todavía no está pagado).</summary>
     public DeliveryEstimate? EstimatedDelivery => DeliveryEstimate.For(Status, PaidAtUtc, ShippedAtUtc ?? (Status == OrderStatus.Shipped ? UpdatedAtUtc : null));
 
@@ -168,15 +171,23 @@ public class Order
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    public void MarkCancelled()
+    /// <summary>
+    /// Cancela un pedido que todavía no se pagó (el cliente se arrepintió en el checkout). Quien llama libera el
+    /// stock, el cupón y los puntos apartados. Un pedido ya pagado se cancela con <see cref="RequestCancellation"/>.
+    /// </summary>
+    public void MarkCancelled(DateTime? nowUtc = null)
     {
-        if (Status == OrderStatus.Paid)
+        if (Status == OrderStatus.Cancelled) return;
+        if (Status != OrderStatus.PendingPayment)
         {
-            throw new DomainException("No se puede cancelar una orden que ya fue pagada.");
+            throw new DomainException(Status == OrderStatus.Paid
+                ? "No se puede cancelar una orden que ya fue pagada."
+                : $"No se puede cancelar una orden en estado '{Status}'.");
         }
 
         Status = OrderStatus.Cancelled;
-        UpdatedAtUtc = DateTime.UtcNow;
+        CancelledAtUtc = nowUtc ?? DateTime.UtcNow;
+        UpdatedAtUtc = CancelledAtUtc.Value;
     }
 
     public void MarkShipped()
@@ -184,6 +195,12 @@ public class Order
         if (Status != OrderStatus.Paid)
         {
             throw new DomainException($"Solo se puede marcar como enviada una orden pagada (estado actual: '{Status}').");
+        }
+
+        if (OpenReturn is { IsCancellation: true })
+        {
+            throw new DomainException(
+                "El cliente pidió cancelar este pedido: apruébala o recházala en Devoluciones antes de enviarlo.");
         }
 
         Status = OrderStatus.Shipped;
@@ -271,6 +288,41 @@ public class Order
         return orderReturn;
     }
 
+    /// <summary>Por qué no se puede pedir la cancelación ahora (null = sí se puede).</summary>
+    public string? WhyCannotCancel()
+    {
+        if (Status == OrderStatus.PendingPayment) return null;
+        if (Status != OrderStatus.Paid)
+            return Status is OrderStatus.Shipped
+                ? "Este pedido ya fue enviado: en vez de cancelarlo, pide una devolución."
+                : $"No se puede cancelar un pedido en estado '{Status}'.";
+        if (OpenReturn is not null)
+            return "Ya pediste cancelar este pedido; espera a que lo revisemos.";
+        return null;
+    }
+
+    /// <summary>
+    /// El pedido está pagado pero no enviado: se pide la cancelación de TODO el pedido (Fase 7). Funciona como una
+    /// devolución de todas las unidades: el Admin la aprueba (y se reembolsa todo) o la rechaza. Mientras está
+    /// pendiente, el pedido no se puede enviar.
+    /// </summary>
+    public OrderReturn RequestCancellation(ReturnReason reason, string? comment, DateTime nowUtc)
+    {
+        if (Status != OrderStatus.Paid || OpenReturn is not null)
+            throw new DomainException(WhyCannotCancel() ?? "No se puede cancelar este pedido.");
+        if (!Enum.IsDefined(reason))
+            throw new DomainException("Motivo inválido.");
+        var cleanComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+        if (cleanComment?.Length > OrderReturn.MaxCommentLength)
+            throw new DomainException($"El comentario admite hasta {OrderReturn.MaxCommentLength} caracteres.");
+
+        var lines = _lines.Select(l => new OrderReturnLine(l.VariantId, l.ProductId, l.ProductName, l.UnitPrice, l.Quantity));
+        var cancellation = new OrderReturn(Guid.NewGuid(), reason, cleanComment, lines, nowUtc, isCancellation: true);
+        _returns.Add(cancellation);
+        UpdatedAtUtc = nowUtc;
+        return cancellation;
+    }
+
     private OrderReturn GetReturn(Guid returnId) =>
         _returns.FirstOrDefault(r => r.Id == returnId) ?? throw new DomainException("La devolución no es de este pedido.");
 
@@ -328,6 +380,8 @@ public class Order
         var cleanNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
         if (cleanNote?.Length > OrderReturn.MaxCommentLength)
             throw new DomainException($"La nota admite hasta {OrderReturn.MaxCommentLength} caracteres.");
+        if (target.IsCancellation && Status != OrderStatus.Paid)
+            throw new DomainException("Este pedido ya no se puede cancelar.");
 
         var quote = QuoteRefund(returnId);
         if (quote.Amount <= 0)
@@ -347,6 +401,14 @@ public class Order
             throw new DomainException("Solo se puede reembolsar una devolución aprobada.");
 
         target.MarkRefunded(nowUtc);
+        if (target.IsCancellation && Status == OrderStatus.Paid)
+        {
+            Status = OrderStatus.Cancelled;
+            CancelledAtUtc = nowUtc;
+            UpdatedAtUtc = nowUtc;
+            return;
+        }
+
         var refundedUnits = _returns.Where(r => r.Status == ReturnStatus.Refunded).SelectMany(r => r.Lines).Sum(l => l.Quantity);
         if (refundedUnits >= _lines.Sum(l => l.Quantity)) Status = OrderStatus.Refunded;
         UpdatedAtUtc = nowUtc;

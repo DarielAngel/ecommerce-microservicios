@@ -25,12 +25,13 @@ public record ReturnLineResult(Guid VariantId, Guid ProductId, string ProductNam
 public record ReturnResult(
     Guid ReturnId, Guid OrderId, string Status, string Reason, string? Comment, string? AdminNote,
     decimal RefundAmount, int LoyaltyPointsToRestore, DateTime CreatedAtUtc, DateTime? ResolvedAtUtc, DateTime? RefundedAtUtc,
-    IReadOnlyList<ReturnLineResult> Lines)
+    IReadOnlyList<ReturnLineResult> Lines, bool IsCancellation = false)
 {
     public static ReturnResult From(Order order, OrderReturn r) => new(
         r.Id, order.Id, r.Status.ToString(), r.Reason.ToString(), r.Comment, r.AdminNote,
         r.RefundAmount, r.LoyaltyPointsToRestore, r.CreatedAtUtc, r.ResolvedAtUtc, r.RefundedAtUtc,
-        r.Lines.Select(l => new ReturnLineResult(l.VariantId, l.ProductId, l.ProductName, l.UnitPrice, l.Quantity)).ToList());
+        r.Lines.Select(l => new ReturnLineResult(l.VariantId, l.ProductId, l.ProductName, l.UnitPrice, l.Quantity)).ToList(),
+        r.IsCancellation);
 }
 
 /// <summary>
@@ -41,7 +42,8 @@ public record AdminReturnResult(
     Guid ReturnId, Guid OrderId, string Status, string Reason, string? Comment, string? AdminNote,
     decimal RefundAmount, int LoyaltyPointsToRestore, bool CompletesOrder,
     DateTime CreatedAtUtc, DateTime? ResolvedAtUtc, DateTime? RefundedAtUtc, IReadOnlyList<ReturnLineResult> Lines,
-    string UserEmail, string UserFullName, decimal OrderTotal, decimal OrderRefundedAmount, DateTime? ShippedAtUtc)
+    string UserEmail, string UserFullName, decimal OrderTotal, decimal OrderRefundedAmount, DateTime? ShippedAtUtc,
+    bool IsCancellation = false)
 {
     public static AdminReturnResult From(Order order, OrderReturn r)
     {
@@ -51,7 +53,8 @@ public record AdminReturnResult(
             r.Id, order.Id, basic.Status, basic.Reason, r.Comment, r.AdminNote,
             quote.Amount, quote.LoyaltyPointsToRestore, quote.CompletesOrder,
             r.CreatedAtUtc, r.ResolvedAtUtc, r.RefundedAtUtc, basic.Lines,
-            order.UserEmail, order.UserFullName, order.TotalAmount, order.RefundedAmount, order.ShippedAtUtc);
+            order.UserEmail, order.UserFullName, order.TotalAmount, order.RefundedAmount, order.ShippedAtUtc,
+            r.IsCancellation);
     }
 }
 
@@ -335,7 +338,7 @@ public class RejectReturnCommandHandler : IRequestHandler<RejectReturnCommand, A
             {
                 await _events.PublishAsync(new ReturnRejectedEvent(
                     orderReturn.Id, order.Id, order.UserId, order.UserEmail, order.UserFullName,
-                    orderReturn.AdminNote!, orderReturn.ResolvedAtUtc!.Value), ct);
+                    orderReturn.AdminNote!, orderReturn.ResolvedAtUtc!.Value, orderReturn.IsCancellation), ct);
             }
             catch (Exception ex)
             {
@@ -363,8 +366,10 @@ internal static class RefundEvents
 {
     public static OrderRefundedEvent For(Order order, OrderReturn orderReturn, TimeProvider time) => new(
         orderReturn.Id, order.Id, order.UserId, order.UserEmail, order.UserFullName,
-        orderReturn.RefundAmount, "USD", order.Status == Domain.Enums.OrderStatus.Refunded,
+        orderReturn.RefundAmount, "USD",
+        order.Status is Domain.Enums.OrderStatus.Refunded or Domain.Enums.OrderStatus.Cancelled,
         orderReturn.LoyaltyPointsToRestore,
         orderReturn.Lines.Select(l => new RefundedItem(l.VariantId, l.ProductId, l.ProductName, l.Quantity)).ToList(),
-        orderReturn.RefundedAtUtc ?? time.GetUtcNow().UtcDateTime);
+        orderReturn.RefundedAtUtc ?? time.GetUtcNow().UtcDateTime,
+        orderReturn.IsCancellation);
 }

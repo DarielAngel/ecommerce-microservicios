@@ -61,6 +61,15 @@ public class PaymentServiceClient : IPaymentServiceClient
         return new RefundPaymentResult(body.RefundId, body.Amount, body.PayPalRefundId, body.PaymentStatus);
     }
 
+    public async Task<string?> GetPaymentStatusAsync(Guid orderId, string accessToken, CancellationToken ct)
+    {
+        var response = await _httpClient.SendAsync(WithAuth(HttpMethod.Get, $"api/payments/{orderId}", accessToken), ct);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadFromJsonAsync<PaymentResponse>(cancellationToken: ct);
+        return body?.Status;
+    }
+
     public async Task<RefundPaymentResult?> FindRefundAsync(Guid orderId, Guid refundId, string accessToken, CancellationToken ct)
     {
         var response = await _httpClient.SendAsync(WithAuth(HttpMethod.Get, $"api/payments/{orderId}/refunds/{refundId}", accessToken), ct);

@@ -9,7 +9,8 @@ public record AdminOrderResult(
     Guid OrderId, Guid UserId, string UserEmail, string UserFullName, string ShippingAddress,
     string Status, decimal TotalAmount, DateTime CreatedAtUtc, IReadOnlyList<OrderLineResult> Lines,
     decimal DiscountAmount, string? CouponCode, DateTime? PaidAtUtc = null, DateTime? ShippedAtUtc = null,
-    int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0);
+    int LoyaltyPoints = 0, decimal LoyaltyDiscount = 0,
+    decimal RefundedAmount = 0, bool HasPendingCancellation = false, DateTime? CancelledAtUtc = null);
 
 public class ListAllOrdersQueryHandler : IRequestHandler<ListAllOrdersQuery, IReadOnlyList<AdminOrderResult>>
 {
@@ -27,7 +28,8 @@ public class ListAllOrdersQueryHandler : IRequestHandler<ListAllOrdersQuery, IRe
             order.Status.ToString(), order.TotalAmount, order.CreatedAtUtc,
             order.Lines.Select(OrderLineResult.From).ToList(),
             order.DiscountAmount, order.CouponCode, order.PaidAtUtc, order.ShippedAtUtc,
-            order.LoyaltyPoints, order.LoyaltyDiscount
+            order.LoyaltyPoints, order.LoyaltyDiscount,
+            order.RefundedAmount, order.OpenReturn is { IsCancellation: true }, order.CancelledAtUtc
         )).ToList();
     }
 }

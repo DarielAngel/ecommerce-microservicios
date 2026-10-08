@@ -8,6 +8,10 @@ const loading = ref(true)
 const error = ref('')
 const shippingId = ref(null)
 const actionError = ref('')
+const notice = ref('')
+const cancellingId = ref(null)
+const cancelNote = ref('')
+const cancelBusy = ref(false)
 const expandedId = ref(null)
 
 const statusStyles = {
@@ -48,13 +52,32 @@ async function markShipped(orderId) {
   }
 }
 
+// Cancelar un pedido pagado sin enviar (Fase 7): se reembolsa todo en el acto.
+async function cancelOrder(o) {
+  actionError.value = ''
+  cancelBusy.value = true
+  try {
+    const result = await apiClient.post(`/api/orders/${o.orderId}/cancel`, { reason: 'Other', comment: cancelNote.value.trim() || null })
+    notice.value = `Pedido de ${o.userEmail} cancelado: se reembolsaron $${Number(result.refundedAmount ?? 0).toFixed(2)}.`
+    cancellingId.value = null
+    cancelNote.value = ''
+    await load()
+  } catch (err) {
+    actionError.value = err.message
+    await load()
+  } finally {
+    cancelBusy.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
 <template>
   <div>
     <h1 class="text-2xl font-semibold text-gray-900 mb-6">Órdenes</h1>
-    <p v-if="actionError" class="text-sm text-red-600 mb-4">{{ actionError }}</p>
+    <p v-if="actionError" class="text-sm text-red-600 mb-4" role="alert">{{ actionError }}</p>
+    <p v-if="notice" class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700" role="status">{{ notice }}</p>
 
     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
       <div v-if="loading" class="p-6 text-sm text-gray-500">Cargando...</div>
@@ -85,13 +108,35 @@ onMounted(load)
                 <span class="text-xs px-2 py-0.5 rounded-full" :class="statusStyles[o.status] || 'bg-gray-100 text-gray-600'">
                   {{ o.status }}
                 </span>
+                <span v-if="o.hasPendingCancellation" class="ml-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700"
+                  data-testid="pending-cancellation">Cancelación pedida</span>
+                <span v-if="o.refundedAmount > 0" class="block text-xs text-gray-500">Reembolsado ${{ o.refundedAmount.toFixed(2) }}</span>
               </td>
               <td class="px-4 py-2.5 text-gray-500 text-xs">{{ new Date(o.createdAtUtc).toLocaleString() }}</td>
               <td class="px-4 py-2.5 text-right" @click.stop>
-                <button v-if="o.status === 'Paid'" @click="markShipped(o.orderId)" :disabled="shippingId === o.orderId"
-                  class="text-brand-600 hover:text-brand-700 font-medium text-xs disabled:opacity-50">
-                  {{ shippingId === o.orderId ? 'Marcando...' : 'Marcar enviada' }}
-                </button>
+                <template v-if="o.status === 'Paid'">
+                  <div v-if="cancellingId === o.orderId" class="flex flex-col items-end gap-1" data-testid="cancel-order-form">
+                    <input v-model="cancelNote" maxlength="500" placeholder="Nota para el cliente (opcional)"
+                      class="w-56 rounded border border-gray-300 px-2 py-1 text-xs" aria-label="Nota para el cliente" />
+                    <div class="flex gap-2">
+                      <button type="button" @click="cancelOrder(o)" :disabled="cancelBusy" data-testid="cancel-order-confirm"
+                        class="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white disabled:opacity-50">
+                        {{ cancelBusy ? 'Reembolsando…' : `Cancelar y reembolsar $${o.totalAmount.toFixed(2)}` }}
+                      </button>
+                      <button type="button" @click="cancellingId = null" class="text-xs text-gray-600">No</button>
+                    </div>
+                  </div>
+                  <template v-else>
+                    <button v-if="!o.hasPendingCancellation" @click="markShipped(o.orderId)" :disabled="shippingId === o.orderId"
+                      class="text-brand-600 hover:text-brand-700 font-medium text-xs disabled:opacity-50">
+                      {{ shippingId === o.orderId ? 'Marcando...' : 'Marcar enviada' }}
+                    </button>
+                    <button type="button" @click="cancellingId = o.orderId" data-testid="cancel-order"
+                      class="ml-3 text-red-600 hover:text-red-700 font-medium text-xs">
+                      {{ o.hasPendingCancellation ? 'Aprobar cancelación' : 'Cancelar' }}
+                    </button>
+                  </template>
+                </template>
                 <span v-else-if="o.shippedAtUtc" class="text-xs text-gray-500" data-testid="shipped-at">
                   Enviada {{ new Date(o.shippedAtUtc).toLocaleString() }}
                 </span>

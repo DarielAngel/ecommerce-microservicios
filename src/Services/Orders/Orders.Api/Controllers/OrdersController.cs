@@ -102,6 +102,20 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
+    public record CancelOrderRequest(string? Reason, string? Comment);
+
+    /// <summary>
+    /// Cancela un pedido sin enviar: pendiente de pago → al instante; pagado → el cliente pide la cancelación (la
+    /// aprueba un Admin) y un Admin la hace directamente (con reembolso total).
+    /// </summary>
+    [HttpPost("{orderId:guid}/cancel")]
+    public async Task<ActionResult<CheckoutResult>> Cancel(Guid orderId, CancelOrderRequest? request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new CancelOrderCommand(
+            orderId, GetUserId(), User.IsInRole("Admin"), request?.Reason ?? "ChangedMind", request?.Comment, GetRawAccessToken()), ct);
+        return Ok(result);
+    }
+
     /// <summary>Todas las devoluciones (Admin), las más nuevas primero. ?status=Requested|Approved|Refunded|Rejected</summary>
     [HttpGet("returns")]
     [Authorize(Roles = "Admin")]

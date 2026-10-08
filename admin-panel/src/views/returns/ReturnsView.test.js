@@ -107,4 +107,11 @@ describe('ReturnsView', () => {
 
     expect(client.post).toHaveBeenCalledWith('/api/orders/returns/r1/reject', { note: 'PayPal no lo permite' })
   })
+
+  it('marca las cancelaciones y su botón dice que cancela el pedido', async () => {
+    const wrapper = await mountView([{ ...pending, isCancellation: true, completesOrder: true, refundAmount: 40 }])
+
+    expect(wrapper.get('[data-testid="return-is-cancellation"]').text()).toBe('Cancelación')
+    expect(wrapper.get('[data-testid="return-approve"]').text()).toBe('Cancelar el pedido y reembolsar $40.00')
+  })
 })

@@ -159,4 +159,34 @@ describe('OrdersHistoryView', () => {
     expect(returns[1].text()).toContain('Reembolsada: $16.00')
     expect(returns[1].text()).toContain('+200 puntos devueltos')
   })
+
+  it('cancela al instante un pedido sin pagar, y uno pagado lo pide con un motivo', async () => {
+    const wrapper = await mountView([{ ...pending, canCancel: true }, { ...shipped, orderId: 'cccccccc-0000', status: 'Paid', canCancel: true }])
+    client.post.mockImplementation(async (path, body) => path.startsWith('/api/orders/aaaaaaaa')
+      ? { ...pending, status: 'Cancelled', canCancel: false }
+      : { ...shipped, orderId: 'cccccccc-0000', status: 'Paid', canCancel: false,
+          returns: [{ returnId: 'r1', isCancellation: true, status: 'Requested', reason: body.reason, refundAmount: 0,
+            loyaltyPointsToRestore: 0, adminNote: null, lines: [{ variantId: 'v1', productName: 'Taza', quantity: 2 }] }] })
+
+    // Sin pagar: solo confirmar.
+    const unpaid = orderItems(wrapper).find((w) => w.text().includes('#aaaaaaaa'))
+    await unpaid.get('button').trigger('click')
+    await wrapper.get('[data-testid="cancel-order"]').trigger('click')
+    expect(wrapper.get('[data-testid="cancel-form"]').text()).toContain('Todavía no se cobró nada')
+    await wrapper.get('[data-testid="cancel-form"]').trigger('submit')
+    await flushPromises()
+    expect(client.post).toHaveBeenLastCalledWith('/api/orders/aaaaaaaa-0000/cancel', { reason: 'ChangedMind', comment: null })
+    expect(useToastStore().toasts.at(-1).message).toBe('Pedido cancelado.')
+
+    // Pagado: se pide con motivo y queda "Cancelación solicitada".
+    const paid = orderItems(wrapper).find((w) => w.text().includes('#cccccccc'))
+    await paid.get('button').trigger('click')
+    await wrapper.get('[data-testid="cancel-order"]').trigger('click')
+    await wrapper.get('[data-testid="cancel-form"] select').setValue('WrongItem')
+    await wrapper.get('[data-testid="cancel-form"]').trigger('submit')
+    await flushPromises()
+    expect(client.post).toHaveBeenLastCalledWith('/api/orders/cccccccc-0000/cancel', { reason: 'WrongItem', comment: null })
+    expect(wrapper.get('[data-testid="order-return"]').text()).toContain('Cancelación solicitada')
+    expect(wrapper.find('[data-testid="cancel-order"]').exists()).toBe(false)
+  })
 })

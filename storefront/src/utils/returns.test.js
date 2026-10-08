@@ -36,4 +36,10 @@ describe('devoluciones', () => {
     expect(RETURN_REASONS.map((r) => r.value)).toEqual(['DoesNotFit', 'Damaged', 'WrongItem', 'NotAsDescribed', 'ChangedMind', 'Other'])
     expect(reasonLabel('Damaged')).toBe('Llegó dañado o con fallas')
   })
+
+  it('describe las cancelaciones con su propio texto', () => {
+    expect(returnStatus({ isCancellation: true, status: 'Requested' }).label).toBe('Cancelación solicitada — la estamos revisando')
+    expect(returnStatus({ isCancellation: true, status: 'Refunded', refundAmount: 51 }).label).toBe('Pedido cancelado y reembolsado: $51.00')
+    expect(returnStatus({ isCancellation: true, status: 'Rejected' }).tone).toBe('danger')
+  })
 })

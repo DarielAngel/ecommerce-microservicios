@@ -51,6 +51,13 @@ public class OrderReturn
     private readonly List<OrderReturnLine> _lines = new();
 
     public Guid Id { get; private set; }
+
+    /// <summary>
+    /// true = no es una devolución sino la cancelación de un pedido pagado que todavía no se envió (todas las
+    /// unidades, todo el dinero). Sigue el mismo camino: el Admin la aprueba y se reembolsa, o la rechaza.
+    /// </summary>
+    public bool IsCancellation { get; private set; }
+
     public ReturnStatus Status { get; private set; }
     public ReturnReason Reason { get; private set; }
     public string? Comment { get; private set; }
@@ -83,9 +90,11 @@ public class OrderReturn
 
     private OrderReturn() { }
 
-    internal OrderReturn(Guid id, ReturnReason reason, string? comment, IEnumerable<OrderReturnLine> lines, DateTime nowUtc)
+    internal OrderReturn(Guid id, ReturnReason reason, string? comment, IEnumerable<OrderReturnLine> lines, DateTime nowUtc,
+        bool isCancellation = false)
     {
         Id = id;
+        IsCancellation = isCancellation;
         Status = ReturnStatus.Requested;
         Reason = reason;
         Comment = comment;

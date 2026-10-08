@@ -10,6 +10,7 @@ import { pointsFor } from '../utils/loyalty'
 import { returnStatus, reasonLabel, returnDeadlineText } from '../utils/returns'
 import AccountNav from '../components/AccountNav.vue'
 import ReturnRequestForm from '../components/ReturnRequestForm.vue'
+import CancelOrderPanel from '../components/CancelOrderPanel.vue'
 
 const apiClient = useApi()
 const cartStore = useCartStore()
@@ -23,6 +24,8 @@ const expandedId = ref(null)
 const buyingAgainId = ref(null)
 const returningId = ref(null)
 const sendingReturn = ref(false)
+const cancellingId = ref(null)
+const sendingCancel = ref(false)
 
 const statusLabels = {
   PendingPayment: 'Pago pendiente',
@@ -106,6 +109,25 @@ async function onRequestReturn(order, request) {
   }
 }
 
+async function onCancel(order, request) {
+  sendingCancel.value = true
+  try {
+    const updated = await apiClient.post(`/api/orders/${order.orderId}/cancel`, request)
+    orders.value = orders.value.map((o) => (o.orderId === updated.orderId ? updated : o))
+    cancellingId.value = null
+    toast.push({
+      type: 'success',
+      message: updated.status === 'Cancelled'
+        ? 'Pedido cancelado.'
+        : 'Pedimos la cancelación. Te avisaremos por correo cuando la revisemos.'
+    })
+  } catch (err) {
+    toast.push({ type: 'error', message: err.message, duration: 8000 })
+  } finally {
+    sendingCancel.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -175,7 +197,9 @@ onMounted(load)
 
           <!-- Devoluciones (Fase 7) -->
           <div v-if="o.returns?.length" data-testid="order-returns">
-            <p class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">Devoluciones</p>
+            <p class="mb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">
+              {{ o.returns.every((r) => r.isCancellation) ? 'Cancelación' : 'Devoluciones' }}
+            </p>
             <ul class="space-y-2">
               <li v-for="r in o.returns" :key="r.returnId" class="rounded-lg border px-3 py-2 text-sm"
                 :class="returnTones[returnStatus(r).tone]" data-testid="order-return" :data-status="r.status">
@@ -189,10 +213,18 @@ onMounted(load)
             </ul>
           </div>
 
+          <CancelOrderPanel v-if="cancellingId === o.orderId" :order="o" :submitting="sendingCancel"
+            @submit="(request) => onCancel(o, request)" @cancel="cancellingId = null" />
+
           <ReturnRequestForm v-if="returningId === o.orderId" :order="o" :submitting="sendingReturn"
             @submit="(request) => onRequestReturn(o, request)" @cancel="returningId = null" />
 
           <div class="flex flex-wrap items-center gap-2">
+            <button v-if="o.canCancel && cancellingId !== o.orderId" type="button" data-testid="cancel-order"
+              @click="cancellingId = o.orderId"
+              class="rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10">
+              Cancelar pedido
+            </button>
             <button v-if="o.canRequestReturn && returningId !== o.orderId" type="button" data-testid="request-return"
               @click="returningId = o.orderId"
               class="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface-muted">

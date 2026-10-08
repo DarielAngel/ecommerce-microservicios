@@ -178,6 +178,12 @@ Marca cada punto a medida que lo pruebas.
   *"Devolución reembolsada"*.
 - [ ] Pide otra devolución de la unidad que queda y **recházala** con una nota: el cliente la ve en *Mis pedidos* y
   puede volver a pedirla. Si devuelves todo, el pedido queda **Reembolsada**.
+- [ ] **Cancelar sin pagar**: haz un checkout y, sin confirmar el pago, ve a **Mis pedidos** → *Cancelar pedido* →
+  *Sí, cancelar*: queda **Cancelada** y los productos siguen en tu carrito.
+- [ ] **Cancelar pagado**: paga otro pedido y, antes de enviarlo, toca *Cancelar pedido* → *Pedir la cancelación*.
+  En el panel → **Órdenes** aparece *"Cancelación pedida"* y no se puede marcar como enviada; en **Devoluciones**
+  apruébala: el pedido queda **Cancelada** con todo reembolsado. (Desde **Órdenes** también puedes *Cancelar* un
+  pedido pagado directamente.)
 
 ---
 

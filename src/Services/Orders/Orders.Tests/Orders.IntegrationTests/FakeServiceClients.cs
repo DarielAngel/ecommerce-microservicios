@@ -61,6 +61,9 @@ public class FakePaymentServiceClient : IPaymentServiceClient
         return Task.FromResult(new RefundPaymentResult(refundId, amount, $"FAKE-REFUND-{refundId}", "Captured"));
     }
 
+    public Task<string?> GetPaymentStatusAsync(Guid orderId, string accessToken, CancellationToken ct) =>
+        Task.FromResult<string?>("PendingApproval");
+
     public Task<RefundPaymentResult?> FindRefundAsync(Guid orderId, Guid refundId, string accessToken, CancellationToken ct) =>
         Task.FromResult(Refunds.TryGetValue(refundId, out var amount)
             ? new RefundPaymentResult(refundId, amount, $"FAKE-REFUND-{refundId}", "Captured")

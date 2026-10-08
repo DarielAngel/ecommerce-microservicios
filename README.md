@@ -1619,17 +1619,26 @@ Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-
     saldo negativo) y devuelve en la misma proporción los puntos que el cliente había usado.
   - **Notificaciones** manda el correo "Tu reembolso está en camino" (y "No pudimos aceptar tu devolución" al
     rechazar).
-- **Fuera de alcance por ahora**: cancelar un pedido pagado que todavía no se envió, y devolver el uso del cupón.
+- **Cancelar antes del envío** (*Mis pedidos* → *Cancelar pedido*):
+  - **Sin pagar**: se cancela al instante y se liberan el stock, el cupón y los puntos apartados (los productos
+    siguen en el carrito). Si PayPal ya había cobrado (la confirmación se cortó), no se cancela así: primero se
+    confirma el pago y después se pide la cancelación con reembolso.
+  - **Pagado y sin enviar**: el cliente **pide** la cancelación (solo un Admin mueve dinero). Aparece en
+    *Devoluciones* marcada como *Cancelación*; al aprobarla se reembolsa **todo** lo cobrado, el stock vuelve,
+    se ajustan los puntos y el pedido queda **Cancelada**. Mientras está pendiente, el pedido **no se puede
+    marcar como enviado**. El Admin también puede cancelar y reembolsar directo desde *Órdenes*.
+- **Fuera de alcance por ahora**: devolver el uso del cupón al devolver o cancelar.
 
   | Método | Ruta | Acceso |
   |---|---|---|
   | POST | `/api/orders/{orderId}/returns` | cliente (solo sus pedidos) |
+  | POST | `/api/orders/{orderId}/cancel` | cliente (sin pagar: cancela; pagado: pide) · Admin (pagado: cancela y reembolsa) |
   | GET | `/api/orders/returns?status=Requested\|Approved\|Refunded\|Rejected` | Admin |
   | POST | `/api/orders/returns/{returnId}/approve` · `/reject` | Admin |
   | POST | `/api/payments/{orderId}/refunds` · GET `/api/payments/{orderId}/refunds/{refundId}` | Admin (los usa Órdenes) |
 
-  Las respuestas de pedidos suman `returns`, `refundedAmount`, `returnDeadlineUtc`, `canRequestReturn` y, por
-  línea, `returnableQuantity`.
+  Las respuestas de pedidos suman `returns` (con `isCancellation`), `refundedAmount`, `returnDeadlineUtc`,
+  `canRequestReturn`, `canCancel`, `cancelledAtUtc` y, por línea, `returnableQuantity`.
 
 - Bases que ya existían **no hay que borrarlas**: al arrancar, Órdenes crea `order_returns` y `order_return_lines`
   (y completa la fecha de envío de pedidos viejos), Pagos crea `payment_refunds`, Inventario crea

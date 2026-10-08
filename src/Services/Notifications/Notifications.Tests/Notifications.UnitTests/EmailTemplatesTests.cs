@@ -94,4 +94,17 @@ public class EmailTemplatesTests
 
         html.Should().Contain("Producto &lt;usado&gt;");
     }
+
+    [Fact]
+    public void Cancelacion_UsaSuPropioAsuntoYTexto()
+    {
+        var orderId = Guid.Parse("abcdef12-0000-0000-0000-000000000000");
+
+        var (subject, html) = EmailTemplates.ReturnRefunded(orderId, "Ana", new[] { new EmailTemplates.RefundLine("Taza", 1) }, 25.5m, "USD", true, 0, orderCancelled: true);
+        var (rejectedSubject, _) = EmailTemplates.ReturnRejected(orderId, "Ana", "Ya salió", isCancellation: true);
+
+        subject.Should().Be("Cancelamos tu pedido #ABCDEF12");
+        html.Should().Contain("25.50 USD").And.Contain("todo lo que pagaste");
+        rejectedSubject.Should().Be("Sobre la cancelación de tu pedido #ABCDEF12");
+    }
 }

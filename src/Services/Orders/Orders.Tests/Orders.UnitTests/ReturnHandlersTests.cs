@@ -189,4 +189,122 @@ public class ReturnHandlersTests
             .Validate(new RequestReturnCommand(Guid.NewGuid(), Guid.NewGuid(), new[] { new ReturnItemInput(Guid.NewGuid(), 1) }, reason, null))
             .IsValid.Should().Be(valid);
     }
+
+    // ---- Cancelar (Fase 7) ----
+
+    private readonly IInventoryServiceClient _inventory = Substitute.For<IInventoryServiceClient>();
+    private readonly ICouponServiceClient _coupons = Substitute.For<ICouponServiceClient>();
+    private readonly ILoyaltyServiceClient _loyalty = Substitute.For<ILoyaltyServiceClient>();
+    private readonly MediatR.ISender _mediator = Substitute.For<MediatR.ISender>();
+
+    private CancelOrderCommandHandler Canceller() => new(
+        _orders, _lock, _inventory, _coupons, _loyalty, _payments, _mediator, TimeProvider.System, NullLogger<CancelOrderCommandHandler>.Instance);
+
+    private Order GivenOrder(Guid userId, bool paid)
+    {
+        var order = Order.Create(Guid.NewGuid(), userId, "ana@test.com", "Ana", "Calle 1",
+            new[] { (_mug, Guid.NewGuid(), "Taza", "TZ", 20m, 1) }, ("PROMO", 2m));
+        if (paid) order.MarkPaid();
+        _orders.GetByIdFreshAsync(order.Id, Arg.Any<CancellationToken>()).Returns(order);
+        return order;
+    }
+
+    [Fact]
+    public async Task Cancelar_SinPagar_LiberaStockYCuponYQuedaCancelada()
+    {
+        var user = Guid.NewGuid();
+        var order = GivenOrder(user, paid: false);
+
+        var result = await Canceller().Handle(new CancelOrderCommand(order.Id, user, false, "ChangedMind", null, "t"), CancellationToken.None);
+
+        result.Status.Should().Be("Cancelled");
+        await _inventory.Received(1).ReleaseReservationAsync(order.Id, "t", Arg.Any<CancellationToken>());
+        await _coupons.Received(1).ReleaseAsync(order.Id, "t", Arg.Any<CancellationToken>());
+        await _loyalty.DidNotReceiveWithAnyArgs().ReleaseAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Cancelar_SiNoSePuedeLiberarElStock_NoCancelaNada()
+    {
+        var user = Guid.NewGuid();
+        var order = GivenOrder(user, paid: false);
+        _inventory.ReleaseReservationAsync(default, default!, default).ReturnsForAnyArgs<Task>(_ => throw new HttpRequestException("Inventario caído"));
+
+        var act = () => Canceller().Handle(new CancelOrderCommand(order.Id, user, false, "ChangedMind", null, "t"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<HttpRequestException>();
+        order.Status.Should().Be(OrderStatus.PendingPayment);
+    }
+
+    [Fact]
+    public async Task Cancelar_PagadoComoCliente_SoloPideLaCancelacion()
+    {
+        var user = Guid.NewGuid();
+        var order = GivenOrder(user, paid: true);
+
+        var result = await Canceller().Handle(new CancelOrderCommand(order.Id, user, false, "ChangedMind", "Ya no lo necesito", "t"), CancellationToken.None);
+
+        result.Status.Should().Be("Paid");
+        result.Returns!.Single().Should().Match<ReturnResult>(r => r.IsCancellation && r.Status == "Requested");
+        await _mediator.DidNotReceiveWithAnyArgs().Send(default(ApproveReturnCommand)!, default);
+    }
+
+    [Fact]
+    public async Task Cancelar_PagadoComoAdmin_LaApruebaEnElActo_ReusandoLaQuePidioElCliente()
+    {
+        var order = GivenOrder(Guid.NewGuid(), paid: true);
+        var asked = order.RequestCancellation(ReturnReason.ChangedMind, null, DateTime.UtcNow);
+
+        await Canceller().Handle(new CancelOrderCommand(order.Id, Guid.NewGuid(), true, "Other", "Sin stock real", "admin"), CancellationToken.None);
+
+        await _mediator.Received(1).Send(Arg.Is<ApproveReturnCommand>(c => c.ReturnId == asked.Id && c.AccessToken == "admin"), Arg.Any<CancellationToken>());
+        order.Returns.Should().ContainSingle("no se crea una segunda solicitud");
+    }
+
+    [Fact]
+    public async Task Cancelar_ElPedidoDeOtroCliente_EsNotFound()
+    {
+        var order = GivenOrder(Guid.NewGuid(), paid: false);
+
+        var act = () => Canceller().Handle(new CancelOrderCommand(order.Id, Guid.NewGuid(), false, "ChangedMind", null, "t"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotFoundAppException>();
+        await _inventory.DidNotReceiveWithAnyArgs().ReleaseReservationAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Cancelar_SinPagarPeroPayPalYaCobro_NoCancelaNiLiberaNada()
+    {
+        var user = Guid.NewGuid();
+        var order = GivenOrder(user, paid: false);
+        _payments.GetPaymentStatusAsync(order.Id, "t", Arg.Any<CancellationToken>()).Returns("Captured");
+
+        var act = () => Canceller().Handle(new CancelOrderCommand(order.Id, user, false, "ChangedMind", null, "t"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictAppException>().WithMessage("*ya se cobró*");
+        order.Status.Should().Be(OrderStatus.PendingPayment);
+        await _inventory.DidNotReceiveWithAnyArgs().ReleaseReservationAsync(default, default!, default);
+    }
+
+    [Fact]
+    public async Task Cancelar_SinPagarComoAdmin_NoSePuede()
+    {
+        var order = GivenOrder(Guid.NewGuid(), paid: false);
+
+        var act = () => Canceller().Handle(new CancelOrderCommand(order.Id, Guid.NewGuid(), true, "Other", null, "admin"), CancellationToken.None);
+
+        await act.Should().ThrowAsync<ConflictAppException>();
+        order.Status.Should().Be(OrderStatus.PendingPayment);
+    }
+
+    [Fact]
+    public async Task Cancelar_ComoAdmin_SuComentarioVaComoNotaYNoComoDelCliente()
+    {
+        var order = GivenOrder(Guid.NewGuid(), paid: true);
+
+        await Canceller().Handle(new CancelOrderCommand(order.Id, Guid.NewGuid(), true, "Other", "Sin stock", "admin"), CancellationToken.None);
+
+        order.Returns.Single().Comment.Should().BeNull();
+        await _mediator.Received(1).Send(Arg.Is<ApproveReturnCommand>(c => c.Note == "Sin stock"), Arg.Any<CancellationToken>());
+    }
 }

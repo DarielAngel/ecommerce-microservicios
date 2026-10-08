@@ -89,7 +89,7 @@ public class OrderRefundedConsumer : IConsumer<OrderRefundedEvent>
             new SendReturnRefundedEmailCommand(
                 m.ReturnId, m.OrderId, m.Email, m.FullName,
                 m.Items.Select(i => new Application.Common.EmailTemplates.RefundLine(i.ProductName, i.Quantity)).ToList(),
-                m.RefundAmount, m.Currency, m.OrderFullyRefunded, m.LoyaltyPointsToRestore),
+                m.RefundAmount, m.Currency, m.OrderFullyRefunded, m.LoyaltyPointsToRestore, m.OrderCancelled),
             context.CancellationToken);
     }
 }
@@ -103,6 +103,6 @@ public class ReturnRejectedConsumer : IConsumer<ReturnRejectedEvent>
     public Task Consume(ConsumeContext<ReturnRejectedEvent> context) =>
         _mediator.Send(
             new SendReturnRejectedEmailCommand(context.Message.ReturnId, context.Message.OrderId, context.Message.Email,
-                context.Message.FullName, context.Message.Note),
+                context.Message.FullName, context.Message.Note, context.Message.IsCancellation),
             context.CancellationToken);
 }

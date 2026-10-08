@@ -13,9 +13,16 @@ public class MarkOrderAsShippedCommandHandlerTests
 {
     private readonly IOrderRepository _orderRepository = Substitute.For<IOrderRepository>();
     private readonly IEventPublisher _eventPublisher = Substitute.For<IEventPublisher>();
+    private readonly IOrderLock _orderLock = Substitute.For<IOrderLock>();
+
+    public MarkOrderAsShippedCommandHandlerTests()
+    {
+        _orderLock.AcquireAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(Substitute.For<IAsyncDisposable>()));
+    }
 
     private MarkOrderAsShippedCommandHandler CreateHandler() =>
-        new(_orderRepository, _eventPublisher, NullLogger<MarkOrderAsShippedCommandHandler>.Instance);
+        new(_orderRepository, _orderLock, _eventPublisher, NullLogger<MarkOrderAsShippedCommandHandler>.Instance);
 
     private static Order BuildPaidOrder(Guid orderId)
     {
@@ -31,7 +38,7 @@ public class MarkOrderAsShippedCommandHandlerTests
     {
         var orderId = Guid.NewGuid();
         var order = BuildPaidOrder(orderId);
-        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
+        _orderRepository.GetByIdFreshAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
 
         var handler = CreateHandler();
         var result = await handler.Handle(new MarkOrderAsShippedCommand(orderId), CancellationToken.None);
@@ -47,7 +54,7 @@ public class MarkOrderAsShippedCommandHandlerTests
         var orderId = Guid.NewGuid();
         var order = BuildPaidOrder(orderId);
         order.MarkShipped();
-        _orderRepository.GetByIdAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
+        _orderRepository.GetByIdFreshAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
 
         var handler = CreateHandler();
         var result = await handler.Handle(new MarkOrderAsShippedCommand(orderId), CancellationToken.None);
@@ -60,11 +67,26 @@ public class MarkOrderAsShippedCommandHandlerTests
     [Fact]
     public async Task Handle_ConOrdenInexistente_DeberiaLanzarNotFoundAppException()
     {
-        _orderRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Order?)null);
+        _orderRepository.GetByIdFreshAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Order?)null);
 
         var handler = CreateHandler();
         var act = async () => await handler.Handle(new MarkOrderAsShippedCommand(Guid.NewGuid()), CancellationToken.None);
 
         await act.Should().ThrowAsync<NotFoundAppException>();
+    }
+
+    [Fact]
+    public async Task Handle_ConUnaCancelacionPedida_NoEnviaYLoHaceBajoElCandado()
+    {
+        var orderId = Guid.NewGuid();
+        var order = BuildPaidOrder(orderId);
+        order.RequestCancellation(ReturnReason.ChangedMind, null, DateTime.UtcNow);
+        _orderRepository.GetByIdFreshAsync(orderId, Arg.Any<CancellationToken>()).Returns(order);
+
+        var act = () => CreateHandler().Handle(new MarkOrderAsShippedCommand(orderId), CancellationToken.None);
+
+        await act.Should().ThrowAsync<Ecommerce.Orders.Domain.Exceptions.DomainException>();
+        await _orderLock.Received(1).AcquireAsync(orderId, Arg.Any<CancellationToken>());
+        await _eventPublisher.DidNotReceiveWithAnyArgs().PublishAsync<OrderShippedEvent>(default!, default);
     }
 }

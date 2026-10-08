@@ -620,4 +620,91 @@ public class OrdersEndpointsTests : IClassFixture<OrdersApiFactory>
         var paidOnly = await CreatePaidOrderAsync(userToken);
         (await RequestReturnAsync(paidOnly, userToken, _factory.FakeCart.Items[0].VariantId, 1)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    // ---- Cancelar antes del envío (Fase 7) ----
+
+    private Task<HttpResponseMessage> CancelAsync(Guid orderId, string token, string reason = "ChangedMind")
+    {
+        var request = WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/cancel", token);
+        request.Content = JsonContent.Create(new { Reason = reason, Comment = "Ya no lo necesito" });
+        return _client.SendAsync(request);
+    }
+
+    [Fact]
+    public async Task Cancelar_PendienteDePago_LiberaElStockYQuedaCancelada()
+    {
+        var userToken = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var variantId = Guid.NewGuid();
+        _factory.FakeCart.Items = new List<CartItemInfo> { BuildCartItem(variantId) };
+        _factory.FakeInventory.ShouldReserveSucceed = true;
+        var checkout = WithAuth(HttpMethod.Post, "/api/orders/checkout", userToken);
+        checkout.Content = JsonContent.Create(new { VariantIds = new List<Guid> { variantId }, ShippingAddress = "Calle Falsa 123" });
+        var order = await (await _client.SendAsync(checkout)).Content.ReadFromJsonAsync<CheckoutResult>();
+        order!.CanCancel.Should().BeTrue();
+
+        var cancelled = await CancelAsync(order.OrderId, userToken);
+
+        cancelled.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await cancelled.Content.ReadFromJsonAsync<CheckoutResult>();
+        result!.Status.Should().Be("Cancelled");
+        result.CancelledAtUtc.Should().NotBeNull();
+        _factory.FakeInventory.ReleasedOrders.Should().ContainKey(order.OrderId);
+
+        // Confirmar el pago después ya no cobra nada.
+        var confirm = await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{order.OrderId}/confirm-payment", userToken));
+        (await confirm.Content.ReadFromJsonAsync<CheckoutResult>())!.Status.Should().Be("Cancelled");
+    }
+
+    [Fact]
+    public async Task Cancelar_Pagado_ElClienteLaPide_NoSePuedeEnviar_YElAdminLaApruebaConReembolsoTotal()
+    {
+        var userToken = OrdersApiFactory.CreateToken(Guid.NewGuid());
+        var orderId = await CreatePaidOrderAsync(userToken);
+
+        var requested = await (await CancelAsync(orderId, userToken)).Content.ReadFromJsonAsync<CheckoutResult>();
+        requested!.Status.Should().Be("Paid");
+        requested.CanCancel.Should().BeFalse();
+        var cancellation = requested.Returns!.Single();
+        cancellation.IsCancellation.Should().BeTrue();
+
+        (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/{orderId}/ship", AdminToken())))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var pending = await (await _client.SendAsync(WithAuth(HttpMethod.Get, "/api/orders/returns?status=Requested", AdminToken())))
+            .Content.ReadFromJsonAsync<List<AdminReturnResult>>();
+        pending!.Single(r => r.ReturnId == cancellation.ReturnId).Should().Match<AdminReturnResult>(r => r.IsCancellation && r.CompletesOrder);
+
+        (await _client.SendAsync(WithAuth(HttpMethod.Post, $"/api/orders/returns/{cancellation.ReturnId}/approve", AdminToken())))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var final = await (await _client.SendAsync(WithAuth(HttpMethod.Get, $"/api/orders/{orderId}", userToken))).Content.ReadFromJsonAsync<CheckoutResult>();
+        final!.Status.Should().Be("Cancelled");
+        final.RefundedAmount.Should().Be(final.TotalAmount);
+        _factory.FakePayments.Refunds[cancellation.ReturnId].Should().Be(final.TotalAmount);
+        _factory.Published.Events.OfType<Ecommerce.Contracts.Events.OrderRefundedEvent>()
+            .Should().ContainSingle(e => e.ReturnId == cancellation.ReturnId).Which.OrderCancelled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Cancelar_ElAdminLaCancelaDirectoYSeReembolsaEnElActo()
+    {
+        var orderId = await CreatePaidOrderAsync(OrdersApiFactory.CreateToken(Guid.NewGuid()));
+
+        var result = await (await CancelAsync(orderId, AdminToken(), reason: "Other")).Content.ReadFromJsonAsync<CheckoutResult>();
+
+        result!.Status.Should().Be("Cancelled");
+        result.RefundedAmount.Should().Be(result.TotalAmount);
+    }
+
+    [Fact]
+    public async Task Cancelar_UnPedidoEnviado_Devuelve400ConElMotivo()
+    {
+        var (orderId, _, userToken) = await ShippedOrderAsync();
+
+        var response = await CancelAsync(orderId, userToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("message").GetString()
+            .Should().Contain("pide una devolución");
+    }
 }

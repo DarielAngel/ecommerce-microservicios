@@ -79,6 +79,15 @@ async function confirmPayment() {
       </router-link>
     </div>
 
+    <div v-else-if="result.status === 'Cancelled'" data-testid="pending-cancelled">
+      <div class="text-5xl mb-3">🛑</div>
+      <h1 class="text-xl font-semibold text-ink mb-2">Este pedido fue cancelado</h1>
+      <p class="text-sm text-ink-soft mb-6">No se cobró nada. Los productos siguen en tu carrito por si quieres comprarlos.</p>
+      <router-link :to="{ name: 'cart' }" class="text-brand-ink font-medium text-sm underline">
+        Ir al carrito
+      </router-link>
+    </div>
+
     <div v-else>
       <div class="text-5xl mb-3">⚠️</div>
       <h1 class="text-xl font-semibold text-ink mb-2">El pago no se pudo completar</h1>
