@@ -4,12 +4,14 @@ import { useRouter } from 'vue-router'
 import { useApi } from '../api/useApi'
 import { useCartStore } from '../stores/cart'
 import { useAuthStore } from '../stores/auth'
+import { usePwaStore } from '../stores/pwa'
 import { addressesApi } from '../api/addresses'
 import { loyaltyApi } from '../api/loyalty'
 import { emptyAddress, formatAddress, isComplete, errorText } from '../utils/addresses'
 import CouponField from '../components/CouponField.vue'
 import AddressForm from '../components/AddressForm.vue'
 
+const pwa = usePwaStore()
 const apiClient = useApi()
 const cartStore = useCartStore()
 const router = useRouter()
@@ -238,7 +240,10 @@ async function submit() {
 
       <p v-if="error" class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
 
-      <button type="submit" :disabled="submitting || selectedItems.length === 0"
+      <p v-if="!pwa.online" class="text-sm text-amber-700 dark:text-amber-300" role="status" data-testid="checkout-offline">
+        Sin conexión: el pago necesita internet. Tu carrito sigue guardado.
+      </p>
+      <button type="submit" :disabled="submitting || selectedItems.length === 0 || !pwa.online"
         class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg py-2.5">
         {{ submitting ? 'Procesando...' : 'Pagar con PayPal' }}
       </button>

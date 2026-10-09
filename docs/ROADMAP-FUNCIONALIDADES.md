@@ -93,8 +93,16 @@ Inspiración: Amazon, Mercado Libre, Zalando.
 - **Aceptación**: nunca se devuelve más de lo cobrado (ni por redondeo, ni por reintentos, ni con dos Admins a
   la vez); un mismo reembolso no repone stock ni ajusta puntos dos veces.
 
+### Fase 8 — Tienda instalable (PWA) (storefront)
+Inspiración: Mercado Libre Lite, AliExpress, Starbucks, Twitter Lite.
+- T8.1 Manifiesto e íconos: se instala como app (Chrome/Edge/Android con botón propio; iPhone con instrucciones)
+- T8.2 Sin conexión: abre la app y muestra el catálogo y las fotos ya vistas; nunca guarda datos del cliente
+- T8.3 Aviso de versión nueva ("Actualizar" / "Después") y errores de red en español
+- **Aceptación**: recargar sin red muestra el último producto visto; carrito, pedidos y pagos nunca salen de
+  la caché.
+
 ### Futuro (fuera de este ciclo)
-Multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
+Multi-vendedor · multimoneda e i18n · asistente de compras
 con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volumen) · omnicanal.
 
 ## Estado
@@ -109,3 +117,4 @@ con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volu
 | 5 — Checkout rápido y seguimiento | Hecha |
 | 6 — Lealtad y recuperación | Hecha |
 | 7 — Devoluciones y reembolsos | Hecha |
+| 8 — Tienda instalable (PWA) | Hecha |

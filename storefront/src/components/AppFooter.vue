@@ -1,5 +1,6 @@
 <script setup>
 import { STORE } from '../config'
+import InstallAppCard from './InstallAppCard.vue'
 
 const year = new Date().getFullYear()
 </script>
@@ -13,6 +14,7 @@ const year = new Date().getFullYear()
           {{ STORE.name }}
         </p>
         <p class="mt-3 text-sm text-ink-muted">{{ STORE.tagline }}</p>
+        <InstallAppCard />
       </div>
 
       <div class="text-sm">

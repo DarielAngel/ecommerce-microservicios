@@ -1658,6 +1658,43 @@ docker compose up -d --build orders-service payments-service inventory-service l
 
 Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (sección 4.8).
 
+## Fase 8 — Tienda instalable (PWA)
+
+**PWA** (*Progressive Web App*, "aplicación web progresiva") = la misma tienda web, pero que el navegador puede
+**instalar como una app**: ícono en el escritorio o la pantalla de inicio, ventana propia sin barra de direcciones,
+y que **abre aunque no haya conexión**. No hay que publicar nada en Play Store ni App Store. Solo la tienda
+(el panel de Admin sigue siendo una web normal).
+
+- **Instalar**: en Chrome, Edge o Android aparece *"Instalar la app"* en el pie de la tienda (y el ícono de
+  instalar en la barra de direcciones). En iPhone/iPad, Safari no tiene ese botón: la tienda explica *Compartir →
+  "Agregar a inicio"*. *"No, gracias"* se recuerda. Manteniendo presionado el ícono: accesos directos a *Mis
+  pedidos*, *Carrito* y *Favoritos*.
+- **Sin conexión**: un *service worker* (un pequeño programa que el navegador corre aparte de la página) guarda
+  la "cáscara" de la app (HTML, JS, CSS, fuentes, íconos: ~500 KB) y lo último que viste del **catálogo público**
+  (productos, categorías, reseñas: primero la red; si no hay o tarda más de 4 s, lo guardado) y las **fotos**.
+  Arriba aparece *"Sin conexión…"* y el botón de pagar se desactiva.
+- **Nunca se guarda en el dispositivo nada del cliente**: carrito, pedidos, puntos, direcciones, favoritos,
+  cupones, stock y pagos siempre van a la red. Las reglas viven en `storefront/pwa-cache-rules.js` y tienen
+  pruebas que lo verifican ruta por ruta.
+- **Versiones nuevas**: al publicar una versión, la tienda muestra *"Hay una versión nueva de la tienda"* con
+  **Actualizar** / **Después**; nunca recarga sola en medio de una compra. Una app que queda abierta días
+  pregunta cada hora.
+- **Errores en español**: sin red, en vez de *"Failed to fetch"* se lee *"Sin conexión a internet. Revisa tu red
+  e intenta de nuevo."*.
+- **nginx**: `sw.js`, `manifest.webmanifest` e `index.html` se sirven con `Cache-Control: no-cache` (si quedaran
+  en caché, el navegador no vería las versiones nuevas); los archivos con hash, un año.
+- Hecho con `vite-plugin-pwa` (Workbox). Solo funciona en la versión compilada (`docker compose`, `vite preview`),
+  **no con `pnpm run dev`**.
+- **Requisito del navegador**: el service worker solo funciona en `https://` o en `localhost`. En tu PC
+  (`http://localhost:5173`) funciona todo; para instalarla en un teléfono hay que publicarla con HTTPS.
+
+```cmd
+docker compose up -d --build storefront
+```
+
+Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-LOCALES.md) (sección 4.9).
+Prueba automática: `e2e/tests/pwa.spec.js` (manifiesto e íconos; recargar sin red y seguir viendo el producto).
+
 ## Datos de demostración
 
 Para probar con una tienda "viva" en vez de productos con códigos raros:

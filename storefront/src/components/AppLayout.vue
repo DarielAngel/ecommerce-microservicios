@@ -7,6 +7,7 @@ import { useApi } from '../api/useApi'
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
 import ToastHost from './ToastHost.vue'
+import PwaPrompts from './PwaPrompts.vue'
 
 const auth = useAuthStore()
 const cart = useCartStore()
@@ -51,6 +52,7 @@ watch(() => auth.isAuthenticated, (isLoggedIn) => {
 
 <template>
   <div class="flex min-h-screen flex-col bg-canvas text-ink">
+    <PwaPrompts />
     <AppHeader />
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
       <router-view />

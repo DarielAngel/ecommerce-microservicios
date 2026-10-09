@@ -85,4 +85,24 @@ describe('api client (storefront) — parámetros de tipo arreglo', () => {
     const url = new URL(global.fetch.mock.calls[0][0])
     expect(url.searchParams.has('productIds')).toBe(false)
   })
+
+  it('sin red, el error se explica en español en vez de "Failed to fetch"', async () => {
+    global.fetch.mockRejectedValue(new TypeError('Failed to fetch'))
+    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+
+    const error = await api.get('/api/cart').catch((e) => e)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(0)
+    expect(error.message).toBe('Sin conexión a internet. Revisa tu red e intenta de nuevo.')
+    onLine.mockRestore()
+  })
+
+  it('con red pero sin respuesta del servidor, también avisa en español', async () => {
+    global.fetch.mockRejectedValue(new TypeError('Failed to fetch'))
+
+    const error = await api.get('/api/products').catch((e) => e)
+
+    expect(error.message).toBe('No pudimos conectar con la tienda. Intenta de nuevo en un momento.')
+  })
 })

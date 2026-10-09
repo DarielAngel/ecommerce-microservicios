@@ -188,6 +188,20 @@ Marca cada punto a medida que lo pruebas.
   (o devuélvelo entero). En **Mis pedidos** dice *"el cupón vuelve a estar disponible"*, en **Cupones** aparece
   *"1 devuelto"* y puedes volver a aplicarlo en el checkout. Con una devolución **parcial** el cupón sigue usado.
 
+### 4.9 Tienda instalable y sin conexión (PWA, Fase 8)
+Usa **Chrome o Edge** en tu PC (en `http://localhost:5173`; con `pnpm run dev` no funciona: tiene que ser la
+versión de Docker).
+- [ ] Al pie de la tienda aparece *"📲 Lleva la tienda en tu teléfono"* → **Instalar la app** (o el ícono de
+  instalar a la derecha de la barra de direcciones). Se abre en su propia ventana, con el ícono de la bolsa verde.
+  Clic derecho sobre el ícono instalado: accesos a *Mis pedidos*, *Carrito* y *Favoritos*.
+- [ ] Abre un producto. Luego `F12` → **Application** → **Service workers** → marca **Offline** (o *Network* →
+  *Offline*) y recarga: la tienda abre igual, arriba dice *"Sin conexión…"* y el producto se sigue viendo con su
+  foto. En el checkout el botón **Pagar** queda desactivado. Desmarca *Offline*: el aviso se va solo.
+- [ ] **Versión nueva**: con la tienda abierta, cambia algo (por ejemplo `STORE_TAGLINE` en el `.env`) y
+  `docker compose up -d --build storefront`. Recarga: abajo aparece *"Hay una versión nueva de la tienda"* →
+  **Actualizar** muestra el cambio.
+- [ ] Para quitarla: en la ventana de la app, menú `⋮` → *Desinstalar*.
+
 ---
 
 ## 5. Recorrido como Admin (panel — http://localhost:8081)
@@ -257,6 +271,7 @@ pnpm test
 | Quiero empezar con la base vacía | `docker compose down -v` (**borra todos los datos**) y luego `docker compose up -d` y el script de datos otra vez. |
 | La tienda muestra solo productos "E2E" | No se cargaron los datos de demostración en esta base: `node scripts\seed-demo-data.mjs`. Los restos de las pruebas se borran con `node scripts\limpiar-datos-e2e.mjs`. |
 | La búsqueda sin tildes no encuentra nada | Catálogo instala la extensión `unaccent` al arrancar; si se cayó antes, reinícialo: `docker compose restart catalog-service`. |
+| La tienda no muestra un cambio aunque reconstruí | Es la PWA guardando la versión anterior: aparece *"Hay una versión nueva"* → **Actualizar**. Si no aparece, recarga con `Ctrl+Shift+R`. |
 | `no such host` al construir imágenes | Problema de DNS de Docker/WSL: ver *Troubleshooting general* en el README. |
 | `Resource temporarily unavailable (api.nuget.org)` o `short read / unexpected EOF` al construir | Se cortó la red o el DNS de Docker a mitad de la descarga. Vuelve a correr el mismo comando: lo ya descargado (imágenes y paquetes NuGet/pnpm) queda en caché y solo se baja lo que faltaba. Si la red está muy inestable, construye de a un servicio (ver abajo). |
 | Reconstruyó **todos** los servicios aunque cambié poco | Microsoft publicó una versión nueva de la imagen `dotnet/sdk:8.0`. Ya no hace falta volver a bajar los paquetes: quedan en la caché de BuildKit, compartida por todos los servicios. **No** corras `docker builder prune` (borraría esa caché). |

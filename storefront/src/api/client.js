@@ -25,11 +25,21 @@ async function request(method, path, { body, token, params } = {}) {
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers.Authorization = `Bearer ${token}`
 
-  const response = await fetch(url, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    })
+  } catch {
+    // fetch solo falla así cuando no hubo respuesta (sin red, servidor caído, CORS): el "Failed to fetch" del
+    // navegador no le dice nada al cliente.
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false
+    throw new ApiError(offline
+      ? 'Sin conexión a internet. Revisa tu red e intenta de nuevo.'
+      : 'No pudimos conectar con la tienda. Intenta de nuevo en un momento.', 0, null)
+  }
 
   const contentType = response.headers.get('content-type') || ''
   const data = contentType.includes('application/json') ? await response.json().catch(() => null) : null
