@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { parseDay, deliveryText, timelineSteps, canBuyAgain, buyAgain, buyAgainMessage } from './orders'
+import { parseDay, deliveryText, timelineSteps, canBuyAgain, buyAgain, buyAgainMessage, couponReleased } from './orders'
 
 const apiError = (status) => Object.assign(new Error(`Error ${status}`), { status })
 const line = (variantId, productName, quantity) => ({ variantId, productName, quantity })
@@ -87,5 +87,15 @@ describe('utils/orders — comprar de nuevo', () => {
   it('un error inesperado (sin conexión, sesión vencida) se propaga', async () => {
     const addItem = vi.fn(async () => { throw apiError(500) })
     await expect(buyAgain([line('v1', 'Taza', 1)], addItem)).rejects.toThrow('Error 500')
+  })
+})
+
+describe('utils/orders — cupón liberado', () => {
+  it('solo cuando el pedido con cupón se canceló o se reembolsó entero', () => {
+    expect(couponReleased({ couponCode: 'VERANO25', status: 'Cancelled' })).toBe(true)
+    expect(couponReleased({ couponCode: 'VERANO25', status: 'Refunded' })).toBe(true)
+    expect(couponReleased({ couponCode: 'VERANO25', status: 'Shipped', refundedAmount: 10 })).toBe(false)
+    expect(couponReleased({ couponCode: null, status: 'Cancelled' })).toBe(false)
+    expect(couponReleased(null)).toBe(false)
   })
 })

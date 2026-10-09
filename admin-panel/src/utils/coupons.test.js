@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { emptyCouponForm, toPayload, fromCoupon, describeDiscount, couponStatus, usageLabel } from './coupons'
+import { emptyCouponForm, toPayload, fromCoupon, describeDiscount, couponStatus, usageLabel, restoredLabel } from './coupons'
 
 const baseCoupon = {
   id: 'c1', code: 'VERANO10', description: 'Verano', type: 'Percentage', value: 10, maxDiscountAmount: null,
@@ -65,5 +65,14 @@ describe('usageLabel', () => {
   it('muestra usados / límite, o solo usados si no hay límite', () => {
     expect(usageLabel({ ...baseCoupon, timesUsed: 3, usageLimit: 100 })).toBe('3 / 100')
     expect(usageLabel({ ...baseCoupon, timesUsed: 3 })).toBe('3')
+  })
+})
+
+describe('restoredLabel', () => {
+  it('muestra los usos devueltos, o nada si no hay', () => {
+    expect(restoredLabel({ ...baseCoupon, timesRestored: 1 })).toBe('1 devuelto (pedido reembolsado)')
+    expect(restoredLabel({ ...baseCoupon, timesRestored: 3 })).toBe('3 devueltos (pedidos reembolsados)')
+    expect(restoredLabel({ ...baseCoupon, timesRestored: 0 })).toBe('')
+    expect(restoredLabel(baseCoupon)).toBe('')
   })
 })

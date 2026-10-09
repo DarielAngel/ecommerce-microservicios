@@ -1455,6 +1455,9 @@ corazones quedan vacíos.
      descuento con el subtotal real; no confía en el que mostró el navegador) → Pagos cobra el
      **total con descuento**. Si algo falla, se liberan el cupón y el stock.
   2. *Pago capturado*: se confirma el uso. *Pago rechazado*: se libera y vuelve a estar disponible.
+  3. *Pedido reembolsado entero* (Fase 7: cancelado antes del envío o devuelto completo): Promociones escucha
+     `OrderRefundedEvent` por RabbitMQ y el uso pasa a **devuelto**: deja de contar para el límite y para "un uso
+     por cliente". Con una devolución **parcial** el cupón sigue usado (se aplicó a lo que el cliente se quedó).
 - **Límite de usos sin carreras**: al reservar, la fila del cupón se bloquea (`SELECT ... FOR UPDATE`)
   mientras se cuentan los usos. Hay una prueba con **10 checkouts simultáneos sobre un cupón de 1 uso:
   gana exactamente uno**.
@@ -1627,7 +1630,12 @@ Para probarlo paso a paso, ver la [guía de pruebas en local](docs/GUIA-PRUEBAS-
     *Devoluciones* marcada como *Cancelación*; al aprobarla se reembolsa **todo** lo cobrado, el stock vuelve,
     se ajustan los puntos y el pedido queda **Cancelada**. Mientras está pendiente, el pedido **no se puede
     marcar como enviado**. El Admin también puede cancelar y reembolsar directo desde *Órdenes*.
-- **Fuera de alcance por ahora**: devolver el uso del cupón al devolver o cancelar.
+- **El cupón vuelve**: si el pedido se reembolsa **entero** (cancelación de un pedido pagado, o la devolución que
+  completa el pedido), **Promociones** también escucha `OrderRefundedEvent` y libera el uso del cupón (estado
+  *Restored*): deja de contar para el límite de usos y para "un uso por cliente". El correo y *Mis pedidos* le
+  avisan al cliente que puede volver a usarlo (si sigue vigente); en el panel → **Cupones** se ve como
+  *"1 devuelto (pedido reembolsado)"*. Una devolución **parcial** no lo libera: el descuento se aplicó a lo que el
+  cliente se quedó. Promociones ahora usa RabbitMQ (solo para este evento; el canje del checkout sigue por HTTP).
 
   | Método | Ruta | Acceso |
   |---|---|---|

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useApi } from '../../api/useApi'
-import { emptyCouponForm, toPayload, fromCoupon, describeDiscount, couponStatus, usageLabel } from '../../utils/coupons'
+import { emptyCouponForm, toPayload, fromCoupon, describeDiscount, couponStatus, usageLabel, restoredLabel } from '../../utils/coupons'
 
 const apiClient = useApi()
 
@@ -196,6 +196,7 @@ onMounted(load)
             <td class="px-4 py-2.5 text-gray-700">
               {{ usageLabel(c) }}
               <span v-if="c.oncePerCustomer" class="block text-xs text-gray-400">1 por cliente</span>
+              <span v-if="restoredLabel(c)" class="block text-xs text-gray-400" data-testid="coupon-restored">{{ restoredLabel(c) }}</span>
             </td>
             <td class="px-4 py-2.5">
               <span class="text-xs px-2 py-0.5 rounded-full" :class="statusStyles[couponStatus(c).key]">{{ couponStatus(c).label }}</span>

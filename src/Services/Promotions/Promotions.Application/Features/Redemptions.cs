@@ -138,3 +138,39 @@ public class ReleaseRedemptionCommandHandler : IRequestHandler<ReleaseRedemption
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Devolver el uso (Fase 7): la compra se reembolsó entera
+// ---------------------------------------------------------------------------------------------
+
+/// <summary>
+/// La orden se reembolsó completa (cancelada antes del envío o devuelta entera): su uso del cupón deja de contar.
+/// Llega por el evento OrderRefundedEvent, así que tiene que ser idempotente y no fallar si la orden no tenía cupón.
+/// </summary>
+public record RestoreRedemptionCommand(Guid OrderId, Guid UserId) : IRequest<bool>;
+
+public class RestoreRedemptionCommandHandler : IRequestHandler<RestoreRedemptionCommand, bool>
+{
+    private readonly IRedemptionRepository _redemptions;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RestoreRedemptionCommandHandler(IRedemptionRepository redemptions, IUnitOfWork unitOfWork)
+    {
+        _redemptions = redemptions;
+        _unitOfWork = unitOfWork;
+    }
+
+    /// <returns>true si el uso se devolvió ahora; false si no había cupón o ya estaba devuelto.</returns>
+    public async Task<bool> Handle(RestoreRedemptionCommand request, CancellationToken ct)
+    {
+        var redemption = await _redemptions.GetByOrderIdAsync(request.OrderId, ct);
+        if (redemption is null) return false;
+
+        // El evento viene de Órdenes, pero si el dueño no coincide algo está mal: no se toca nada.
+        if (redemption.UserId != request.UserId) return false;
+
+        if (!redemption.Restore()) return false;
+        await _unitOfWork.SaveChangesAsync(ct);
+        return true;
+    }
+}

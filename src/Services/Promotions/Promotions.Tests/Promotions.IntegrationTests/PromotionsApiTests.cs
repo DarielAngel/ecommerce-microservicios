@@ -1,8 +1,10 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Ecommerce.Contracts.Events;
 using Ecommerce.Promotions.Infrastructure.Persistence;
 using FluentAssertions;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -23,7 +25,7 @@ public class PromotionsApiTests : IClassFixture<PromotionsApiFactory>
 
     private record CouponDto(Guid Id, string Code, string Description, string Type, decimal Value, decimal? MaxDiscountAmount,
         decimal MinimumSubtotal, DateTime? StartsAtUtc, DateTime? EndsAtUtc, int? UsageLimit, bool OncePerCustomer,
-        bool IsActive, int TimesUsed, int ActiveReservations);
+        bool IsActive, int TimesUsed, int ActiveReservations, int TimesRestored);
 
     private record QuoteDto(string Code, string Description, decimal Subtotal, decimal DiscountAmount, decimal Total);
     private record RedemptionDto(Guid OrderId, string Code, decimal Subtotal, decimal DiscountAmount, string Status);
@@ -324,4 +326,100 @@ public class PromotionsApiTests : IClassFixture<PromotionsApiFactory>
     public async Task LiberarUnaOrdenSinCupon_DeberiaResponder204() =>
         (await SendAsync(HttpMethod.Post, $"/internal/redemptions/{Guid.NewGuid()}/release", CustomerToken()))
             .StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+    // ---- Pedido reembolsado (Fase 7): el uso del cupón vuelve a estar disponible ----
+
+    private async Task PublishRefundAsync(Guid orderId, Guid userId, bool fullyRefunded, string? code)
+    {
+        // Si se publica antes de que el consumidor haya enlazado su cola, RabbitMQ descarta el mensaje.
+        await _factory.Services.GetRequiredService<IBusControl>()
+            .WaitForHealthStatus(BusHealthStatus.Healthy, TimeSpan.FromSeconds(30));
+
+        using var scope = _factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<IPublishEndpoint>().Publish(new OrderRefundedEvent(
+            Guid.NewGuid(), orderId, userId, "ana@ejemplo.com", "Ana", 45m, "USD", fullyRefunded, 0,
+            new List<RefundedItem>(), DateTime.UtcNow, OrderCancelled: false, CouponCode: fullyRefunded ? code : null));
+    }
+
+    private async Task<string> RedemptionStatusAsync(Guid orderId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PromotionsDbContext>();
+        return (await db.Redemptions.AsNoTracking().SingleAsync(r => r.OrderId == orderId)).Status.ToString();
+    }
+
+    private async Task WaitForStatusAsync(Guid orderId, string expected)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(20);
+        while (await RedemptionStatusAsync(orderId) != expected)
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException($"El canje de {orderId} sigue en {await RedemptionStatusAsync(orderId)}, se esperaba {expected}.");
+            await Task.Delay(200);
+        }
+    }
+
+    private async Task<(Guid OrderId, Guid UserId, string Token)> PaidOrderWithCouponAsync(string code)
+    {
+        var userId = Guid.NewGuid();
+        var token = PromotionsApiFactory.CreateToken(userId);
+        var orderId = Guid.NewGuid();
+        (await ReserveAsync(orderId, code, 50, token)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await SendAsync(HttpMethod.Post, $"/internal/redemptions/{orderId}/confirm", token)).StatusCode.Should().Be(HttpStatusCode.OK);
+        return (orderId, userId, token);
+    }
+
+    [Fact]
+    public async Task PedidoReembolsadoCompleto_DevuelveElUso_YElClientePuedeVolverAUsarlo()
+    {
+        var code = Unique("DEVUELTO");
+        await CreateCouponAsync(code, limit: 1, oncePerCustomer: true);
+        var (orderId, userId, token) = await PaidOrderWithCouponAsync(code);
+
+        var before = await ReserveAsync(Guid.NewGuid(), code, 50, token);
+        before.StatusCode.Should().Be(HttpStatusCode.BadRequest, "el único uso está gastado");
+
+        await PublishRefundAsync(orderId, userId, fullyRefunded: true, code);
+        await WaitForStatusAsync(orderId, "Restored");
+
+        var coupon = await GetCouponAsync(code);
+        coupon.TimesUsed.Should().Be(0);
+        coupon.TimesRestored.Should().Be(1);
+        (await ReserveAsync(Guid.NewGuid(), code, 50, token)).StatusCode.Should().Be(HttpStatusCode.OK,
+            "el pedido se reembolsó entero: es como si nunca hubiera usado el cupón");
+    }
+
+    [Fact]
+    public async Task EventoRepetido_DevuelveElUsoUnaSolaVez()
+    {
+        var code = Unique("REPE");
+        await CreateCouponAsync(code);
+        var (orderId, userId, _) = await PaidOrderWithCouponAsync(code);
+
+        await PublishRefundAsync(orderId, userId, fullyRefunded: true, code);
+        await PublishRefundAsync(orderId, userId, fullyRefunded: true, code);
+        await WaitForStatusAsync(orderId, "Restored");
+        await Task.Delay(1000); // que llegue también el segundo
+
+        var coupon = await GetCouponAsync(code);
+        coupon.TimesRestored.Should().Be(1);
+        coupon.TimesUsed.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task DevolucionParcial_NoDevuelveElUsoDelCupon()
+    {
+        var code = Unique("PARCIAL");
+        await CreateCouponAsync(code);
+        var (orderId, userId, _) = await PaidOrderWithCouponAsync(code);
+
+        await PublishRefundAsync(orderId, userId, fullyRefunded: false, code);
+        // Para saber que el evento parcial ya se procesó, mandamos después uno completo de OTRA orden y esperamos ese.
+        var (otherOrder, otherUser, _) = await PaidOrderWithCouponAsync(code);
+        await PublishRefundAsync(otherOrder, otherUser, fullyRefunded: true, code);
+        await WaitForStatusAsync(otherOrder, "Restored");
+
+        (await RedemptionStatusAsync(orderId)).Should().Be("Confirmed");
+        (await GetCouponAsync(code)).TimesUsed.Should().Be(1);
+    }
 }

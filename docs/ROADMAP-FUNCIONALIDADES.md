@@ -89,11 +89,12 @@ Inspiración: Amazon, Mercado Libre, Zalando.
 - T7.4 Al reembolsar: el stock vuelve a Inventario, se ajustan los puntos y se avisa por correo
 - T7.5 Cancelar antes del envío: sin pagar al instante; pagado, pedido por el cliente y aprobado por el Admin
   (reembolso total), o cancelado directo por el Admin
+- T7.6 El cupón vuelve: un pedido reembolsado entero libera el uso del cupón (Promociones escucha `OrderRefundedEvent`)
 - **Aceptación**: nunca se devuelve más de lo cobrado (ni por redondeo, ni por reintentos, ni con dos Admins a
   la vez); un mismo reembolso no repone stock ni ajusta puntos dos veces.
 
 ### Futuro (fuera de este ciclo)
-Devolver el uso del cupón al devolver o cancelar · multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
+Multi-vendedor · multimoneda e i18n · PWA instalable · asistente de compras
 con IA · suscripciones · pago en cuotas · B2B (cotizaciones, precios por volumen) · omnicanal.
 
 ## Estado

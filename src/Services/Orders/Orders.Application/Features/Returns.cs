@@ -364,12 +364,18 @@ public class RejectReturnCommandHandler : IRequestHandler<RejectReturnCommand, A
 
 internal static class RefundEvents
 {
-    public static OrderRefundedEvent For(Order order, OrderReturn orderReturn, TimeProvider time) => new(
-        orderReturn.Id, order.Id, order.UserId, order.UserEmail, order.UserFullName,
-        orderReturn.RefundAmount, "USD",
-        order.Status is Domain.Enums.OrderStatus.Refunded or Domain.Enums.OrderStatus.Cancelled,
-        orderReturn.LoyaltyPointsToRestore,
-        orderReturn.Lines.Select(l => new RefundedItem(l.VariantId, l.ProductId, l.ProductName, l.Quantity)).ToList(),
-        orderReturn.RefundedAtUtc ?? time.GetUtcNow().UtcDateTime,
-        orderReturn.IsCancellation);
+    public static OrderRefundedEvent For(Order order, OrderReturn orderReturn, TimeProvider time)
+    {
+        var fullyRefunded = order.Status is Domain.Enums.OrderStatus.Refunded or Domain.Enums.OrderStatus.Cancelled;
+        return new OrderRefundedEvent(
+            orderReturn.Id, order.Id, order.UserId, order.UserEmail, order.UserFullName,
+            orderReturn.RefundAmount, "USD",
+            fullyRefunded,
+            orderReturn.LoyaltyPointsToRestore,
+            orderReturn.Lines.Select(l => new RefundedItem(l.VariantId, l.ProductId, l.ProductName, l.Quantity)).ToList(),
+            orderReturn.RefundedAtUtc ?? time.GetUtcNow().UtcDateTime,
+            orderReturn.IsCancellation,
+            // Solo cuando se devolvió todo: con una devolución parcial el cupón sí se usó (en lo que el cliente se queda).
+            fullyRefunded ? order.CouponCode : null);
+    }
 }

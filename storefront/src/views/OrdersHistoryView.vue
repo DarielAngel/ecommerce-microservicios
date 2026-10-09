@@ -5,7 +5,7 @@ import { useApi } from '../api/useApi'
 import { useCartStore } from '../stores/cart'
 import { useToastStore } from '../stores/toast'
 import { formatMoney } from '../utils/format'
-import { timelineSteps, deliveryText, formatMoment, canBuyAgain, buyAgain, buyAgainMessage } from '../utils/orders'
+import { timelineSteps, deliveryText, formatMoment, canBuyAgain, buyAgain, buyAgainMessage, couponReleased } from '../utils/orders'
 import { pointsFor } from '../utils/loyalty'
 import { returnStatus, reasonLabel, returnDeadlineText } from '../utils/returns'
 import AccountNav from '../components/AccountNav.vue'
@@ -118,7 +118,7 @@ async function onCancel(order, request) {
     toast.push({
       type: 'success',
       message: updated.status === 'Cancelled'
-        ? 'Pedido cancelado.'
+        ? (couponReleased(updated) ? `Pedido cancelado. Tu cupón ${updated.couponCode} vuelve a estar disponible.` : 'Pedido cancelado.')
         : 'Pedimos la cancelación. Te avisaremos por correo cuando la revisemos.'
     })
   } catch (err) {
@@ -154,6 +154,7 @@ onMounted(load)
             <p class="text-xs text-ink-muted">
               {{ formatMoney(o.totalAmount) }}
               <span v-if="o.couponCode" class="text-emerald-700 dark:text-emerald-400">· cupón {{ o.couponCode }} (−{{ formatMoney(o.discountAmount) }})</span>
+              <span v-if="couponReleased(o)" class="text-emerald-700 dark:text-emerald-400" data-testid="order-coupon-released">· el cupón vuelve a estar disponible</span>
               <span v-if="o.loyaltyPoints" class="text-emerald-700 dark:text-emerald-400" data-testid="order-points-used">· {{ o.loyaltyPoints }} puntos (−{{ formatMoney(o.loyaltyDiscount) }})</span>
               <span v-if="o.status === 'Paid' || o.status === 'Shipped'" data-testid="order-points-earned">· +{{ pointsFor(o.totalAmount) }} puntos</span>
               <span v-if="o.refundedAmount > 0" class="text-emerald-700 dark:text-emerald-400" data-testid="order-refunded">· reembolsado {{ formatMoney(o.refundedAmount) }}</span>

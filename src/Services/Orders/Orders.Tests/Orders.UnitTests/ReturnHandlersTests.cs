@@ -25,10 +25,11 @@ public class ReturnHandlersTests
             .Returns(_ => Task.FromResult(Substitute.For<IAsyncDisposable>()));
     }
 
-    private Order GivenShippedOrder(Guid? userId = null)
+    private Order GivenShippedOrder(Guid? userId = null, string? coupon = null)
     {
         var order = Order.Create(Guid.NewGuid(), userId ?? Guid.NewGuid(), "ana@test.com", "Ana", "Calle 1",
-            new[] { (_mug, Guid.NewGuid(), "Taza", "TZ", 20m, 2) });
+            new[] { (_mug, Guid.NewGuid(), "Taza", "TZ", 20m, 2) },
+            coupon is null ? null : (coupon, 4m));
         order.MarkPaid();
         order.MarkShipped();
         _orders.GetByIdAsync(order.Id, Arg.Any<CancellationToken>()).Returns(order);
@@ -92,6 +93,34 @@ public class ReturnHandlersTests
         await _orders.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>()); // aprobada (antes de pagar) y reembolsada
         await _events.Received(1).PublishAsync(Arg.Is<OrderRefundedEvent>(e =>
             e.ReturnId == r.Id && e.RefundAmount == 40m && e.OrderFullyRefunded && e.Items.Single().Quantity == 2), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Aprobar_LaQueCompletaElPedido_ConCupon_MandaElCodigoParaLiberarlo()
+    {
+        var order = GivenShippedOrder(coupon: "verano25");
+        var r = GivenRequestedReturn(order, 2);
+        _payments.RefundAsync(default, default, default, default, default!, default)
+            .ReturnsForAnyArgs(new RefundPaymentResult(r.Id, 36m, "PP-R", "Refunded"));
+
+        await Approver().Handle(new ApproveReturnCommand(r.Id, null, "t"), CancellationToken.None);
+
+        await _events.Received(1).PublishAsync(Arg.Is<OrderRefundedEvent>(e =>
+            e.OrderFullyRefunded && e.CouponCode == "VERANO25"), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Aprobar_UnaParcial_ConCupon_NoLiberaElCupon()
+    {
+        var order = GivenShippedOrder(coupon: "VERANO25");
+        var r = GivenRequestedReturn(order, 1);
+        _payments.RefundAsync(default, default, default, default, default!, default)
+            .ReturnsForAnyArgs(new RefundPaymentResult(r.Id, 18m, "PP-R", "Refunded"));
+
+        await Approver().Handle(new ApproveReturnCommand(r.Id, null, "t"), CancellationToken.None);
+
+        await _events.Received(1).PublishAsync(Arg.Is<OrderRefundedEvent>(e =>
+            !e.OrderFullyRefunded && e.CouponCode == null), Arg.Any<CancellationToken>());
     }
 
     [Fact]

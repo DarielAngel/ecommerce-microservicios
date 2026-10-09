@@ -75,7 +75,8 @@ public class SendCartAbandonedEmailCommandHandler : IRequestHandler<SendCartAban
 // ---- Devolución reembolsada / rechazada (Fase 7) ----
 public record SendReturnRefundedEmailCommand(
     Guid ReturnId, Guid OrderId, string Email, string FullName, IReadOnlyList<EmailTemplates.RefundLine> Items,
-    decimal Amount, string Currency, bool OrderFullyRefunded, int PointsRestored, bool OrderCancelled = false) : IRequest;
+    decimal Amount, string Currency, bool OrderFullyRefunded, int PointsRestored, bool OrderCancelled = false,
+    string? CouponCode = null) : IRequest;
 
 public class SendReturnRefundedEmailCommandHandler : IRequestHandler<SendReturnRefundedEmailCommand>
 {
@@ -87,7 +88,7 @@ public class SendReturnRefundedEmailCommandHandler : IRequestHandler<SendReturnR
     {
         var (subject, html) = EmailTemplates.ReturnRefunded(
             request.OrderId, request.FullName, request.Items, request.Amount, request.Currency, request.OrderFullyRefunded,
-            request.PointsRestored, request.OrderCancelled);
+            request.PointsRestored, request.OrderCancelled, request.CouponCode);
         return _dispatcher.DispatchAsync(NotificationType.ReturnRefunded, request.ReturnId, request.Email, subject, html, ct);
     }
 }

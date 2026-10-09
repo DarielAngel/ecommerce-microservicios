@@ -184,6 +184,9 @@ Marca cada punto a medida que lo pruebas.
   En el panel → **Órdenes** aparece *"Cancelación pedida"* y no se puede marcar como enviada; en **Devoluciones**
   apruébala: el pedido queda **Cancelada** con todo reembolsado. (Desde **Órdenes** también puedes *Cancelar* un
   pedido pagado directamente.)
+- [ ] **El cupón vuelve**: crea en el panel un cupón de **1 uso por cliente**, paga un pedido con él y cancélalo
+  (o devuélvelo entero). En **Mis pedidos** dice *"el cupón vuelve a estar disponible"*, en **Cupones** aparece
+  *"1 devuelto"* y puedes volver a aplicarlo en el checkout. Con una devolución **parcial** el cupón sigue usado.
 
 ---
 

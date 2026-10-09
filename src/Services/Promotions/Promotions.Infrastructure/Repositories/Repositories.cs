@@ -60,8 +60,12 @@ public class RedemptionRepository : IRedemptionRepository
         IReadOnlyCollection<Guid> couponIds, DateTime nowUtc, CancellationToken ct)
     {
         var ids = couponIds.ToList();
-        var rows = await Counting(nowUtc)
-            .Where(r => ids.Contains(r.CouponId))
+        var reservedSince = nowUtc - CouponRedemption.ReservationTtl;
+        var rows = await _context.Redemptions.AsNoTracking()
+            .Where(r => ids.Contains(r.CouponId) && (
+                r.Status == RedemptionStatus.Confirmed ||
+                r.Status == RedemptionStatus.Restored ||
+                (r.Status == RedemptionStatus.Reserved && r.CreatedAtUtc > reservedSince)))
             .GroupBy(r => new { r.CouponId, r.Status })
             .Select(g => new { g.Key.CouponId, g.Key.Status, Count = g.Count() })
             .ToListAsync(ct);
@@ -70,7 +74,8 @@ public class RedemptionRepository : IRedemptionRepository
             g => g.Key,
             g => new CouponUsage(
                 g.Where(x => x.Status == RedemptionStatus.Confirmed).Sum(x => x.Count),
-                g.Where(x => x.Status == RedemptionStatus.Reserved).Sum(x => x.Count)));
+                g.Where(x => x.Status == RedemptionStatus.Reserved).Sum(x => x.Count),
+                g.Where(x => x.Status == RedemptionStatus.Restored).Sum(x => x.Count)));
     }
 
     public Task<bool> HasActiveForUserAsync(Guid couponId, Guid userId, DateTime nowUtc, CancellationToken ct) =>

@@ -73,8 +73,9 @@ public class CartAbandonedConsumer : IConsumer<CartAbandonedEvent>
 }
 
 /// <summary>
-/// Devolución reembolsada (Fase 7). La cola se llama "OrderRefunded"; Inventario y Lealtad escuchan el mismo
-/// evento con colas propias ("ReturnRestock" y "loyalty-order-refunded"), así cada servicio recibe su copia.
+/// Devolución reembolsada (Fase 7). La cola se llama "OrderRefunded"; Inventario, Lealtad y Promociones escuchan el
+/// mismo evento con colas propias ("ReturnRestock", "loyalty-order-refunded" y "promotions-order-refunded"), así cada
+/// servicio recibe su copia.
 /// </summary>
 public class OrderRefundedConsumer : IConsumer<OrderRefundedEvent>
 {
@@ -89,7 +90,7 @@ public class OrderRefundedConsumer : IConsumer<OrderRefundedEvent>
             new SendReturnRefundedEmailCommand(
                 m.ReturnId, m.OrderId, m.Email, m.FullName,
                 m.Items.Select(i => new Application.Common.EmailTemplates.RefundLine(i.ProductName, i.Quantity)).ToList(),
-                m.RefundAmount, m.Currency, m.OrderFullyRefunded, m.LoyaltyPointsToRestore, m.OrderCancelled),
+                m.RefundAmount, m.Currency, m.OrderFullyRefunded, m.LoyaltyPointsToRestore, m.OrderCancelled, m.CouponCode),
             context.CancellationToken);
     }
 }

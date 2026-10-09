@@ -519,11 +519,17 @@ services:
       Jwt__Secret: "${JWT_SECRET:-clave-de-desarrollo-cambiar-en-produccion-1234567890}"
       Jwt__Issuer: "Ecommerce.Users"
       Jwt__Audience: "Ecommerce.Clients"
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__VirtualHost: "/"
+      RabbitMq__Username: "guest"
+      RabbitMq__Password: "guest"
       ASPNETCORE_ENVIRONMENT: "Development"
     ports:
       - "5010:8080"
     depends_on:
       postgres-promotions:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - ecommerce-net

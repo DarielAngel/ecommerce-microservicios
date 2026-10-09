@@ -107,4 +107,20 @@ public class EmailTemplatesTests
         html.Should().Contain("25.50 USD").And.Contain("todo lo que pagaste");
         rejectedSubject.Should().Be("Sobre la cancelación de tu pedido #ABCDEF12");
     }
+
+    [Fact]
+    public void PedidoReembolsadoEntero_ConCupon_AvisaQueVuelveAEstarDisponible()
+    {
+        var items = new[] { new EmailTemplates.RefundLine("Taza", 1) };
+
+        var (_, full) = EmailTemplates.ReturnRefunded(Guid.NewGuid(), "Ana", items, 18m, "USD", true, 0, couponCode: "VERANO<25>");
+        var (_, cancelled) = EmailTemplates.ReturnRefunded(Guid.NewGuid(), "Ana", items, 18m, "USD", true, 0, orderCancelled: true, couponCode: "VERANO25");
+        var (_, partial) = EmailTemplates.ReturnRefunded(Guid.NewGuid(), "Ana", items, 18m, "USD", false, 0, couponCode: "VERANO25");
+        var (_, noCoupon) = EmailTemplates.ReturnRefunded(Guid.NewGuid(), "Ana", items, 18m, "USD", true, 0);
+
+        full.Should().Contain("Tu cupón <b>VERANO&lt;25&gt;</b> vuelve a estar disponible");
+        cancelled.Should().Contain("VERANO25").And.Contain("vuelve a estar disponible");
+        partial.Should().NotContain("cupón");
+        noCoupon.Should().NotContain("cupón");
+    }
 }

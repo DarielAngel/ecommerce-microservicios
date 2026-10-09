@@ -2,8 +2,11 @@ using Ecommerce.Promotions.Domain.Entities;
 
 namespace Ecommerce.Promotions.Application.Common;
 
-/// <summary>Usos de un cupón que cuentan para su límite: confirmados + reservas todavía vigentes.</summary>
-public record CouponUsage(int Confirmed, int ActiveReservations)
+/// <summary>
+/// Usos de un cupón que cuentan para su límite: confirmados + reservas todavía vigentes. <paramref name="Restored"/>
+/// (compras reembolsadas completas) es solo informativo para el Admin: NO cuenta.
+/// </summary>
+public record CouponUsage(int Confirmed, int ActiveReservations, int Restored = 0)
 {
     public int Total => Confirmed + ActiveReservations;
 }

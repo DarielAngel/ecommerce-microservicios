@@ -211,4 +211,44 @@ public class CouponRedemptionTests
         var act = r.Confirm;
         act.Should().Throw<DomainException>();
     }
+
+    [Fact]
+    public void Restore_DeUnUsoConfirmado_LoDevuelve_YEsIdempotente()
+    {
+        var r = NewRedemption();
+        r.Confirm();
+
+        r.Restore().Should().BeTrue();
+        r.Restore().Should().BeFalse();
+        r.Status.Should().Be(RedemptionStatus.Restored);
+    }
+
+    [Fact]
+    public void Restore_DeUnaReservaNuncaConfirmada_TambienLaDevuelve()
+    {
+        var r = NewRedemption();
+        r.Restore().Should().BeTrue();
+        r.Status.Should().Be(RedemptionStatus.Restored);
+    }
+
+    [Fact]
+    public void Restore_DeUnUsoLiberado_NoCambiaNada()
+    {
+        var r = NewRedemption();
+        r.Release();
+        r.Restore().Should().BeFalse();
+        r.Status.Should().Be(RedemptionStatus.Released);
+    }
+
+    [Fact]
+    public void UnUsoDevuelto_IgnoraConfirmarOLiberarQueLleguenTarde()
+    {
+        var r = NewRedemption();
+        r.Confirm();
+        r.Restore();
+
+        r.Confirm();
+        r.Release();
+        r.Status.Should().Be(RedemptionStatus.Restored);
+    }
 }

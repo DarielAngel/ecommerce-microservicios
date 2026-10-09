@@ -84,9 +84,9 @@ public static class EmailTemplates
     /// <summary>Devolución reembolsada (Fase 7): qué se devolvió, cuánto vuelve y cuándo se ve en PayPal.</summary>
     public static (string Subject, string Html) ReturnRefunded(
         Guid orderId, string fullName, IReadOnlyList<RefundLine> items, decimal amount, string currency, bool orderFullyRefunded,
-        int pointsRestored, bool orderCancelled = false)
+        int pointsRestored, bool orderCancelled = false, string? couponCode = null)
     {
-        if (orderCancelled) return OrderCancelled(orderId, fullName, amount, currency, pointsRestored);
+        if (orderCancelled) return OrderCancelled(orderId, fullName, amount, currency, pointsRestored, couponCode);
 
         var name = WebUtility.HtmlEncode(fullName);
         var shortId = ShortOrderId(orderId);
@@ -102,12 +102,18 @@ public static class EmailTemplates
                 $"<ul>{rows}</ul>" +
                 $"<p><b>Te devolvemos:</b> {money}{(orderFullyRefunded ? " (el pedido completo)" : "")}</p>" +
                 points +
+                CouponBack(orderFullyRefunded ? couponCode : null) +
                 "<p style=\"font-size: 12px; color: #6b7280;\">El dinero vuelve al mismo medio de pago en PayPal; puede tardar unos días en verse reflejado.</p>"));
     }
 
+    /// <summary>Pedido reembolsado entero con cupón: su uso se liberó (lo hace Promociones con el mismo evento).</summary>
+    private static string CouponBack(string? couponCode) => string.IsNullOrWhiteSpace(couponCode)
+        ? ""
+        : $"<p>Tu cupón <b>{WebUtility.HtmlEncode(couponCode)}</b> vuelve a estar disponible: si sigue vigente, puedes usarlo en otra compra.</p>";
+
     /// <summary>Pedido pagado que se canceló antes del envío (Fase 7): se reembolsó todo.</summary>
     public static (string Subject, string Html) OrderCancelled(
-        Guid orderId, string fullName, decimal amount, string currency, int pointsRestored)
+        Guid orderId, string fullName, decimal amount, string currency, int pointsRestored, string? couponCode = null)
     {
         var name = WebUtility.HtmlEncode(fullName);
         var shortId = ShortOrderId(orderId);
@@ -121,6 +127,7 @@ public static class EmailTemplates
                 $"<p>Hola <b>{name}</b>, cancelamos tu pedido <b>#{shortId}</b> antes de enviarlo.</p>" +
                 $"<p><b>Te devolvemos:</b> {money} (todo lo que pagaste)</p>" +
                 points +
+                CouponBack(couponCode) +
                 "<p style=\"font-size: 12px; color: #6b7280;\">El dinero vuelve al mismo medio de pago en PayPal; puede tardar unos días en verse reflejado.</p>"));
     }
 

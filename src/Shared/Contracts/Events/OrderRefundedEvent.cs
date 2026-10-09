@@ -7,6 +7,7 @@ namespace Ecommerce.Contracts.Events;
 /// <item>Lealtad descuenta los puntos que esa parte de la compra había dado y devuelve
 /// <see cref="LoyaltyPointsToRestore"/> de los que el cliente había usado.</item>
 /// <item>Notificaciones le avisa al cliente.</item>
+/// <item>Promociones, si el pedido quedó reembolsado completo, libera el uso del cupón (vuelve a estar disponible).</item>
 /// </list>
 /// <see cref="ReturnId"/> identifica la devolución: los consumidores lo usan para no aplicar dos veces el mismo
 /// evento (RabbitMQ entrega "al menos una vez").
@@ -14,6 +15,9 @@ namespace Ecommerce.Contracts.Events;
 /// <param name="OrderCancelled">
 /// true si no fue una devolución sino la cancelación de un pedido pagado antes de enviarlo (todo se reembolsa).
 /// Opcional y al final: los consumidores que no lo usan siguen funcionando igual.
+/// </param>
+/// <param name="CouponCode">
+/// Código del cupón que usó el pedido, solo si <see cref="OrderFullyRefunded"/> (su uso se libera); si no, null.
 /// </param>
 public record OrderRefundedEvent(
     Guid ReturnId,
@@ -27,7 +31,8 @@ public record OrderRefundedEvent(
     int LoyaltyPointsToRestore,
     IReadOnlyList<RefundedItem> Items,
     DateTime RefundedAtUtc,
-    bool OrderCancelled = false);
+    bool OrderCancelled = false,
+    string? CouponCode = null);
 
 public record RefundedItem(Guid VariantId, Guid ProductId, string ProductName, int Quantity);
 

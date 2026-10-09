@@ -1,6 +1,8 @@
 using Ecommerce.Promotions.Application.Common;
+using Ecommerce.Promotions.Infrastructure.Messaging;
 using Ecommerce.Promotions.Infrastructure.Persistence;
 using Ecommerce.Promotions.Infrastructure.Repositories;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +25,30 @@ public static class DependencyInjection
         services.AddScoped<IRedemptionRepository, RedemptionRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // Sin RabbitMQ: Órdenes llama a este servicio por HTTP durante la saga, igual que a Inventario.
+        // El checkout (reservar / confirmar / liberar) sigue siendo HTTP desde Órdenes. RabbitMQ solo trae el
+        // OrderRefundedEvent (Fase 7): un pedido reembolsado completo devuelve el uso del cupón.
+        var rabbitMqSettings = configuration.GetSection(RabbitMqSettings.SectionName).Get<RabbitMqSettings>()
+            ?? new RabbitMqSettings();
+
+        services.AddMassTransit(busConfigurator =>
+        {
+            busConfigurator.SetEndpointNameFormatter(MessagingConventions.EndpointNameFormatter);
+            busConfigurator.AddConsumer<OrderRefundedConsumer>();
+
+            busConfigurator.UsingRabbitMq((context, rabbitConfigurator) =>
+            {
+                rabbitConfigurator.Host(rabbitMqSettings.Host, (ushort)rabbitMqSettings.Port, rabbitMqSettings.VirtualHost, hostConfigurator =>
+                {
+                    hostConfigurator.Username(rabbitMqSettings.Username);
+                    hostConfigurator.Password(rabbitMqSettings.Password);
+                });
+
+                rabbitConfigurator.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(5)));
+
+                rabbitConfigurator.ConfigureEndpoints(context);
+            });
+        });
+
         return services;
     }
 }

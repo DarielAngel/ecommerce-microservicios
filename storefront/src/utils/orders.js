@@ -113,3 +113,11 @@ export function buyAgainMessage({ added, partial, unavailable }) {
   if (unavailable.length) parts.push(`${unavailable.length === 1 ? 'Ya no está disponible' : 'Ya no están disponibles'}: ${names(unavailable)}.`)
   return parts.join(' ')
 }
+
+/**
+ * Pedido con cupón que terminó sin compra: cancelado (antes o después de pagar) o reembolsado entero (Fase 7).
+ * Promociones libera ese uso, así que el cliente puede volver a usar el cupón (si sigue vigente).
+ */
+export function couponReleased(order) {
+  return Boolean(order?.couponCode) && (order.status === 'Cancelled' || order.status === 'Refunded')
+}

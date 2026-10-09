@@ -12,6 +12,7 @@ ENV NUGET_ENABLE_ENHANCED_HTTP_RETRY=true \
     NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT=8 \
     NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS=3000
 
+COPY src/Shared/Contracts/Contracts.csproj src/Shared/Contracts/
 COPY src/Services/Promotions/Promotions.Domain/Promotions.Domain.csproj src/Services/Promotions/Promotions.Domain/
 COPY src/Services/Promotions/Promotions.Application/Promotions.Application.csproj src/Services/Promotions/Promotions.Application/
 COPY src/Services/Promotions/Promotions.Infrastructure/Promotions.Infrastructure.csproj src/Services/Promotions/Promotions.Infrastructure/
@@ -20,6 +21,7 @@ COPY src/Services/Promotions/Promotions.Api/Promotions.Api.csproj src/Services/P
 RUN --mount=type=cache,id=nuget-packages,target=/root/.nuget/packages,sharing=locked \
     dotnet restore src/Services/Promotions/Promotions.Api/Promotions.Api.csproj
 
+COPY src/Shared/Contracts/ src/Shared/Contracts/
 COPY src/Services/Promotions/ src/Services/Promotions/
 RUN --mount=type=cache,id=nuget-packages,target=/root/.nuget/packages,sharing=locked \
     dotnet publish src/Services/Promotions/Promotions.Api/Promotions.Api.csproj -c Release -o /app --no-restore

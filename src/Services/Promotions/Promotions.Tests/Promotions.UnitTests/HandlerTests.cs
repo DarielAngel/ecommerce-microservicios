@@ -323,4 +323,73 @@ public class AdminCouponHandlerTests : HandlerTestBase
         result.Single(c => c.Code == "NUEVO").TimesUsed.Should().Be(0);
         result.Single(c => c.Code == "NUEVO").Type.Should().Be("FixedAmount");
     }
+
+    [Fact]
+    public async Task List_MuestraLosUsosDevueltosAparte_SinContarlos()
+    {
+        var coupon = Coupons.Percentage(code: "DEVUELTO");
+        CouponsRepo.ListAsync(Arg.Any<CancellationToken>()).Returns(new List<Coupon> { coupon });
+        Redemptions.GetUsageAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, CouponUsage> { [coupon.Id] = new(2, 0, 3) });
+
+        var result = (await new ListCouponsQueryHandler(CouponsRepo, Redemptions, Time).Handle(new ListCouponsQuery(), CancellationToken.None)).Single();
+
+        result.TimesUsed.Should().Be(2);
+        result.TimesRestored.Should().Be(3);
+    }
+}
+
+public class RestoreRedemptionCommandHandlerTests : HandlerTestBase
+{
+    private Task<bool> Restore(Guid orderId, Guid? userId = null) =>
+        new RestoreRedemptionCommandHandler(Redemptions, UnitOfWork)
+            .Handle(new RestoreRedemptionCommand(orderId, userId ?? UserId), CancellationToken.None);
+
+    private CouponRedemption GivenConfirmed()
+    {
+        var r = CouponRedemption.Reserve(Guid.NewGuid(), Coupons.Percentage(), UserId, 100, 10);
+        r.Confirm();
+        Redemptions.GetByOrderIdAsync(r.OrderId, Arg.Any<CancellationToken>()).Returns(r);
+        return r;
+    }
+
+    [Fact]
+    public async Task DevuelveElUso_YGuarda()
+    {
+        var r = GivenConfirmed();
+
+        (await Restore(r.OrderId)).Should().BeTrue();
+
+        r.Status.Should().Be(RedemptionStatus.Restored);
+        await UnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UnaOrdenSinCupon_NoHaceNada()
+    {
+        (await Restore(Guid.NewGuid())).Should().BeFalse();
+        await UnitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
+    }
+
+    [Fact]
+    public async Task SiElDuenoNoCoincide_NoTocaElUso()
+    {
+        var r = GivenConfirmed();
+
+        (await Restore(r.OrderId, Guid.NewGuid())).Should().BeFalse();
+
+        r.Status.Should().Be(RedemptionStatus.Confirmed);
+        await UnitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
+    }
+
+    [Fact]
+    public async Task Repetido_SoloGuardaLaPrimeraVez()
+    {
+        var r = GivenConfirmed();
+
+        await Restore(r.OrderId);
+        (await Restore(r.OrderId)).Should().BeFalse();
+
+        await UnitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }

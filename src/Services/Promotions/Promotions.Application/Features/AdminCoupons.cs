@@ -9,12 +9,12 @@ namespace Ecommerce.Promotions.Application.Features;
 public record CouponAdminResult(
     Guid Id, string Code, string Description, string Type, decimal Value, decimal? MaxDiscountAmount,
     decimal MinimumSubtotal, DateTime? StartsAtUtc, DateTime? EndsAtUtc, int? UsageLimit, bool OncePerCustomer,
-    bool IsActive, int TimesUsed, int ActiveReservations, DateTime CreatedAtUtc)
+    bool IsActive, int TimesUsed, int ActiveReservations, DateTime CreatedAtUtc, int TimesRestored = 0)
 {
     public static CouponAdminResult From(Coupon c, CouponUsage usage) => new(
         c.Id, c.Code, c.Description, c.Type.ToString(), c.Value, c.MaxDiscountAmount, c.MinimumSubtotal,
         c.StartsAtUtc, c.EndsAtUtc, c.UsageLimit, c.OncePerCustomer, c.IsActive,
-        usage.Confirmed, usage.ActiveReservations, c.CreatedAtUtc);
+        usage.Confirmed, usage.ActiveReservations, c.CreatedAtUtc, usage.Restored);
 }
 
 /// <summary>Los datos editables de un cupón (el código no cambia una vez creado).</summary>

@@ -11,7 +11,13 @@ public enum RedemptionStatus
     Confirmed = 1,
 
     /// <summary>El pago falló o se canceló: el uso vuelve a estar disponible.</summary>
-    Released = 2
+    Released = 2,
+
+    /// <summary>
+    /// La compra se pagó pero después se reembolsó entera (se canceló antes del envío o se devolvió todo — Fase 7):
+    /// el uso deja de contar, como si no se hubiera comprado. El registro queda para el historial.
+    /// </summary>
+    Restored = 3
 }
 
 /// <summary>
@@ -62,7 +68,8 @@ public class CouponRedemption
     /// <summary>Idempotente: confirmar dos veces no hace nada la segunda.</summary>
     public void Confirm()
     {
-        if (Status == RedemptionStatus.Confirmed) return;
+        // Restored: la compra ya se pagó y se reembolsó; una confirmación que llega tarde no la vuelve a contar.
+        if (Status is RedemptionStatus.Confirmed or RedemptionStatus.Restored) return;
         if (Status == RedemptionStatus.Released)
             throw new DomainException("No se puede confirmar el uso de un cupón que ya se liberó.");
 
@@ -73,11 +80,26 @@ public class CouponRedemption
     /// <summary>Idempotente: liberar dos veces no hace nada la segunda.</summary>
     public void Release()
     {
-        if (Status == RedemptionStatus.Released) return;
+        if (Status is RedemptionStatus.Released or RedemptionStatus.Restored) return;
         if (Status == RedemptionStatus.Confirmed)
             throw new DomainException("No se puede liberar el uso de un cupón de una compra ya pagada.");
 
         Status = RedemptionStatus.Released;
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// La compra se reembolsó completa: el uso del cupón vuelve a estar disponible (para el límite de usos y para
+    /// "un uso por cliente"). Idempotente. Una reserva que nunca se confirmó (la confirmación es "mejor esfuerzo")
+    /// también se puede devolver; una liberada ya no cuenta, así que no cambia.
+    /// </summary>
+    /// <returns>true si cambió (antes contaba como usado).</returns>
+    public bool Restore()
+    {
+        if (Status is RedemptionStatus.Restored or RedemptionStatus.Released) return false;
+
+        Status = RedemptionStatus.Restored;
+        UpdatedAtUtc = DateTime.UtcNow;
+        return true;
     }
 }

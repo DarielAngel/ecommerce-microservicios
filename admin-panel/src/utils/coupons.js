@@ -87,3 +87,10 @@ export function couponStatus(coupon, now = new Date()) {
 export function usageLabel(coupon) {
   return coupon.usageLimit ? `${coupon.timesUsed} / ${coupon.usageLimit}` : `${coupon.timesUsed}`
 }
+
+/** Usos devueltos por pedidos reembolsados enteros (Fase 7): ya no cuentan para el límite. */
+export function restoredLabel(coupon) {
+  const n = coupon?.timesRestored ?? 0
+  if (n <= 0) return ''
+  return n === 1 ? '1 devuelto (pedido reembolsado)' : `${n} devueltos (pedidos reembolsados)`
+}
