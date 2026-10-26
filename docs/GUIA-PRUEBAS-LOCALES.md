@@ -272,7 +272,7 @@ pnpm test
 | La tienda muestra solo productos "E2E" | No se cargaron los datos de demostración en esta base: `node scripts\seed-demo-data.mjs`. Los restos de las pruebas se borran con `node scripts\limpiar-datos-e2e.mjs`. |
 | La búsqueda sin tildes no encuentra nada | Catálogo instala la extensión `unaccent` al arrancar; si se cayó antes, reinícialo: `docker compose restart catalog-service`. |
 | La tienda no muestra un cambio aunque reconstruí | Es la PWA guardando la versión anterior: aparece *"Hay una versión nueva"* → **Actualizar**. Si no aparece, recarga con `Ctrl+Shift+R`. |
-| `no such host` al construir imágenes | Problema de DNS de Docker/WSL: ver *Troubleshooting general* en el README. |
+| `no such host` al construir imágenes | Problema de DNS de Docker/WSL: ver *Troubleshooting general* en [GUIA-CONSTRUCCION.md](GUIA-CONSTRUCCION.md). |
 | `Resource temporarily unavailable (api.nuget.org)` o `short read / unexpected EOF` al construir | Se cortó la red o el DNS de Docker a mitad de la descarga. Vuelve a correr el mismo comando: lo ya descargado (imágenes y paquetes NuGet/pnpm) queda en caché y solo se baja lo que faltaba. Si la red está muy inestable, construye de a un servicio (ver abajo). |
 | Reconstruyó **todos** los servicios aunque cambié poco | Microsoft publicó una versión nueva de la imagen `dotnet/sdk:8.0`. Ya no hace falta volver a bajar los paquetes: quedan en la caché de BuildKit, compartida por todos los servicios. **No** corras `docker builder prune` (borraría esa caché). |
 
